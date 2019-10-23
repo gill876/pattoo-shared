@@ -196,8 +196,9 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function get_agent_id."""
         # Test. Agent_id shouldn't change
         agent_name = random()
-        expected = agent.get_agent_id(agent_name)
-        result = agent.get_agent_id(agent_name)
+        agent_hostname = random()
+        expected = agent.get_agent_id(agent_name, agent_hostname)
+        result = agent.get_agent_id(agent_name, agent_hostname)
         self.assertEqual(result, expected)
 
     def test__generate_agent_id(self):
