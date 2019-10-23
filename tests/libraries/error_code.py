@@ -65,24 +65,25 @@ def check(root):
     else:
         duplicates = _duplicates
 
+    print('\n\nThe root directory is {}\n\n'.format(root))
+    
     # Get available codes
-    if bool(error_codes) is True:
-        code_max = max(error_codes)
-        if int(code_max) >= code_max_limit:
-            log_message = ('''\
+    code_max = max(error_codes)
+    if int(code_max) >= code_max_limit:
+        log_message = ('''\
 Extremely large error code {} found. Must be less than {}. Please fix.\
 '''.format(code_max, code_max_limit))
-            log.log2die(1571, log_message)
+        log.log2die(1571, log_message)
 
-        # Process error codes
-        for next_code in range(min(error_codes), code_max):
-            if next_code not in error_codes:
-                available_codes.append(next_code)
+    # Process error codes
+    for next_code in range(min(error_codes), code_max):
+        if next_code not in error_codes:
+            available_codes.append(next_code)
 
-        # Get available codes
-        if bool(available_codes) is False:
-            available_codes = list(
-                range(max(error_codes), max(error_codes) + entries + 1))
+    # Get available codes
+    if bool(available_codes) is False:
+        available_codes = list(
+            range(max(error_codes), max(error_codes) + entries + 1))
 
     # Print report
     print('''
