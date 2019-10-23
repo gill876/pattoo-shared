@@ -24,8 +24,8 @@ def check(root):
 
     """
     # Define min and max code values
-    code_min = 1000
-    code_max = 49999
+    code_min_limit = 1000
+    code_max_limit = 49999
 
     # Define where pattoo lives
     ignore_paths = [
@@ -66,19 +66,23 @@ def check(root):
         duplicates = _duplicates
 
     # Get available codes
-    code_max = max(error_codes)
-    if int(code_max) >= 10000:
-        log_message = ('''\
-Extremely large error code {} found. Please fix.'''.format(code_max))
-        log.log2die(1571, log_message)
+    if bool(error_codes) is True:
+        code_max = max(error_codes)
+        if int(code_max) >= code_max_limit:
+            log_message = ('''\
+Extremely large error code {} found. Must be less than {}. Please fix.\
+'''.format(code_max, code_max_limit))
+            log.log2die(1571, log_message)
 
-    # Process error codes
-    for next_code in range(min(error_codes), code_max):
-        if next_code not in error_codes:
-            available_codes.append(next_code)
-    if bool(available_codes) is False:
-        available_codes = list(
-            range(max(error_codes), max(error_codes) + entries + 1))
+        # Process error codes
+        for next_code in range(min(error_codes), code_max):
+            if next_code not in error_codes:
+                available_codes.append(next_code)
+
+        # Get available codes
+        if bool(available_codes) is False:
+            available_codes = list(
+                range(max(error_codes), max(error_codes) + entries + 1))
 
     # Print report
     print('''
@@ -103,12 +107,12 @@ ERROR: Duplicate error codes found. Please resolve.
         sys.exit(1)
 
     # Exit with error if code values are out of range
-    if (min(error_codes) < code_min) or (max(error_codes) > code_max):
+    if (min(error_codes) < code_min_limit) or (max(error_codes) > code_max_limit):
         print('''
 
 ERROR: Error codes values out of range {} to {}. Please resolve.
 
-'''.format(code_min, code_max))
+'''.format(code_min_limit, code_max_limit))
         sys.exit(1)
 
 
