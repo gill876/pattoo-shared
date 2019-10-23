@@ -24,4 +24,4 @@ before_install:
     - tests/bin/unittest_setup.py
 
 # Run the unittest scripts
-script: tests/do_all_tests.py
+script: tests/bin/do_all_tests.py
