@@ -175,6 +175,13 @@ $ ./_do_all_tests.py
     if os.environ['PATTOO_CONFIGDIR'] != config_directory:
         log.log2die_safe(1024, screen_message)
 
+    # Update message
+    screen_message = ('''{}
+
+PATTOO_CONFIGDIR is incorrectly set to {}
+
+'''.format(screen_message, os.environ['PATTOO_CONFIGDIR']))
+
     # Make sure the PATTOO_CONFIGDIR environment variable is set to unittest
     if 'unittest' not in os.environ['PATTOO_CONFIGDIR']:
         log_message = (
