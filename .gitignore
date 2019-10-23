@@ -9,13 +9,9 @@
 # _AND_ maintain the directory structure
 
 etc/**
-!etc/.gitkeep
 cache/**
-!cache/.gitkeep
 log/**
-!log/.gitkeep
 daemon/**
-!daemon/.gitkeep
 
 ###############################################################################
 # Vim editor files
