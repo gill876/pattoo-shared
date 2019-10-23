@@ -127,6 +127,7 @@ class Test_File(unittest.TestCase):
     #########################################################################
 
     prefix = 'unittest'
+    agent_hostname = 'pattoo_host'
 
     def test___init__(self):
         """Testing function __init__."""
@@ -149,7 +150,7 @@ class Test_File(unittest.TestCase):
     def test_agent_id(self):
         """Testing function agent_id."""
         filename = daemon._File()
-        result = filename.agent_id(self.prefix)
+        result = filename.agent_id(self.prefix, self.agent_hostname)
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
 
 
