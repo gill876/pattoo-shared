@@ -29,8 +29,8 @@ def check(root):
 
     # Define where pattoo lives
     ignore_paths = [
-        '/.git/', '/__pycache__/', '/_archive/', '/_deprecated/', '/build/',
-        '/dist/', '.egg']
+        '/.git/', '/__pycache__/', '/_archive/', '/_deprecated/',
+        '/pattoo-shared/build/', '/pattoo-shared/dist/', '.egg']
     error_functions = (
         'log2die_safe(', 'log2warning(',
         'log2debug(', 'log2live(', 'log2warn(', 'log2die(', 'log2quiet(',
@@ -65,8 +65,6 @@ def check(root):
     else:
         duplicates = _duplicates
 
-    print('\n\nThe root directory is {}\n\n'.format(root))
-    
     # Get available codes
     code_max = max(error_codes)
     if int(code_max) >= code_max_limit:
