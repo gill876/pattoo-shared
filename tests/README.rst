@@ -16,11 +16,11 @@ Duplicate Error Logging Codes
 
 The codes should be unique to make it easier to find the source of an issue.
 
-Developers can use the output of the ``dev/error_code_report.py`` script to determine whether the logging error codes selected have duplicates. It will give an output like this.
+Developers can use the output of the ``bin/error_code_report.py`` script to determine whether the logging error codes selected have duplicates. It will give an output like this.
 
 .. code-block:: bash
 
-   $ dev/error_code_report.py
+   $ bin/error_code_report.py
    Pattoo Error Code Summary Report
    --------------------------------
    Starting Code              : 1001
