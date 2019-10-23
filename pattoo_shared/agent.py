@@ -401,7 +401,7 @@ def _ip_binding(aav):
     return result
 
 
-def get_agent_id(agent_name):
+def get_agent_id(agent_name, agent_hostname):
     """Create a permanent UID for the agent_name.
 
     Args:
@@ -412,7 +412,7 @@ def get_agent_id(agent_name):
 
     """
     # Initialize key variables
-    filename = daemon.agent_id_file(agent_name)
+    filename = daemon.agent_id_file(agent_name, agent_hostname)
 
     # Read environment file with UID if it exists
     if os.path.isfile(filename):

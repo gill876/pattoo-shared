@@ -381,11 +381,12 @@ class _File(object):
         value = '{}/{}.lock'.format(self._directory.lock(), prefix)
         return value
 
-    def agent_id(self, prefix):
+    def agent_id(self, agent_name, agent_hostname):
         """Define the hidden agent_id directory.
 
         Args:
-            prefix: Prefix of file
+            agent_name: Agent name
+            agent_hostname: Agent hostname
 
         Returns:
             value: agent_id directory
@@ -393,7 +394,8 @@ class _File(object):
         """
         # Return
         files.mkdir(self._directory.agent_id())
-        value = '{}/{}.agent_id'.format(self._directory.agent_id(), prefix)
+        value = '{}/{}.{}.agent_id'.format(
+            self._directory.agent_id(), agent_hostname, agent_name)
         return value
 
 
@@ -429,11 +431,12 @@ def lock_file(agent_name):
     return result
 
 
-def agent_id_file(agent_name):
+def agent_id_file(agent_name, agent_hostname):
     """Get the agent_idfile for an agent.
 
     Args:
         agent_name: Agent name
+        agent_hostname: Agent hostname
 
     Returns:
         result: Name of agent_id file
@@ -441,5 +444,5 @@ def agent_id_file(agent_name):
     """
     # Return
     f_obj = _File()
-    result = f_obj.agent_id(agent_name)
+    result = f_obj.agent_id(agent_name, agent_hostname)
     return result
