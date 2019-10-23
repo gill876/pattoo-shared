@@ -26,7 +26,7 @@ Please fix.''')
     sys.exit(2)
 
 # Pattoo imports
-from tests.bin.configuration import UnittestConfig
+from tests.libraries.configuration import UnittestConfig
 
 
 def main():
