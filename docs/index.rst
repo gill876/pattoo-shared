@@ -6,6 +6,15 @@
 PattooShared
 ============
 
+The PattooShared ``pip`` module creates a universal set of classes to produce and consume ``pattoo`` compatible data.
+
+Visit the `PattooShared site <https://github.com/PalisadoesFoundation/pattoo-shared>`_ to see the code.
+
+Introduction
+------------
+
+General information about the project, including the the prerequisite steps to get it operational on your system.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -16,6 +25,7 @@ PattooShared
 Miscellaneous Information
 -------------------------
 
+Technical background information on the project.
 
 .. toctree::
    :maxdepth: 2
@@ -24,11 +34,3 @@ Miscellaneous Information
    troubleshooting
    data
    glossary
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
