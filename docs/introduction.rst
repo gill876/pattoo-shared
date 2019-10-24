@@ -8,7 +8,7 @@ PattooShared Objective
 
 The data posted by ``pattoo`` agents to the central server must be clearly defined. The data stuctures must be identical for easy interoperability.
 
-The PattooShared ``pip`` module was created to achieve this goal by using common classes to produce and consume ``pattoo`` compatible data.
+The PattooShared ``pip`` module creates a universal set of classes to produce and consume ``pattoo`` compatible data.
 
 Related Documentation
 =====================
