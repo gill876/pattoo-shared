@@ -70,48 +70,6 @@ class TestDataVariable(unittest.TestCase):
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
-    def test___setattr__(self):
-        """Testing function __setattr__."""
-        # Setup DataVariable
-        value = 10
-        data_label = 'black_bear'
-        data_index = 10
-        data_type = DATA_INT
-        variable = DataVariable(
-            value=value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
-
-        # Save current values
-        _data_type = data_type
-        _value = value
-        _data_label = data_label
-        _data_index = data_index
-
-        # Test each variable
-        data_type = DATA_STRING
-        variable.data_type = data_type
-        self.assertEqual(variable.data_type, data_type)
-        variable.data_type = _data_type
-        self.assertEqual(variable.data_type, _data_type)
-
-        data_label = 'pattoo_stuff'
-        variable.data_label = data_label
-        self.assertEqual(variable.data_label, data_label)
-        variable.data_label = _data_label
-        self.assertEqual(variable.data_label, _data_label)
-
-        data_index = 476
-        variable.data_index = data_index
-        self.assertEqual(variable.data_index, data_index)
-        variable.data_index = _data_index
-        self.assertEqual(variable.data_index, _data_index)
-
-        value = 1234
-        variable.value = value
-        self.assertEqual(variable.value, value)
-        variable.value = _value
-        self.assertEqual(variable.value, _value)
-
 
 class TestDataVariablesHost(unittest.TestCase):
     """Checks all functions and methods."""
@@ -403,23 +361,6 @@ class TestAgentAPIVariable(unittest.TestCase):
 <AgentAPIVariable ip_bind_port=6000, listen_address='0.0.0.0'>''')
         result = aav.__repr__()
         self.assertEqual(expected, result)
-
-    def test___setattr__(self):
-        """Testing function __setattr__."""
-        # Setup AgentAPIVariable
-        ip_bind_port = 1234
-        listen_address = '1.2.3.4'
-
-        # Test defaults
-        aav = AgentAPIVariable()
-        self.assertEqual(aav.ip_bind_port, 6000)
-        self.assertEqual(aav.listen_address, '0.0.0.0')
-
-        # Test non-defaults
-        aav.ip_bind_port = ip_bind_port
-        aav.listen_address = listen_address
-        self.assertEqual(aav.ip_bind_port, ip_bind_port)
-        self.assertEqual(aav.listen_address, listen_address)
 
 
 class TestBasicFunctions(unittest.TestCase):

@@ -51,20 +51,6 @@ class DataVariable(object):
         )
         return result
 
-    def __setattr__(self, name, value):
-        """Set attibutes.
-
-        Args:
-            name:
-            value:
-
-        Returns:
-            None
-
-        """
-        # Set the attribute
-        self.__dict__[name] = value
-
 
 class DataVariablesHost(object):
     """Object defining a list of DataVariable objects."""
@@ -240,20 +226,6 @@ class AgentAPIVariable(object):
            )
         )
         return result
-
-    def __setattr__(self, name, value):
-        """Set attibutes.
-
-        Args:
-            name:
-            value:
-
-        Returns:
-            None
-
-        """
-        # Set the attribute
-        self.__dict__[name] = value
 
 
 def _strip_non_printable(value):
