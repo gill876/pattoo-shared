@@ -161,7 +161,7 @@ def read_json_files(_directory, die=True):
     # Verify JSON files found in directory. We cannot use logging as it
     # requires a logfile location from the configuration directory to work
     # properly
-    if (json_found is False) and (bool(die) is False):
+    if (json_found is False) and (bool(die) is True):
         log_message = (
             'No JSON files found in directory "{}" with ".json" '
             'extension.'.format(_directory))

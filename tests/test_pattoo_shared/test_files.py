@@ -145,6 +145,23 @@ class TestBasicFunctions(unittest.TestCase):
             'key7': 7,
         }
 
+        # Create a temporary file without a json extension and test
+        directory = tempfile.mkdtemp()
+        with self.assertRaises(SystemExit):
+            _ = files.read_json_files(directory)
+        os.removedirs(directory)
+
+        # Create a temporary file without a json extension and test
+        directory = tempfile.mkdtemp()
+        with self.assertRaises(SystemExit):
+            _ = files.read_json_files(directory, die=True)
+        os.removedirs(directory)
+
+        # Test with die being False. Nothing should happen
+        directory = tempfile.mkdtemp()
+        _ = files.read_json_files(directory, die=False)
+        os.removedirs(directory)
+
         # Create temp file with known data
         directory = tempfile.mkdtemp()
         filenames = {
@@ -183,6 +200,17 @@ class TestBasicFunctions(unittest.TestCase):
         tmp = tempfile.NamedTemporaryFile(delete=False)
         with self.assertRaises(SystemExit):
             _ = files.read_json_file(tmp.name)
+        os.remove(tmp.name)
+
+        # Create a temporary file without a json extension and test
+        tmp = tempfile.NamedTemporaryFile(delete=False)
+        with self.assertRaises(SystemExit):
+            _ = files.read_json_file(tmp.name, die=True)
+        os.remove(tmp.name)
+
+        # Test with die being False. Nothing should happen
+        tmp = tempfile.NamedTemporaryFile(delete=False)
+        _ = files.read_json_file(tmp.name, die=False)
         os.remove(tmp.name)
 
         # Create json file and test
