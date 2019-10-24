@@ -17,7 +17,7 @@ General information about the project, including the the prerequisite steps to g
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Introduction:
 
    palisadoes
    introduction
