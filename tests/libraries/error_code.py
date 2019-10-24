@@ -23,14 +23,16 @@ def check(root):
         None
 
     """
-    # Define min and max code values
+    # Define min and max code values. This range is set to prevent different
+    # pattoo projects from having overlapping numbers
     code_min_limit = 1000
-    code_max_limit = 49999
+    code_max_limit = 19999
 
     # Define where pattoo lives
     ignore_paths = [
         '/.git/', '/__pycache__/', '/_archive/', '/_deprecated/',
-        '/pattoo-shared/build/', '/pattoo-shared/dist/', '.egg']
+        '/pattoo-shared/build/', '/pattoo-shared/dist/', '.egg',
+        '/docs/', '/daemon/', '/log/']
     error_functions = (
         'log2die_safe(', 'log2warning(',
         'log2debug(', 'log2live(', 'log2warn(', 'log2die(', 'log2quiet(',

@@ -16,10 +16,11 @@ from pattoo_shared import configuration
 from pattoo_shared import converter
 from pattoo_shared import data as lib_data
 from .converter import ConvertAgentPolledData
+from .variables import AgentPolledData
 
 
 class Post(object):
-    """Class to prepare data for posting."""
+    """Class to prepare data for posting to remote pattoo server."""
 
     def __init__(self, agentdata):
         """Initialize the class.
@@ -33,9 +34,14 @@ class Post(object):
         """
         # Initialize key variables
         config = configuration.Config()
-        self._agentdata = agentdata
+
+        # Test validity
+        if isinstance(agentdata, AgentPolledData) is False:
+            log_message = ('Data to post is not of type AgentPolledData')
+            log.log2die(1018, log_message)
 
         # Get posting URL
+        self._agentdata = agentdata
         self._url = config.api_server_url(agentdata.agent_id)
 
         # Get the agent cache directory

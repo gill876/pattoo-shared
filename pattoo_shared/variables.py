@@ -6,7 +6,11 @@ from pattoo_shared import times
 
 
 class DataVariable(object):
-    """Variable representation for data retreived from a device."""
+    """Variable representation for data retreived from a device.
+
+    Stores individual datapoints polled by pattoo agents
+
+    """
 
     def __init__(self, value=None, data_label=None,
                  data_index=0, data_type=DATA_INT):
@@ -14,10 +18,18 @@ class DataVariable(object):
 
         Args:
             value: Value of data for a given data_index and data_label
-            data_label: data_label
-            data_index: Unique index value of data point. The combination of
-                data_index and data_label must be unique for any polled device.
-            data_type: Data type
+            data_label:
+                A label that describes the type of data being polled.
+                This value must be unique to the agent polling data. (eg. SNMP
+                ifDescr OID '1.3.6.1.2.1.2.2.1.2', Linux 'load_average').
+                Different agents can use the same data_labels.
+            data_index:
+                Unique index value of data point. The combination of data_index
+                and data_label must be unique for any polled device. (eg. SNMP
+                IfIndex value, Linux '5' for the 5 minute load average). If
+                there is only one instance of the data being tracked by
+                data_label, then the data_index should be 0.
+            data_type: This MUST be one of the types listed in constants.py
 
         Returns:
             None
@@ -53,7 +65,11 @@ class DataVariable(object):
 
 
 class DataVariablesHost(object):
-    """Object defining a list of DataVariable objects."""
+    """Object defining a list of DataVariable objects.
+
+    Stores DataVariables polled from a specific ip_device.
+
+    """
 
     def __init__(self, device):
         """Initialize the class.
@@ -63,6 +79,10 @@ class DataVariablesHost(object):
 
         Returns:
             None
+
+        Variables:
+            self.data: List of DataVariables retrieved from the device
+            self.active: True if the object is populated with DataVariables
 
         """
         # Initialize key variables
@@ -107,7 +127,12 @@ class DataVariablesHost(object):
 
 
 class AgentPolledData(object):
-    """Object defining data received from / sent by Agent."""
+    """Object defining data received from / sent by Agent.
+
+    Only AgentPolledData objects can be submitted to the pattoo server through
+    phttp.Post()
+
+    """
 
     def __init__(self, agent_id, agent_program, agent_hostname,
                  timestamp=None, polling_interval=None):
@@ -122,6 +147,10 @@ class AgentPolledData(object):
 
         Returns:
             None
+
+        Variables:
+            self.data: List of DataVariablesHost retrieved from the device
+            self.active: True if the object is populated with DataVariables
 
         """
         # Initialize key variables

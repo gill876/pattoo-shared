@@ -5,6 +5,7 @@
 import unittest
 import os
 import sys
+from copy import deepcopy
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,6 +23,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import converter
+from pattoo_shared.variables import (
+    DataVariable, DataVariablesHost, AgentPolledData)
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
@@ -53,17 +56,170 @@ class TestBasicFunctions(unittest.TestCase):
     # General object setup
     #########################################################################
 
+    apd = {
+        'agent_hostname': 'palisadoes',
+        'agent_id': '9088a13f',
+        'agent_program': 'pattoo-agent-snmpd',
+        'devices': {
+            'device_1': {
+                '.1.3.6.1.2.1.2.2.1.10': {
+                    'data': [['1', 1999], ['100', 2999]],
+                    'data_type': 32},
+                '.1.3.6.1.2.1.2.2.1.16': {
+                    'data': [['1', 3999], ['100', 4999]],
+                    'data_type': 32}
+            },
+            'device_2': {
+                '.1.3.6.1.2.1.2.2.1.10': {
+                    'data': [['1', 1888], ['100', 2888]],
+                    'data_type': 32},
+                '.1.3.6.1.2.1.2.2.1.16': {
+                    'data': [['2', 3888], ['102', 4888]],
+                    'data_type': 32}
+            },
+        },
+        'polling_interval': 10,
+        'timestamp': 1571951520}
+
     def test_convert(self):
         """Testing method / function convert."""
-        pass
+        # Test expected OK
+        data = deepcopy(self.apd)
+        result = converter.convert(data)
+        self.assertTrue(isinstance(result, AgentPolledData))
+        self.assertEqual(result.active, True)
+        self.assertEqual(result.agent_program, data['agent_program'])
+        self.assertEqual(result.agent_hostname, data['agent_hostname'])
+        self.assertEqual(result.timestamp, data['timestamp'])
+        self.assertEqual(result.polling_interval, data['polling_interval'])
+        self.assertEqual(result.agent_id, data['agent_id'])
 
     def test__valid_agent(self):
         """Testing method / function _valid_agent."""
-        pass
+        # Test expected OK
+        data = deepcopy(self.apd)
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertEqual(agent_valid, True)
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No agent_id
+        data = deepcopy(self.apd)
+        del data['agent_id']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertIsNone(agent_id)
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No agent_program
+        data = deepcopy(self.apd)
+        del data['agent_program']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertIsNone(agent_program)
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No agent_hostname
+        data = deepcopy(self.apd)
+        del data['agent_hostname']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertIsNone(agent_hostname)
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No timestamp
+        data = deepcopy(self.apd)
+        del data['timestamp']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertIsNone(timestamp)
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No polling_interval
+        data = deepcopy(self.apd)
+        del data['polling_interval']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertTrue(bool(polled_data))
+        self.assertTrue(isinstance(polled_data, dict))
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertIsNone(polling_interval)
+        self.assertTrue('device_1' in polled_data)
+        self.assertTrue('device_2' in polled_data)
+
+        # No devices
+        data = deepcopy(self.apd)
+        del data['devices']
+        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+         polled_data, agent_valid) = converter._valid_agent(data)
+        self.assertFalse(agent_valid)
+        self.assertEqual(agent_id, data['agent_id'])
+        self.assertEqual(agent_program, data['agent_program'])
+        self.assertEqual(timestamp, data['timestamp'])
+        self.assertEqual(polling_interval, data['polling_interval'])
+        self.assertEqual(agent_hostname, data['agent_hostname'])
+        self.assertIsNone(polled_data)
 
     def test__datavariableshost(self):
         """Testing method / function _datavariableshost."""
-        pass
+        # Initialize key variables
+        device = 'device_1'
+
+        # Test expected OK
+        data = deepcopy(self.apd)['devices']
+        dv_host = converter._datavariableshost(device, data[device])
+        self.assertTrue(isinstance(dv_host, DataVariablesHost))
+        self.assertEqual(dv_host.device, device)
+        self.assertTrue(dv_host.active)
+        self.assertTrue(bool(dv_host.data))
+        self.assertTrue(isinstance(dv_host.data, list))
+
+        for _dv in dv_host.data:
+            self.assertTrue(isinstance(_dv, DataVariable))
 
     def test__datavariables(self):
         """Testing method / function _datavariables."""
