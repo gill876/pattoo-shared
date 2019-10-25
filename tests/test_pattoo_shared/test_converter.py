@@ -24,7 +24,7 @@ directory. Please fix.''')
 # Pattoo imports
 from pattoo_shared import converter
 from pattoo_shared.variables import (
-    DataVariable, DataVariablesHost, AgentPolledData)
+    DataVariable, DataVariablesDevice, AgentPolledData)
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -80,7 +80,7 @@ class TestConvertAgentPolledData(unittest.TestCase):
         self.assertTrue(bool(agentdata.data))
         self.assertTrue(isinstance(agentdata.data, list))
         for dvh in agentdata.data:
-            self.assertTrue(isinstance(dvh, DataVariablesHost))
+            self.assertTrue(isinstance(dvh, DataVariablesDevice))
             self.assertTrue(bool(dvh.data))
             for _dv in dvh.data:
                 self.assertTrue(isinstance(_dv.value, int))
@@ -128,7 +128,7 @@ class TestBasicFunctions(unittest.TestCase):
         }
     ]
 
-    # Bad data for DataVariablesHost testing
+    # Bad data for DataVariablesDevice testing
     # - Data not a list of lists
     # - Data has bad data_type
     # - Data is None
@@ -185,7 +185,7 @@ class TestBasicFunctions(unittest.TestCase):
         },
     }
 
-    # Almost good data for DataVariablesHost testing
+    # Almost good data for DataVariablesDevice testing
     # - Data has None in list
     # - Data has list with 3 values
     bad_dvh_02 = {
@@ -345,7 +345,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test expected OK
         data = deepcopy(APD)['devices']
         dv_host = converter._datavariableshost(device, data[device])
-        self.assertTrue(isinstance(dv_host, DataVariablesHost))
+        self.assertTrue(isinstance(dv_host, DataVariablesDevice))
         self.assertEqual(dv_host.device, device)
         self.assertTrue(dv_host.active)
         self.assertTrue(bool(dv_host.data))
@@ -356,7 +356,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test with bad data
         for data in self.bad_data:
             dv_host = converter._datavariableshost(data, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesHost))
+            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
             self.assertEqual(dv_host.device, data)
             self.assertFalse(dv_host.active)
             self.assertFalse(bool(dv_host.data))
@@ -367,7 +367,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test with bad data
         for device, data in sorted(self.bad_dvh_01.items()):
             dv_host = converter._datavariableshost(device, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesHost))
+            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
             self.assertTrue(dv_host.device, device)
             self.assertFalse(dv_host.active)
             self.assertFalse(bool(dv_host.data))
@@ -378,7 +378,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test with partially corrupted data
         for device, data in sorted(self.bad_dvh_02.items()):
             dv_host = converter._datavariableshost(device, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesHost))
+            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
             self.assertTrue(dv_host.device, device)
             self.assertTrue(dv_host.active)
             self.assertTrue(bool(dv_host.data))
