@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
-"""Pattoo helper for the Linux _data.
+"""Pattoo Data Converter."""
 
-Description:
-
-    Uses Python2 to be compatible with most Linux systems
-
-
-"""
 # Standard libraries
 from collections import defaultdict
 from copy import deepcopy
+import collections
 
 
 # Pattoo libraries
@@ -220,12 +215,8 @@ def _datavariableshost(device, devicedata):
                 continue
 
             # Validate the presence of required keys, then process
-            if 'data' and 'data_type' in label_dict:
-                # Skip invalid types
-                if label_dict['data_type'] not in [
-                        DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
-                        DATA_STRING, DATA_NONE]:
-                    continue
+            if ('data' in label_dict) and ('data_type' in label_dict):
+                # Skip invalid data formats
                 if isinstance(label_dict['data'], list) is False:
                     continue
 
@@ -251,6 +242,17 @@ def _datavariables(data_label, label_dict):
     # Initialize key variables
     datavariables = []
     data_type = label_dict['data_type']
+    found_type = False
+
+    # Skip invalid types
+    for next_type in [
+            DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
+            DATA_STRING, DATA_NONE]:
+        if (data_type == next_type) and (data_type is not True) and (
+                data_type is not False):
+            found_type = True
+    if found_type is False:
+        return []
 
     # Add the data to the DataVariablesHost
     for item in label_dict['data']:
@@ -276,3 +278,61 @@ def _datavariables(data_label, label_dict):
 
     # Return
     return datavariables
+
+
+def extract(agentdata):
+    """Ingest data.
+
+    Args:
+        agentdata: AgentPolledData object
+
+    Returns:
+        rows: List of named tuples containing data
+
+    """
+    # Initialize key variables
+    rows = []
+    datatuple = collections.namedtuple(
+        'Values', '''\
+agent_id agent_program agent_hostname timestamp polling_interval device
+data_label data_index value data_type''')
+
+    # Only process valid data
+    if isinstance(agentdata, AgentPolledData) is True:
+        # Return if invalid data
+        if bool(agentdata.active) is False:
+            return []
+
+        # Assign agent values
+        agent_id = agentdata.agent_id
+        agent_program = agentdata.agent_program
+        agent_hostname = agentdata.agent_hostname
+        timestamp = agentdata.timestamp
+        polling_interval = agentdata.polling_interval
+        agent_program = agentdata.agent_program
+
+        # Cycle through the data
+        for dvh in agentdata.data:
+            # Ignore bad data
+            if dvh.active is False:
+                continue
+
+            # Get data
+            device = dvh.device
+            for _dv in dvh.data:
+                data_label = _dv.data_label
+                data_index = _dv.data_index
+                value = _dv.value
+                data_type = _dv.data_type
+
+                # Assign values to tuple
+                row = datatuple(
+                    agent_id=agent_id, agent_program=agent_program,
+                    agent_hostname=agent_hostname, timestamp=timestamp,
+                    polling_interval=polling_interval, device=device,
+                    data_label=data_label, data_index=data_index,
+                    value=value, data_type=data_type)
+                rows.append(row)
+
+    # Return
+    return rows
