@@ -22,6 +22,17 @@ General information about the project, including the the prerequisite steps to g
    palisadoes
    introduction
 
+Package Classes
+---------------
+
+General information about the classes used in the package.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Package Classes:
+
+   class_descriptions
+
 Miscellaneous Information
 -------------------------
 
