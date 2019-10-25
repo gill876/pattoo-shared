@@ -9,7 +9,7 @@ import collections
 
 # Pattoo libraries
 from .variables import (
-    DataVariable, DataVariablesDevice, AgentPolledData)
+    DataVariable, DeviceDataVariables, AgentPolledData)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 from pattoo_shared import times
@@ -122,10 +122,10 @@ def convert(_data=None):
 
     # Iterate through devices polled by the agent
     for device, devicedata in sorted(polled_data.items()):
-        # Create DataVariablesDevice
+        # Create DeviceDataVariables
         dv_host = _datavariableshost(device, devicedata)
 
-        # Append the DataVariablesDevice to the AgentPolledData object
+        # Append the DeviceDataVariables to the AgentPolledData object
         if dv_host.active is True:
             agentdata.append(dv_host)
 
@@ -193,18 +193,18 @@ def _valid_agent(_data):
 
 
 def _datavariableshost(device, devicedata):
-    """Create a DataVariablesDevice object from Agent data.
+    """Create a DeviceDataVariables object from Agent data.
 
     Args:
         device: Device polled by agent
         devicedata: Data polled from device by agent
 
     Returns:
-        datavariableshost: DataVariablesDevice object
+        datavariableshost: DeviceDataVariables object
 
     """
     # Initialize key variables
-    dv_host = DataVariablesDevice(device)
+    dv_host = DeviceDataVariables(device)
 
     # Ignore invalid data
     if isinstance(devicedata, dict) is True:
@@ -220,7 +220,7 @@ def _datavariableshost(device, devicedata):
                 if isinstance(label_dict['data'], list) is False:
                     continue
 
-                # Add to the DataVariablesDevice
+                # Add to the DeviceDataVariables
                 datavariables = _datavariables(data_label, label_dict)
                 dv_host.extend(datavariables)
 
@@ -254,7 +254,7 @@ def _datavariables(data_label, label_dict):
     if found_type is False:
         return []
 
-    # Add the data to the DataVariablesDevice
+    # Add the data to the DeviceDataVariables
     for item in label_dict['data']:
         if isinstance(item, list) is True:
             if len(item) == 2:

@@ -25,7 +25,7 @@ directory. Please fix.''')
 from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING
 from pattoo_shared.variables import (
-    DataVariable, DataVariablesDevice, AgentPolledData, AgentAPIVariable)
+    DataVariable, DeviceDataVariables, AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -71,7 +71,7 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-class TestDataVariablesDevice(unittest.TestCase):
+class TestDeviceDataVariables(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -80,9 +80,9 @@ class TestDataVariablesDevice(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DataVariablesDevice
+        # Setup DeviceDataVariables
         device = 'localhost'
-        variableshost = DataVariablesDevice(device)
+        variableshost = DeviceDataVariables(device)
 
         # Test initial vlues
         self.assertEqual(variableshost.device, device)
@@ -91,9 +91,9 @@ class TestDataVariablesDevice(unittest.TestCase):
 
     def test_append(self):
         """Testing function append."""
-        # Initialize DataVariablesDevice
+        # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DataVariablesDevice(device)
+        variableshost = DeviceDataVariables(device)
         self.assertEqual(variableshost.device, device)
         self.assertFalse(variableshost.active)
         self.assertEqual(variableshost.data, [])
@@ -125,9 +125,9 @@ class TestDataVariablesDevice(unittest.TestCase):
 
     def test_extend(self):
         """Testing function extend."""
-        # Initialize DataVariablesDevice
+        # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DataVariablesDevice(device)
+        variableshost = DeviceDataVariables(device)
         self.assertEqual(variableshost.device, device)
         self.assertFalse(variableshost.active)
         self.assertEqual(variableshost.data, [])
@@ -218,9 +218,9 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             agent_id, agent_program, agent_hostname,
             timestamp=timestamp, polling_interval=polling_interval)
 
-        # Initialize DataVariablesDevice
+        # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DataVariablesDevice(device)
+        variableshost = DeviceDataVariables(device)
         self.assertEqual(variableshost.device, device)
         self.assertFalse(variableshost.active)
         self.assertEqual(variableshost.data, [])
@@ -234,7 +234,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
-        # Add data to DataVariablesDevice
+        # Add data to DeviceDataVariables
         self.assertFalse(variableshost.active)
         variableshost.append(variable)
         self.assertTrue(variableshost.active)
@@ -254,7 +254,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         self.assertEqual(len(data), 1)
 
         dvh = data[0]
-        self.assertTrue(isinstance(dvh, DataVariablesDevice))
+        self.assertTrue(isinstance(dvh, DeviceDataVariables))
         self.assertEqual(dvh.device, device)
         self.assertTrue(dvh.active)
         self.assertTrue(isinstance(dvh.data, list))
@@ -278,9 +278,9 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             agent_id, agent_program, agent_hostname,
             timestamp=timestamp, polling_interval=polling_interval)
 
-        # Initialize DataVariablesDevice
+        # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DataVariablesDevice(device)
+        variableshost = DeviceDataVariables(device)
         self.assertEqual(variableshost.device, device)
         self.assertFalse(variableshost.active)
         self.assertEqual(variableshost.data, [])
@@ -294,7 +294,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
-        # Add data to DataVariablesDevice
+        # Add data to DeviceDataVariables
         self.assertFalse(variableshost.active)
         variableshost.append(variable)
         self.assertTrue(variableshost.active)
@@ -316,7 +316,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         self.assertEqual(len(data), 1)
 
         dvh = data[0]
-        self.assertTrue(isinstance(dvh, DataVariablesDevice))
+        self.assertTrue(isinstance(dvh, DeviceDataVariables))
         self.assertEqual(dvh.device, device)
         self.assertTrue(dvh.active)
         self.assertTrue(isinstance(dvh.data, list))
