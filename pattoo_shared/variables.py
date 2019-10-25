@@ -64,7 +64,7 @@ class DataVariable(object):
         return result
 
 
-class DataVariablesHost(object):
+class DataVariablesDevice(object):
     """Object defining a list of DataVariable objects.
 
     Stores DataVariables polled from a specific ip_device.
@@ -149,7 +149,7 @@ class AgentPolledData(object):
             None
 
         Variables:
-            self.data: List of DataVariablesHost retrieved from the device
+            self.data: List of DataVariablesDevice retrieved from the device
             self.active: True if the object is populated with DataVariables
 
         """
@@ -186,14 +186,14 @@ polling_interval={5}, active={6}>\
         """Append DataVariable to the list.
 
         Args:
-            item: A DataVariablesHost object
+            item: A DataVariablesDevice object
 
         Returns:
             None
 
         """
         # Only append approved data types
-        if isinstance(item, DataVariablesHost) is True:
+        if isinstance(item, DataVariablesDevice) is True:
             self.data.append(item)
 
             # Set object as being active
@@ -206,7 +206,7 @@ polling_interval={5}, active={6}>\
         """Extend the DataVariable list.
 
         Args:
-            items: A DataVariablesHost object list
+            items: A DataVariablesDevice object list
 
         Returns:
             None
