@@ -39,3 +39,6 @@ PATTOO_AGENT_OS_HUBD = 'pattoo-agent-os-hubd'
 
 # pattoo-snmp constants
 PATTOO_AGENT_SNMPD = 'pattoo-agent-snmpd'
+
+# pattoo-modbus constants
+PATTOO_AGENT_MODBUSTCPD = 'pattoo-agent-modbustcpd'
