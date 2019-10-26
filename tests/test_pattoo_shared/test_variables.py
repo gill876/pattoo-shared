@@ -25,7 +25,8 @@ directory. Please fix.''')
 from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING
 from pattoo_shared.variables import (
-    DataVariable, DeviceDataVariables, AgentPolledData, AgentAPIVariable)
+    DataVariable, DeviceDataVariables, DeviceGateway,
+    AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -82,21 +83,21 @@ class TestDeviceDataVariables(unittest.TestCase):
         """Testing function __init__."""
         # Setup DeviceDataVariables
         device = 'localhost'
-        variableshost = DeviceDataVariables(device)
+        ddv = DeviceDataVariables(device)
 
         # Test initial vlues
-        self.assertEqual(variableshost.device, device)
-        self.assertFalse(variableshost.active)
-        self.assertEqual(variableshost.data, [])
+        self.assertEqual(ddv.device, device)
+        self.assertFalse(ddv.active)
+        self.assertEqual(ddv.data, [])
 
-    def test_append(self):
+    def test_add(self):
         """Testing function append."""
         # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DeviceDataVariables(device)
-        self.assertEqual(variableshost.device, device)
-        self.assertFalse(variableshost.active)
-        self.assertEqual(variableshost.data, [])
+        ddv = DeviceDataVariables(device)
+        self.assertEqual(ddv.device, device)
+        self.assertFalse(ddv.active)
+        self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
         value = 457
@@ -107,53 +108,17 @@ class TestDeviceDataVariables(unittest.TestCase):
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
-        # Test append
-        variableshost.append(None)
-        self.assertEqual(variableshost.data, [])
+        # Test add
+        ddv.add(None)
+        self.assertEqual(ddv.data, [])
 
-        variableshost.append(variable)
-        self.assertTrue(bool(variableshost.data))
-        self.assertTrue(isinstance(variableshost.data, list))
-        self.assertEqual(len(variableshost.data), 1)
-
-        # Test the values in the variable
-        _variable = variableshost.data[0]
-        self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.value, value)
-        self.assertEqual(_variable.data_label, data_label)
-        self.assertEqual(_variable.data_index, data_index)
-
-    def test_extend(self):
-        """Testing function extend."""
-        # Initialize DeviceDataVariables
-        device = 'teddy_bear'
-        variableshost = DeviceDataVariables(device)
-        self.assertEqual(variableshost.device, device)
-        self.assertFalse(variableshost.active)
-        self.assertEqual(variableshost.data, [])
-
-        # Setup DataVariable
-        value = 32138
-        data_label = 'grizzly_bear'
-        data_index = 'qwerty'
-        data_type = DATA_STRING
-        variable = DataVariable(
-            value=value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
-
-        # Test append
-        variableshost.extend(None)
-        self.assertEqual(variableshost.data, [])
-        variableshost.extend(variable)
-        self.assertEqual(variableshost.data, [])
-
-        variableshost.extend([variable])
-        self.assertTrue(bool(variableshost.data))
-        self.assertTrue(isinstance(variableshost.data, list))
-        self.assertEqual(len(variableshost.data), 1)
+        ddv.add(variable)
+        self.assertTrue(bool(ddv.data))
+        self.assertTrue(isinstance(ddv.data, list))
+        self.assertEqual(len(ddv.data), 1)
 
         # Test the values in the variable
-        _variable = variableshost.data[0]
+        _variable = ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
         self.assertEqual(_variable.value, value)
         self.assertEqual(_variable.data_label, data_label)
@@ -206,7 +171,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         result = apd.__repr__()
         self.assertEqual(result, expected)
 
-    def test_append(self):
+    def test_add(self):
         """Testing function append."""
         # Setup AgentPolledData
         agent_id = 'koala_bear'
@@ -218,12 +183,19 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             agent_id, agent_program, agent_hostname,
             timestamp=timestamp, polling_interval=polling_interval)
 
+        # Initialize DeviceGateway
+        gateway = 'grizzly_bear'
+        dgw = DeviceGateway(gateway)
+        self.assertEqual(dgw.device, gateway)
+        self.assertFalse(dgw.active)
+        self.assertEqual(dgw.data, [])
+
         # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DeviceDataVariables(device)
-        self.assertEqual(variableshost.device, device)
-        self.assertFalse(variableshost.active)
-        self.assertEqual(variableshost.data, [])
+        ddv = DeviceDataVariables(device)
+        self.assertEqual(ddv.device, device)
+        self.assertFalse(ddv.active)
+        self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
         value = 457
@@ -235,17 +207,22 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             data_type=data_type)
 
         # Add data to DeviceDataVariables
-        self.assertFalse(variableshost.active)
-        variableshost.append(variable)
-        self.assertTrue(variableshost.active)
+        self.assertFalse(ddv.active)
+        ddv.add(variable)
+        self.assertTrue(ddv.active)
 
-        # Test append
+        # Add data to DeviceGateway
+        self.assertFalse(dgw.active)
+        dgw.add(ddv)
+        self.assertTrue(dgw.active)
+
+        # Test add
         self.assertFalse(apd.active)
-        apd.append(None)
+        apd.add(None)
         self.assertFalse(apd.active)
-        apd.append(variable)
+        apd.add(variable)
         self.assertFalse(apd.active)
-        apd.append(variableshost)
+        apd.add(dgw)
         self.assertTrue(apd.active)
 
         # Test contents
@@ -253,37 +230,74 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data), 1)
 
-        dvh = data[0]
-        self.assertTrue(isinstance(dvh, DeviceDataVariables))
-        self.assertEqual(dvh.device, device)
-        self.assertTrue(dvh.active)
-        self.assertTrue(isinstance(dvh.data, list))
-        self.assertTrue(len(dvh.data), 1)
+        _dgw = data[0]
+        self.assertTrue(isinstance(_dgw, DeviceGateway))
+        self.assertEqual(_dgw.device, gateway)
+        self.assertTrue(_dgw.active)
+        self.assertTrue(isinstance(_dgw.data, list))
+        self.assertTrue(len(_dgw.data), 1)
 
-        _variable = dvh.data[0]
+        data = _dgw.data
+        _ddv = data[0]
+        self.assertTrue(isinstance(_ddv, DeviceDataVariables))
+        self.assertEqual(_ddv.device, device)
+        self.assertTrue(_ddv.active)
+        self.assertTrue(isinstance(_ddv.data, list))
+        self.assertTrue(len(_ddv.data), 1)
+
+        data = _ddv.data
+        _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
         self.assertEqual(_variable.value, value)
         self.assertEqual(_variable.data_label, data_label)
         self.assertEqual(_variable.data_index, data_index)
 
-    def test_extend(self):
-        """Testing function extend."""
-        # Setup AgentPolledData
-        agent_id = 'koala_bear'
-        agent_program = 'panda_bear'
-        agent_hostname = 'localhost'
-        timestamp = 68
-        polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname,
-            timestamp=timestamp, polling_interval=polling_interval)
+
+class TestDeviceGateway(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup DeviceGateway variable
+        gateway = 'polar_bear'
+        dgw = DeviceGateway(gateway)
+
+        # Test
+        self.assertEqual(dgw.device, gateway)
+        self.assertFalse(dgw.active)
+        self.assertEqual(dgw.data, [])
+
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup DeviceGateway variable
+        gateway = 'polar_bear'
+        dgw = DeviceGateway(gateway)
+
+        # Test
+        expected = ('''\
+<DeviceGateway device='polar_bear' active=False, data=[]>''')
+        result = dgw.__repr__()
+        self.assertEqual(result, expected)
+
+    def test_add(self):
+        """Testing function append."""
+        # Initialize DeviceGateway
+        gateway = 'grizzly_bear'
+        dgw = DeviceGateway(gateway)
+        self.assertEqual(dgw.device, gateway)
+        self.assertFalse(dgw.active)
+        self.assertEqual(dgw.data, [])
 
         # Initialize DeviceDataVariables
         device = 'teddy_bear'
-        variableshost = DeviceDataVariables(device)
-        self.assertEqual(variableshost.device, device)
-        self.assertFalse(variableshost.active)
-        self.assertEqual(variableshost.data, [])
+        ddv = DeviceDataVariables(device)
+        self.assertEqual(ddv.device, device)
+        self.assertFalse(ddv.active)
+        self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
         value = 457
@@ -295,34 +309,30 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             data_type=data_type)
 
         # Add data to DeviceDataVariables
-        self.assertFalse(variableshost.active)
-        variableshost.append(variable)
-        self.assertTrue(variableshost.active)
+        self.assertFalse(ddv.active)
+        ddv.add(variable)
+        self.assertTrue(ddv.active)
 
-        # Test append
-        self.assertFalse(apd.active)
-        apd.extend(None)
-        self.assertFalse(apd.active)
-        apd.extend(variable)
-        self.assertFalse(apd.active)
-        apd.extend(variableshost)
-        self.assertFalse(apd.active)
-        apd.extend([variableshost])
-        self.assertTrue(apd.active)
+        # Test add
+        self.assertFalse(dgw.active)
+        dgw.add(None)
+        self.assertFalse(dgw.active)
+        dgw.add(variable)
+        self.assertFalse(dgw.active)
+        dgw.add(ddv)
+        self.assertTrue(dgw.active)
 
         # Test contents
-        data = apd.data
-        self.assertTrue(isinstance(data, list))
-        self.assertEqual(len(data), 1)
+        data = dgw.data
+        _ddv = data[0]
+        self.assertTrue(isinstance(_ddv, DeviceDataVariables))
+        self.assertEqual(_ddv.device, device)
+        self.assertTrue(_ddv.active)
+        self.assertTrue(isinstance(_ddv.data, list))
+        self.assertTrue(len(_ddv.data), 1)
 
-        dvh = data[0]
-        self.assertTrue(isinstance(dvh, DeviceDataVariables))
-        self.assertEqual(dvh.device, device)
-        self.assertTrue(dvh.active)
-        self.assertTrue(isinstance(dvh.data, list))
-        self.assertTrue(len(dvh.data), 1)
-
-        _variable = dvh.data[0]
+        data = _ddv.data
+        _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
         self.assertEqual(_variable.value, value)
         self.assertEqual(_variable.data_label, data_label)

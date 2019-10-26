@@ -110,25 +110,8 @@ class DeviceDataVariables(object):
         )
         return result
 
-    def append(self, item):
-        """Append DataVariable to the list.
-
-        Args:
-            item: A DataVariable object
-
-        Returns:
-            None
-
-        """
-        # Only append approved data types
-        if isinstance(item, DataVariable) is True:
-            self.data.append(item)
-
-            # Set object as being active
-            self.active = False not in [bool(self.data), bool(self.device)]
-
-    def extend(self, items):
-        """Extend the DataVariable list.
+    def add(self, items):
+        """Append DataVariable to the internal self.data list.
 
         Args:
             items: A DataVariable object list
@@ -137,13 +120,17 @@ class DeviceDataVariables(object):
             None
 
         """
-        # Do nothing if not a list
+        # Ensure there is a list of objects
         if isinstance(items, list) is False:
-            return
+            items = [items]
 
-        # Extend the list
+        # Only append approved data types
         for item in items:
-            self.append(item)
+            if isinstance(item, DataVariable) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [bool(self.data), bool(self.device)]
 
 
 class DeviceGateway(object):
@@ -184,7 +171,7 @@ class DeviceGateway(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1} active={2}, data={3}'
+            '<{0} device={1} active={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
                 repr(self.device), repr(self.active), repr(self.data)
@@ -192,25 +179,8 @@ class DeviceGateway(object):
         )
         return result
 
-    def append(self, item):
-        """Add DeviceDataVariables to the list.
-
-        Args:
-            item: A DeviceDataVariables object
-
-        Returns:
-            None
-
-        """
-        # Only append approved data types
-        if isinstance(item, DeviceDataVariables) is True:
-            self.data.append(item)
-
-            # Set object as being active
-            self.active = False not in [bool(self.data), bool(self.device)]
-
-    def extend(self, items):
-        """Extend the DeviceDataVariables list.
+    def add(self, items):
+        """Add DeviceDataVariables to the internal self.data list.
 
         Args:
             items: A DeviceDataVariables object list
@@ -219,13 +189,17 @@ class DeviceGateway(object):
             None
 
         """
-        # Do nothing if not a list
+        # Ensure there is a list of objects
         if isinstance(items, list) is False:
-            return
+            items = [items]
 
-        # Extend the list
+        # Only append approved data types
         for item in items:
-            self.append(item)
+            if isinstance(item, DeviceDataVariables) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [bool(self.data), bool(self.device)]
 
 
 class AgentPolledData(object):
@@ -252,7 +226,7 @@ class AgentPolledData(object):
 
         Variables:
             self.data: List of DeviceGateway objects created by polling
-            self.active: True if the object is populated with DeviceGateway objects
+            self.active: True if the object contains DeviceGateway objects
 
         """
         # Initialize key variables
@@ -284,28 +258,8 @@ polling_interval={5}, active={6}>\
            repr(self.active)))
         return result
 
-    def append(self, item):
-        """Append DeviceGateway to the list.
-
-        Args:
-            item: A DeviceGateway object
-
-        Returns:
-            None
-
-        """
-        # Only append approved data types
-        if isinstance(item, DeviceGateway) is True:
-            self.data.append(item)
-
-            # Set object as being active
-            self.active = False not in [
-                bool(self.agent_id), bool(self.agent_program),
-                bool(self.agent_hostname), bool(self.timestamp),
-                bool(self.polling_interval), bool(self.data)]
-
-    def extend(self, items):
-        """Extend the DeviceGateway list.
+    def add(self, items):
+        """Append DeviceGateway to the internal self.data list.
 
         Args:
             items: A DeviceGateway object list
@@ -315,10 +269,21 @@ polling_interval={5}, active={6}>\
 
         """
         # Do nothing if not a list
-        if isinstance(items, list) is True:
-            # Extend the list
-            for item in items:
-                self.append(item)
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only append approved data types
+        for item in items:
+            # Only append approved data types
+            if isinstance(item, DeviceGateway) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [
+                    bool(self.agent_id), bool(self.agent_program),
+                    bool(self.agent_hostname), bool(self.timestamp),
+                    bool(self.polling_interval), bool(self.data)]
+
 
 class AgentAPIVariable(object):
     """Variable representation for data required by the AgentAPI."""
