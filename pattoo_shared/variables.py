@@ -90,6 +90,26 @@ class DeviceDataVariables(object):
         self.device = device
         self.active = False
 
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = (
+            '<{0} device={1} active={2}, data={3}'
+            ''.format(
+                self.__class__.__name__,
+                repr(self.device), repr(self.active), repr(self.data)
+            )
+        )
+        return result
+
     def append(self, item):
         """Append DataVariable to the list.
 
@@ -112,6 +132,88 @@ class DeviceDataVariables(object):
 
         Args:
             items: A DataVariable object list
+
+        Returns:
+            None
+
+        """
+        # Do nothing if not a list
+        if isinstance(items, list) is False:
+            return
+
+        # Extend the list
+        for item in items:
+            self.append(item)
+
+
+class DeviceGateway(object):
+    """Object defining a list of DeviceDataVariables objects.
+
+    Stores DeviceDataVariables polled from a specific ip_device.
+
+    """
+
+    def __init__(self, device):
+        """Initialize the class.
+
+        Args:
+            device: Device polled to get the DeviceDataVariables objects
+
+        Returns:
+            None
+
+        Variables:
+            self.data: List of DeviceDataVariables retrieved from the device
+            self.active: True if the object has assigned DeviceDataVariables
+
+        """
+        # Initialize key variables
+        self.data = []
+        self.device = device
+        self.active = False
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = (
+            '<{0} device={1} active={2}, data={3}'
+            ''.format(
+                self.__class__.__name__,
+                repr(self.device), repr(self.active), repr(self.data)
+            )
+        )
+        return result
+
+    def append(self, item):
+        """Add DeviceDataVariables to the list.
+
+        Args:
+            item: A DeviceDataVariables object
+
+        Returns:
+            None
+
+        """
+        # Only append approved data types
+        if isinstance(item, DeviceDataVariables) is True:
+            self.data.append(item)
+
+            # Set object as being active
+            self.active = False not in [bool(self.data), bool(self.device)]
+
+    def extend(self, items):
+        """Extend the DeviceDataVariables list.
+
+        Args:
+            items: A DeviceDataVariables object list
 
         Returns:
             None
@@ -149,8 +251,8 @@ class AgentPolledData(object):
             None
 
         Variables:
-            self.data: List of DeviceDataVariables retrieved from the device
-            self.active: True if the object is populated with DataVariables
+            self.data: List of DeviceGateway objects created by polling
+            self.active: True if the object is populated with DeviceGateway objects
 
         """
         # Initialize key variables
@@ -183,17 +285,17 @@ polling_interval={5}, active={6}>\
         return result
 
     def append(self, item):
-        """Append DataVariable to the list.
+        """Append DeviceGateway to the list.
 
         Args:
-            item: A DeviceDataVariables object
+            item: A DeviceGateway object
 
         Returns:
             None
 
         """
         # Only append approved data types
-        if isinstance(item, DeviceDataVariables) is True:
+        if isinstance(item, DeviceGateway) is True:
             self.data.append(item)
 
             # Set object as being active
@@ -203,10 +305,10 @@ polling_interval={5}, active={6}>\
                 bool(self.polling_interval), bool(self.data)]
 
     def extend(self, items):
-        """Extend the DataVariable list.
+        """Extend the DeviceGateway list.
 
         Args:
-            items: A DeviceDataVariables object list
+            items: A DeviceGateway object list
 
         Returns:
             None
@@ -217,7 +319,6 @@ polling_interval={5}, active={6}>\
             # Extend the list
             for item in items:
                 self.append(item)
-
 
 class AgentAPIVariable(object):
     """Variable representation for data required by the AgentAPI."""
