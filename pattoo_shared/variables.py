@@ -54,7 +54,7 @@ class DataVariable(object):
         # Create a printable variation of the value
         printable_value = _strip_non_printable(self.value)
         result = (
-            '<{0} value={1} data_label={2}, data_index={3}, data_type={4}>'
+            '<{0} value={1}, data_label={2}, data_index={3}, data_type={4}>'
             ''.format(
                 self.__class__.__name__,
                 repr(printable_value), repr(self.data_label),

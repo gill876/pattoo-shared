@@ -67,7 +67,7 @@ class TestDataVariable(unittest.TestCase):
 
         # Test
         expected = ('''\
-<DataVariable value=10 data_label='testing', data_index=10, data_type=0>''')
+<DataVariable value=10, data_label='testing', data_index=10, data_type=0>''')
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
