@@ -64,7 +64,7 @@ class DataVariable(object):
         return result
 
 
-class DataVariablesDevice(object):
+class DeviceDataVariables(object):
     """Object defining a list of DataVariable objects.
 
     Stores DataVariables polled from a specific ip_device.
@@ -90,25 +90,28 @@ class DataVariablesDevice(object):
         self.device = device
         self.active = False
 
-    def append(self, item):
-        """Append DataVariable to the list.
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
 
         Args:
-            item: A DataVariable object
-
-        Returns:
             None
 
+        Returns:
+            result: String representation.
+
         """
-        # Only append approved data types
-        if isinstance(item, DataVariable) is True:
-            self.data.append(item)
+        # Create a printable variation of the value
+        result = (
+            '<{0} device={1} active={2}, data={3}'
+            ''.format(
+                self.__class__.__name__,
+                repr(self.device), repr(self.active), repr(self.data)
+            )
+        )
+        return result
 
-            # Set object as being active
-            self.active = False not in [bool(self.data), bool(self.device)]
-
-    def extend(self, items):
-        """Extend the DataVariable list.
+    def add(self, items):
+        """Append DataVariable to the internal self.data list.
 
         Args:
             items: A DataVariable object list
@@ -117,13 +120,86 @@ class DataVariablesDevice(object):
             None
 
         """
-        # Do nothing if not a list
+        # Ensure there is a list of objects
         if isinstance(items, list) is False:
-            return
+            items = [items]
 
-        # Extend the list
+        # Only append approved data types
         for item in items:
-            self.append(item)
+            if isinstance(item, DataVariable) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [bool(self.data), bool(self.device)]
+
+
+class DeviceGateway(object):
+    """Object defining a list of DeviceDataVariables objects.
+
+    Stores DeviceDataVariables polled from a specific ip_device.
+
+    """
+
+    def __init__(self, device):
+        """Initialize the class.
+
+        Args:
+            device: Device polled to get the DeviceDataVariables objects
+
+        Returns:
+            None
+
+        Variables:
+            self.data: List of DeviceDataVariables retrieved from the device
+            self.active: True if the object has assigned DeviceDataVariables
+
+        """
+        # Initialize key variables
+        self.data = []
+        self.device = device
+        self.active = False
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = (
+            '<{0} device={1} active={2}, data={3}>'
+            ''.format(
+                self.__class__.__name__,
+                repr(self.device), repr(self.active), repr(self.data)
+            )
+        )
+        return result
+
+    def add(self, items):
+        """Add DeviceDataVariables to the internal self.data list.
+
+        Args:
+            items: A DeviceDataVariables object list
+
+        Returns:
+            None
+
+        """
+        # Ensure there is a list of objects
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only append approved data types
+        for item in items:
+            if isinstance(item, DeviceDataVariables) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [bool(self.data), bool(self.device)]
 
 
 class AgentPolledData(object):
@@ -149,8 +225,8 @@ class AgentPolledData(object):
             None
 
         Variables:
-            self.data: List of DataVariablesDevice retrieved from the device
-            self.active: True if the object is populated with DataVariables
+            self.data: List of DeviceGateway objects created by polling
+            self.active: True if the object contains DeviceGateway objects
 
         """
         # Initialize key variables
@@ -182,41 +258,31 @@ polling_interval={5}, active={6}>\
            repr(self.active)))
         return result
 
-    def append(self, item):
-        """Append DataVariable to the list.
+    def add(self, items):
+        """Append DeviceGateway to the internal self.data list.
 
         Args:
-            item: A DataVariablesDevice object
-
-        Returns:
-            None
-
-        """
-        # Only append approved data types
-        if isinstance(item, DataVariablesDevice) is True:
-            self.data.append(item)
-
-            # Set object as being active
-            self.active = False not in [
-                bool(self.agent_id), bool(self.agent_program),
-                bool(self.agent_hostname), bool(self.timestamp),
-                bool(self.polling_interval), bool(self.data)]
-
-    def extend(self, items):
-        """Extend the DataVariable list.
-
-        Args:
-            items: A DataVariablesDevice object list
+            items: A DeviceGateway object list
 
         Returns:
             None
 
         """
         # Do nothing if not a list
-        if isinstance(items, list) is True:
-            # Extend the list
-            for item in items:
-                self.append(item)
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only append approved data types
+        for item in items:
+            # Only append approved data types
+            if isinstance(item, DeviceGateway) is True:
+                self.data.append(item)
+
+                # Set object as being active
+                self.active = False not in [
+                    bool(self.agent_id), bool(self.agent_program),
+                    bool(self.agent_hostname), bool(self.timestamp),
+                    bool(self.polling_interval), bool(self.data)]
 
 
 class AgentAPIVariable(object):

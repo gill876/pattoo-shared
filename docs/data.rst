@@ -6,102 +6,45 @@ This document shows the various key, value pairs used in the ``json`` data used 
 
 .. code-block:: json
 
-   {
-      "agent_program" : "pattoo-agent-os-spoked",
-      "agent_id" : "f95784520cdf96cdcc6125378d9d90f47db8caf6d31543f60d828a3182ccec0f",
-      "timestamp" : 1570413300,
-      "agent_hostname" : "swim",
-      "devices" : {
-         "swim" : {
-           "system" : {
-              "data_type" : null,
-              "description" : "Operating System",
-              "data" : [
-                 [
-                    null,
-                    "Linux"
-                 ]
-              ]
-           },
-           "distribution" : {
-              "description" : "Linux Distribution",
-              "data" : [
-                 [
-                    null,
-                    "Ubuntu 18.04 Bionic Beaver"
-                 ]
-              ],
-              "data_type" : null
-           },
-           "release" : {
-              "data_type" : null,
-              "data" : [
-                 [
-                    null,
-                    "4.15.0-65-generic"
-                 ]
-              ],
-              "description" : "Kernel Version"
-           },
-           "version" : {
-              "data_type" : null,
-              "data" : [
-                 [
-                    null,
-                    "#74-Ubuntu SMP Tue Sep 17 17:06:04 UTC 2019"
-                 ]
-              ],
-              "description" : "Kernel Type"
-           },
-           "network_bytes_sent" : {
-              "data_type" : 64,
-              "data" : [
-                 [
-                    "enp3s0f1",
-                    0
-                 ],
-                 [
-                    "lo",
-                    26923324
-                 ],
-                 [
-                    "wlp2s0",
-                    461076329
-                 ]
-              ],
-              "description" : "Bytes (Out)"
-           },
-           "cpu_count" : {
-              "data_type" : 1,
-              "data" : [
-                 [
-                    null,
-                    8
-                 ]
-              ],
-              "description" : "CPU Count"
-           },
-           "disk_usage_percent" : {
-              "data_type" : 1,
-              "data" : [
-                 [
-                    "/",
-                    23.2
-                 ],
-                 [
-                    "/boot/efi",
-                    1.2
-                 ],
-                 [
-                    "/data",
-                    92
-                 ]
-              ],
-              "description" : "Partition Utilization (%)"
-           }
+{'agent_hostname': 'palisadoes',
+ 'agent_id': '8273cf01a6ea9334a00b2023f92799cbdf3c72d2de084a45e344c0c487746cc0',
+ 'agent_program': 'pattoo-agent-os-autonomousd',
+ 'gateways': {
+     'gw01': {
+         'devices': {
+             'palisadoes': {
+                 'cpu_count': {
+                     'data': [[0, 8]],
+                     'data_type': 0},
+                 'cpu_stats': {
+                     'data': [
+                         ['ctx_switches', 3721224481],
+                         ['interrupts', 1708955737],
+                         ['soft_interrupts', 781652003],
+                         ['syscalls', 0]],
+                     'data_type': 64},
+                 'network_bytes_recv': {
+                     'data': [
+                         ['wlp3s0', 0],
+                         ['enp2s0', 20112540291],
+                         ['lo', 80301094]],
+                     'data_type': 64},
+                 'release': {
+                     'data': [[0, '4.15.0-65-generic']],
+                     'data_type': 2},
+                 'system': {
+                     'data': [[0, 'Linux']],
+                     'data_type': 2},
+                 'version': {
+                     'data': [[0, '#74-Ubuntu SMP Tue Sep 17 17:06 UTC 2019']],
+                     'data_type': 2}
+                 }
+             }
          }
-      }
-   }
+     },
+ 'polling_interval': 10,
+ 'timestamp': 1572056400}
+
 
 Formatting
 ----------

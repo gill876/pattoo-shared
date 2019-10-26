@@ -24,7 +24,7 @@ directory. Please fix.''')
 # Pattoo imports
 from pattoo_shared import converter
 from pattoo_shared.variables import (
-    DataVariable, DataVariablesDevice, AgentPolledData)
+    DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -36,22 +36,26 @@ APD = {
     'agent_hostname': 'palisadoes',
     'agent_id': '9088a13f',
     'agent_program': 'pattoo-agent-snmpd',
-    'devices': {
-        'device_1': {
-            '.1.3.6.1.2.1.2.2.1.10': {
-                'data': [['1', 1999], ['100', 2999]],
-                'data_type': 32},
-            '.1.3.6.1.2.1.2.2.1.16': {
-                'data': [['1', 3999], ['100', 4999]],
-                'data_type': 32}
-        },
-        'device_2': {
-            '.1.3.6.1.2.1.2.2.1.10': {
-                'data': [['1', 1888], ['100', 2888]],
-                'data_type': 32},
-            '.1.3.6.1.2.1.2.2.1.16': {
-                'data': [['2', 3888], ['102', 4888]],
-                'data_type': 32}
+    'gateways': {
+        'gw01': {
+            'devices': {
+                'device_1': {
+                    '.1.3.6.1.2.1.2.2.1.10': {
+                        'data': [['1', 1999], ['100', 2999]],
+                        'data_type': 32},
+                    '.1.3.6.1.2.1.2.2.1.16': {
+                        'data': [['1', 3999], ['100', 4999]],
+                        'data_type': 32}
+                },
+                'device_2': {
+                    '.1.3.6.1.2.1.2.2.1.10': {
+                        'data': [['1', 1888], ['100', 2888]],
+                        'data_type': 32},
+                    '.1.3.6.1.2.1.2.2.1.16': {
+                        'data': [['2', 3888], ['102', 4888]],
+                        'data_type': 32}
+                },
+            },
         },
     },
     'polling_interval': 10,
@@ -79,16 +83,20 @@ class TestConvertAgentPolledData(unittest.TestCase):
         self.assertEqual(agentdata.agent_id, data['agent_id'])
         self.assertTrue(bool(agentdata.data))
         self.assertTrue(isinstance(agentdata.data, list))
-        for dvh in agentdata.data:
-            self.assertTrue(isinstance(dvh, DataVariablesDevice))
-            self.assertTrue(bool(dvh.data))
-            for _dv in dvh.data:
-                self.assertTrue(isinstance(_dv.value, int))
-                self.assertTrue(isinstance(_dv.data_index, str))
-                self.assertTrue(isinstance(_dv.data_label, str))
-                self.assertEqual(_dv.data_type, 32)
-                self.assertTrue(_dv.data_label.startswith(
-                    '.1.3.6.1.2.1.2.2.1.1'))
+        for dgw in agentdata.data:
+            self.assertTrue(isinstance(dgw, DeviceGateway))
+            self.assertTrue(bool(dgw.data))
+            self.assertTrue(isinstance(dgw.data, list))
+            for dvh in dgw.data:
+                self.assertTrue(isinstance(dvh, DeviceDataVariables))
+                self.assertTrue(bool(dvh.data))
+                for _dv in dvh.data:
+                    self.assertTrue(isinstance(_dv.value, int))
+                    self.assertTrue(isinstance(_dv.data_index, str))
+                    self.assertTrue(isinstance(_dv.data_label, str))
+                    self.assertEqual(_dv.data_type, 32)
+                    self.assertTrue(_dv.data_label.startswith(
+                        '.1.3.6.1.2.1.2.2.1.1'))
 
     def test__process(self):
         """Testing method / function _process."""
@@ -128,7 +136,7 @@ class TestBasicFunctions(unittest.TestCase):
         }
     ]
 
-    # Bad data for DataVariablesDevice testing
+    # Bad data for DeviceDataVariables testing
     # - Data not a list of lists
     # - Data has bad data_type
     # - Data is None
@@ -185,7 +193,7 @@ class TestBasicFunctions(unittest.TestCase):
         },
     }
 
-    # Almost good data for DataVariablesDevice testing
+    # Almost good data for DeviceDataVariables testing
     # - Data has None in list
     # - Data has list with 3 values
     bad_dvh_02 = {
@@ -228,8 +236,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(agent_id, data['agent_id'])
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
         # No agent_id
         data = deepcopy(APD)
@@ -244,8 +251,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertIsNone(agent_id)
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
         # No agent_program
         data = deepcopy(APD)
@@ -260,8 +266,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertIsNone(agent_program)
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
         # No agent_hostname
         data = deepcopy(APD)
@@ -276,8 +281,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertIsNone(agent_hostname)
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
         # No timestamp
         data = deepcopy(APD)
@@ -292,8 +296,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertIsNone(timestamp)
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
         # No polling_interval
         data = deepcopy(APD)
@@ -308,12 +311,11 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(isinstance(polled_data, dict))
         self.assertEqual(agent_hostname, data['agent_hostname'])
         self.assertIsNone(polling_interval)
-        self.assertTrue('device_1' in polled_data)
-        self.assertTrue('device_2' in polled_data)
+        self.assertTrue('gw01' in polled_data)
 
-        # No devices
+        # No gateways
         data = deepcopy(APD)
-        del data['devices']
+        del data['gateways']
         (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
@@ -337,15 +339,15 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertIsNone(agent_hostname)
             self.assertIsNone(polled_data)
 
-    def test__datavariableshost(self):
-        """Testing method / function _datavariableshost."""
+    def test__create_ddv(self):
+        """Testing method / function _create_ddv."""
         # Initialize key variables
         device = 'device_1'
 
         # Test expected OK
-        data = deepcopy(APD)['devices']
-        dv_host = converter._datavariableshost(device, data[device])
-        self.assertTrue(isinstance(dv_host, DataVariablesDevice))
+        data = deepcopy(APD)['gateways']['gw01']['devices']
+        dv_host = converter._create_ddv(device, data[device])
+        self.assertTrue(isinstance(dv_host, DeviceDataVariables))
         self.assertEqual(dv_host.device, device)
         self.assertTrue(dv_host.active)
         self.assertTrue(bool(dv_host.data))
@@ -355,8 +357,8 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with bad data
         for data in self.bad_data:
-            dv_host = converter._datavariableshost(data, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
+            dv_host = converter._create_ddv(data, data)
+            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
             self.assertEqual(dv_host.device, data)
             self.assertFalse(dv_host.active)
             self.assertFalse(bool(dv_host.data))
@@ -366,8 +368,8 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with bad data
         for device, data in sorted(self.bad_dvh_01.items()):
-            dv_host = converter._datavariableshost(device, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
+            dv_host = converter._create_ddv(device, data)
+            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
             self.assertTrue(dv_host.device, device)
             self.assertFalse(dv_host.active)
             self.assertFalse(bool(dv_host.data))
@@ -377,8 +379,8 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with partially corrupted data
         for device, data in sorted(self.bad_dvh_02.items()):
-            dv_host = converter._datavariableshost(device, data)
-            self.assertTrue(isinstance(dv_host, DataVariablesDevice))
+            dv_host = converter._create_ddv(device, data)
+            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
             self.assertTrue(dv_host.device, device)
             self.assertTrue(dv_host.active)
             self.assertTrue(bool(dv_host.data))
@@ -391,8 +393,8 @@ class TestBasicFunctions(unittest.TestCase):
                 self.assertEqual(_dv.data_type, 32)
                 self.assertEqual(_dv.data_label, 'bad_key_01')
 
-    def test__datavariables(self):
-        """Testing method / function _datavariables."""
+    def test__create_datavariables(self):
+        """Testing method / function _create_datavariables."""
         # Initialize key variables
         valid_types = [
             DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
@@ -406,7 +408,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test valid types
         for next_type in valid_types:
             label_dict['data_type'] = next_type
-            result = converter._datavariables(data_label, label_dict)
+            result = converter._create_datavariables(data_label, label_dict)
             self.assertTrue(isinstance(result, list))
             self.assertTrue(bool(result))
             for _dv in result:
@@ -416,7 +418,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Test invalid types
         for next_type in invalid_types:
             label_dict['data_type'] = next_type
-            result = converter._datavariables(data_label, label_dict)
+            result = converter._create_datavariables(data_label, label_dict)
             self.assertTrue(isinstance(result, list))
             self.assertFalse(bool(result))
             for _dv in result:
@@ -424,19 +426,21 @@ class TestBasicFunctions(unittest.TestCase):
                 self.assertEqual(_dv.data_type, next_type)
 
     def test_extract(self):
-        """Testing method / function _datavariables."""
+        """Testing method / function _create_datavariables."""
         # Test expected OK
         data = deepcopy(APD)
         agentdata = converter.convert(data)
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            self.assertEqual(len(row), 10)
+            print(row)
+            self.assertEqual(len(row), 11)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
             self.assertEqual(row.timestamp, 1571951520)
             self.assertEqual(row.polling_interval, 10)
+            self.assertEqual(row.gateway, 'gw01')
             self.assertTrue(isinstance(row.value, int))
             self.assertTrue(isinstance(row.data_type, int))
             self.assertTrue(isinstance(row.data_index, str))

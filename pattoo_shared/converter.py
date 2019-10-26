@@ -6,10 +6,9 @@ from collections import defaultdict
 from copy import deepcopy
 import collections
 
-
 # Pattoo libraries
 from .variables import (
-    DataVariable, DataVariablesDevice, AgentPolledData)
+    DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 from pattoo_shared import times
@@ -30,16 +29,16 @@ class ConvertAgentPolledData(object):
         """
         # Initialize key variables
         self._data = defaultdict(lambda: defaultdict(dict))
-        self._list_of_dv_host = agentdata.data
+        self._gateway_data = agentdata.data
         self._data['timestamp'] = agentdata.timestamp
         self._data['polling_interval'] = agentdata.polling_interval
         self._data['agent_id'] = agentdata.agent_id
         self._data['agent_program'] = agentdata.agent_program
         self._data['agent_hostname'] = agentdata.agent_hostname
-        self._data['devices'] = self._process()
+        self._data['gateways'] = self._process()
 
     def _process(self):
-        """Return the name of the _data.
+        """Process.
 
         Args:
             None
@@ -49,33 +48,16 @@ class ConvertAgentPolledData(object):
 
         """
         # Intitialize key variables
-        # Yes we could have used Lambdas but pprint wouldn't fit on the screen
         result = {}
 
-        # Get information from data
-        for dv_host in self._list_of_dv_host:
-            # Initialize variable for code simplicity
-            device = dv_host.device
-
-            # Pre-populate the result with empty dicts
-            result[device] = {}
-
-            # Analyze each DataVariable for the dv_host
-            for _dvar in dv_host.data:
-                # Add keys if not already there
-                if _dvar.data_label not in result[device]:
-                    result[device][_dvar.data_label] = {}
-
-                # Assign data values to result
-                data_tuple = (_dvar.data_index, _dvar.value)
-                if 'data' in result[device][_dvar.data_label]:
-                    result[device][_dvar.data_label][
-                        'data'].append(data_tuple)
-                else:
-                    result[device][_dvar.data_label][
-                        'data_type'] = _dvar.data_type
-                    result[device][_dvar.data_label][
-                        'data'] = [data_tuple]
+        if isinstance(self._gateway_data, list) is True:
+            for gwd in self._gateway_data:
+                if isinstance(gwd, DeviceGateway) is True:
+                    if bool(gwd.active) is True:
+                        # Get information from data
+                        gwd_dict = _capd_gwd2dict(gwd)
+                        for gateway, values in gwd_dict.items():
+                            result[gateway] = values
 
         # Return
         return result
@@ -121,19 +103,91 @@ def convert(_data=None):
         timestamp=timestamp, polling_interval=polling_interval)
 
     # Iterate through devices polled by the agent
-    for device, devicedata in sorted(polled_data.items()):
-        # Create DataVariablesDevice
-        dv_host = _datavariableshost(device, devicedata)
+    for gateway, gw_dict in sorted(polled_data.items()):
+        # Create an populate the DeviceGateway object
+        gwd = DeviceGateway(gateway)
+        for device, devicedata in sorted(gw_dict['devices'].items()):
+            # Append the DeviceDataVariables to the DeviceGateway object
+            ddv = _create_ddv(device, devicedata)
+            if ddv.active is True:
+                gwd.add(ddv)
 
-        # Append the DataVariablesDevice to the AgentPolledData object
-        if dv_host.active is True:
-            agentdata.append(dv_host)
+        # Append the DeviceGateway to the AgentPolledData object
+        if gwd.active is True:
+            agentdata.add(gwd)
 
     # Return
     if agentdata.active is False:
         return None
     else:
         return agentdata
+
+
+def extract(agentdata):
+    """Ingest data.
+
+    Args:
+        agentdata: AgentPolledData object
+
+    Returns:
+        rows: List of named tuples containing data
+
+    """
+    # Initialize key variables
+    rows = []
+    datatuple = collections.namedtuple(
+        'Values', '''\
+agent_id agent_program agent_hostname timestamp polling_interval gateway \
+device data_label data_index value data_type''')
+
+    # Only process valid data
+    if isinstance(agentdata, AgentPolledData) is True:
+        # Return if invalid data
+        if bool(agentdata.active) is False:
+            return []
+
+        # Assign agent values
+        agent_id = agentdata.agent_id
+        agent_program = agentdata.agent_program
+        agent_hostname = agentdata.agent_hostname
+        timestamp = agentdata.timestamp
+        polling_interval = agentdata.polling_interval
+        agent_program = agentdata.agent_program
+
+        # Cycle through the data
+        for gwd in agentdata.data:
+            # Ignore bad data
+            if gwd.active is False:
+                continue
+
+            # Get gateway from which data came
+            gateway = gwd.device
+
+            for ddv in gwd.data:
+                # Ignore bad data
+                if ddv.active is False:
+                    continue
+
+                # Get data
+                device = ddv.device
+                for _dv in ddv.data:
+                    data_label = _dv.data_label
+                    data_index = _dv.data_index
+                    value = _dv.value
+                    data_type = _dv.data_type
+
+                    # Assign values to tuple
+                    row = datatuple(
+                        agent_id=agent_id, agent_program=agent_program,
+                        agent_hostname=agent_hostname, timestamp=timestamp,
+                        polling_interval=polling_interval, gateway=gateway,
+                        device=device, data_label=data_label,
+                        data_index=data_index,
+                        value=value, data_type=data_type)
+                    rows.append(row)
+
+    # Return
+    return rows
 
 
 def _valid_agent(_data):
@@ -171,9 +225,9 @@ def _valid_agent(_data):
         if 'polling_interval' in _data:
             if isinstance(_data['polling_interval'], int) is True:
                 polling_interval = _data['polling_interval']
-        if 'devices' in _data:
-            if isinstance(_data['devices'], dict) is True:
-                polled_data = deepcopy(_data['devices'])
+        if 'gateways' in _data:
+            if isinstance(_data['gateways'], dict) is True:
+                polled_data = deepcopy(_data['gateways'])
 
     # Valid timestamp related data?
     valid_times = times.validate_timestamp(timestamp, polling_interval)
@@ -192,19 +246,19 @@ def _valid_agent(_data):
     return result
 
 
-def _datavariableshost(device, devicedata):
-    """Create a DataVariablesDevice object from Agent data.
+def _create_ddv(device, devicedata):
+    """Create a DeviceDataVariables object from Agent data.
 
     Args:
         device: Device polled by agent
         devicedata: Data polled from device by agent
 
     Returns:
-        datavariableshost: DataVariablesDevice object
+        ddv: DeviceDataVariables object
 
     """
     # Initialize key variables
-    dv_host = DataVariablesDevice(device)
+    ddv = DeviceDataVariables(device)
 
     # Ignore invalid data
     if isinstance(devicedata, dict) is True:
@@ -220,15 +274,15 @@ def _datavariableshost(device, devicedata):
                 if isinstance(label_dict['data'], list) is False:
                     continue
 
-                # Add to the DataVariablesDevice
-                datavariables = _datavariables(data_label, label_dict)
-                dv_host.extend(datavariables)
+                # Add to the DeviceDataVariables
+                datavariables = _create_datavariables(data_label, label_dict)
+                ddv.add(datavariables)
 
     # Return
-    return dv_host
+    return ddv
 
 
-def _datavariables(data_label, label_dict):
+def _create_datavariables(data_label, label_dict):
     """Create a valid list of DataVariables for a specific label.
 
     Args:
@@ -254,7 +308,7 @@ def _datavariables(data_label, label_dict):
     if found_type is False:
         return []
 
-    # Add the data to the DataVariablesDevice
+    # Add the data to the DeviceDataVariables
     for item in label_dict['data']:
         if isinstance(item, list) is True:
             if len(item) == 2:
@@ -280,59 +334,83 @@ def _datavariables(data_label, label_dict):
     return datavariables
 
 
-def extract(agentdata):
-    """Ingest data.
+def _capd_gwd2dict(gwd):
+    """Create dict representation of DeviceGateway object.
 
     Args:
-        agentdata: AgentPolledData object
+        gwd: DeviceGateway object
 
     Returns:
-        rows: List of named tuples containing data
+        result: Representation of DeviceGateway as a dict
 
     """
-    # Initialize key variables
-    rows = []
-    datatuple = collections.namedtuple(
-        'Values', '''\
-agent_id agent_program agent_hostname timestamp polling_interval device
-data_label data_index value data_type''')
+    # Intitialize key variables
+    result = {}
 
-    # Only process valid data
-    if isinstance(agentdata, AgentPolledData) is True:
-        # Return if invalid data
-        if bool(agentdata.active) is False:
-            return []
+    # Verify data type
+    if isinstance(gwd, DeviceGateway) is True:
+        if bool(gwd.active) is True:
+            # Get information from data
+            gateway = gwd.device
 
-        # Assign agent values
-        agent_id = agentdata.agent_id
-        agent_program = agentdata.agent_program
-        agent_hostname = agentdata.agent_hostname
-        timestamp = agentdata.timestamp
-        polling_interval = agentdata.polling_interval
-        agent_program = agentdata.agent_program
+            # Analyze each DeviceDataVariables  object in data
+            gwd_data_dict = {}
+            for ddv in gwd.data:
+                ddv_data_dict = _capd_ddv2dict(ddv)
+                for remote_device, remote_data in sorted(
+                        ddv_data_dict.items()):
+                    if bool(remote_data) is True and (
+                            isinstance(remote_data, dict) is True):
+                        gwd_data_dict[remote_device] = remote_data
 
-        # Cycle through the data
-        for dvh in agentdata.data:
-            # Ignore bad data
-            if dvh.active is False:
-                continue
-
-            # Get data
-            device = dvh.device
-            for _dv in dvh.data:
-                data_label = _dv.data_label
-                data_index = _dv.data_index
-                value = _dv.value
-                data_type = _dv.data_type
-
-                # Assign values to tuple
-                row = datatuple(
-                    agent_id=agent_id, agent_program=agent_program,
-                    agent_hostname=agent_hostname, timestamp=timestamp,
-                    polling_interval=polling_interval, device=device,
-                    data_label=data_label, data_index=data_index,
-                    value=value, data_type=data_type)
-                rows.append(row)
+            # Update the result
+            if bool(gwd_data_dict) is True:
+                result[gateway] = {
+                    'devices': gwd_data_dict
+                }
 
     # Return
-    return rows
+    return result
+
+
+def _capd_ddv2dict(ddv):
+    """Create dict representation of DeviceDataVariables object.
+
+    Args:
+        ddv: DeviceDataVariables object
+
+    Returns:
+        result: Representation of DeviceDataVariables as a dict
+
+    """
+    # Intitialize key variables
+    result = {}
+
+    # Verify data type
+    if isinstance(ddv, DeviceDataVariables) is True:
+        if bool(ddv.active) is True:
+            # Get information from data
+            device = ddv.device
+
+            # Pre-populate the result with empty dicts
+            result[device] = {}
+
+            # Analyze each DataVariable for the ddv
+            for _dvar in ddv.data:
+                # Add keys if not already there
+                if _dvar.data_label not in result[device]:
+                    result[device][_dvar.data_label] = {}
+
+                # Assign data values to result
+                data_tuple = (_dvar.data_index, _dvar.value)
+                if 'data' in result[device][_dvar.data_label]:
+                    result[device][_dvar.data_label][
+                        'data'].append(data_tuple)
+                else:
+                    result[device][_dvar.data_label][
+                        'data_type'] = _dvar.data_type
+                    result[device][_dvar.data_label][
+                        'data'] = [data_tuple]
+
+    # Return
+    return result
