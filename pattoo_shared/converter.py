@@ -5,7 +5,6 @@
 from collections import defaultdict
 from copy import deepcopy
 import collections
-from pprint import pprint
 
 # Pattoo libraries
 from .variables import (
@@ -111,11 +110,11 @@ def convert(_data=None):
             # Append the DeviceDataVariables to the DeviceGateway object
             ddv = _create_ddv(device, devicedata)
             if ddv.active is True:
-                gwd.append(ddv)
+                gwd.add(ddv)
 
         # Append the DeviceGateway to the AgentPolledData object
         if gwd.active is True:
-            agentdata.append(gwd)
+            agentdata.add(gwd)
 
     # Return
     if agentdata.active is False:
@@ -277,7 +276,7 @@ def _create_ddv(device, devicedata):
 
                 # Add to the DeviceDataVariables
                 datavariables = _create_datavariables(data_label, label_dict)
-                ddv.extend(datavariables)
+                ddv.add(datavariables)
 
     # Return
     return ddv
