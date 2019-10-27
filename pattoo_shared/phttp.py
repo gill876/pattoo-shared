@@ -72,7 +72,7 @@ class Post(object):
 
         # Create data to post
         if data is None:
-            if self._agentdata.active is True:
+            if self._agentdata.valid is True:
                 process = ConvertAgentPolledData(self._agentdata)
                 data2post = process.data()
             else:
