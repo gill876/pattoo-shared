@@ -87,7 +87,7 @@ class TestDeviceDataVariables(unittest.TestCase):
 
         # Test initial vlues
         self.assertEqual(ddv.device, device)
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
     def test_add(self):
@@ -96,7 +96,7 @@ class TestDeviceDataVariables(unittest.TestCase):
         device = 'teddy_bear'
         ddv = DeviceDataVariables(device)
         self.assertEqual(ddv.device, device)
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
@@ -150,7 +150,7 @@ class TestAgentPolledData(unittest.TestCase):
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
         self.assertEqual(apd.agent_hostname, agent_hostname)
-        self.assertFalse(apd.active)
+        self.assertFalse(apd.valid)
 
     def test___repr__(self):
         """Testing function __repr__."""
@@ -167,7 +167,7 @@ class TestAgentPolledData(unittest.TestCase):
         # Test
         expected = ('''\
 <AgentPolledData agent_id='polar_bear' agent_program='brown_bear', \
-agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
+agent_hostname='localhost', timestamp=60 polling_interval=30,.valid=False>''')
         result = apd.__repr__()
         self.assertEqual(result, expected)
 
@@ -187,14 +187,14 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         gateway = 'grizzly_bear'
         dgw = DeviceGateway(gateway)
         self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         self.assertEqual(dgw.data, [])
 
         # Initialize DeviceDataVariables
         device = 'teddy_bear'
         ddv = DeviceDataVariables(device)
         self.assertEqual(ddv.device, device)
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
@@ -207,23 +207,23 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
             data_type=data_type)
 
         # Add data to DeviceDataVariables
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         ddv.add(variable)
-        self.assertTrue(ddv.active)
+        self.assertTrue(ddv.valid)
 
         # Add data to DeviceGateway
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         dgw.add(ddv)
-        self.assertTrue(dgw.active)
+        self.assertTrue(dgw.valid)
 
         # Test add
-        self.assertFalse(apd.active)
+        self.assertFalse(apd.valid)
         apd.add(None)
-        self.assertFalse(apd.active)
+        self.assertFalse(apd.valid)
         apd.add(variable)
-        self.assertFalse(apd.active)
+        self.assertFalse(apd.valid)
         apd.add(dgw)
-        self.assertTrue(apd.active)
+        self.assertTrue(apd.valid)
 
         # Test contents
         data = apd.data
@@ -233,7 +233,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         _dgw = data[0]
         self.assertTrue(isinstance(_dgw, DeviceGateway))
         self.assertEqual(_dgw.device, gateway)
-        self.assertTrue(_dgw.active)
+        self.assertTrue(_dgw.valid)
         self.assertTrue(isinstance(_dgw.data, list))
         self.assertTrue(len(_dgw.data), 1)
 
@@ -241,7 +241,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, active=False>''')
         _ddv = data[0]
         self.assertTrue(isinstance(_ddv, DeviceDataVariables))
         self.assertEqual(_ddv.device, device)
-        self.assertTrue(_ddv.active)
+        self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))
         self.assertTrue(len(_ddv.data), 1)
 
@@ -268,7 +268,7 @@ class TestDeviceGateway(unittest.TestCase):
 
         # Test
         self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         self.assertEqual(dgw.data, [])
 
     def test___repr__(self):
@@ -279,7 +279,7 @@ class TestDeviceGateway(unittest.TestCase):
 
         # Test
         expected = ('''\
-<DeviceGateway device='polar_bear' active=False, data=[]>''')
+<DeviceGateway device='polar_bear'.valid=False, data=[]>''')
         result = dgw.__repr__()
         self.assertEqual(result, expected)
 
@@ -289,14 +289,14 @@ class TestDeviceGateway(unittest.TestCase):
         gateway = 'grizzly_bear'
         dgw = DeviceGateway(gateway)
         self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         self.assertEqual(dgw.data, [])
 
         # Initialize DeviceDataVariables
         device = 'teddy_bear'
         ddv = DeviceDataVariables(device)
         self.assertEqual(ddv.device, device)
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
         # Setup DataVariable
@@ -309,25 +309,25 @@ class TestDeviceGateway(unittest.TestCase):
             data_type=data_type)
 
         # Add data to DeviceDataVariables
-        self.assertFalse(ddv.active)
+        self.assertFalse(ddv.valid)
         ddv.add(variable)
-        self.assertTrue(ddv.active)
+        self.assertTrue(ddv.valid)
 
         # Test add
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         dgw.add(None)
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         dgw.add(variable)
-        self.assertFalse(dgw.active)
+        self.assertFalse(dgw.valid)
         dgw.add(ddv)
-        self.assertTrue(dgw.active)
+        self.assertTrue(dgw.valid)
 
         # Test contents
         data = dgw.data
         _ddv = data[0]
         self.assertTrue(isinstance(_ddv, DeviceDataVariables))
         self.assertEqual(_ddv.device, device)
-        self.assertTrue(_ddv.active)
+        self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))
         self.assertTrue(len(_ddv.data), 1)
 

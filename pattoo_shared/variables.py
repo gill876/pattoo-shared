@@ -82,13 +82,13 @@ class DeviceDataVariables(object):
 
         Variables:
             self.data: List of DataVariables retrieved from the device
-            self.active: True if the object is populated with DataVariables
+            self.valid: True if the object is populated with DataVariables
 
         """
         # Initialize key variables
         self.data = []
         self.device = device
-        self.active = False
+        self.valid = False
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -102,10 +102,10 @@ class DeviceDataVariables(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1} active={2}, data={3}'
+            '<{0} device={1}.valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.active), repr(self.data)
+                repr(self.device), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -129,8 +129,8 @@ class DeviceDataVariables(object):
             if isinstance(item, DataVariable) is True:
                 self.data.append(item)
 
-                # Set object as being active
-                self.active = False not in [bool(self.data), bool(self.device)]
+                # Set object as being.valid
+                self.valid = False not in [bool(self.data), bool(self.device)]
 
 
 class DeviceGateway(object):
@@ -151,13 +151,13 @@ class DeviceGateway(object):
 
         Variables:
             self.data: List of DeviceDataVariables retrieved from the device
-            self.active: True if the object has assigned DeviceDataVariables
+            self.valid: True if the object has assigned DeviceDataVariables
 
         """
         # Initialize key variables
         self.data = []
         self.device = device
-        self.active = False
+        self.valid = False
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -171,10 +171,10 @@ class DeviceGateway(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1} active={2}, data={3}>'
+            '<{0} device={1}.valid={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.active), repr(self.data)
+                repr(self.device), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -198,8 +198,8 @@ class DeviceGateway(object):
             if isinstance(item, DeviceDataVariables) is True:
                 self.data.append(item)
 
-                # Set object as being active
-                self.active = False not in [bool(self.data), bool(self.device)]
+                # Set object as being.valid
+                self.valid = False not in [bool(self.data), bool(self.device)]
 
 
 class AgentPolledData(object):
@@ -226,7 +226,7 @@ class AgentPolledData(object):
 
         Variables:
             self.data: List of DeviceGateway objects created by polling
-            self.active: True if the object contains DeviceGateway objects
+            self.valid: True if the object contains DeviceGateway objects
 
         """
         # Initialize key variables
@@ -236,7 +236,7 @@ class AgentPolledData(object):
         (self.timestamp, self.polling_interval) = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
         self.data = []
-        self.active = False
+        self.valid = False
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -251,11 +251,11 @@ class AgentPolledData(object):
         # Return
         result = ('''\
 <{0} agent_id={1} agent_program={2}, agent_hostname={3}, timestamp={4} \
-polling_interval={5}, active={6}>\
+polling_interval={5},.valid={6}>\
 '''.format(self.__class__.__name__, repr(self.agent_id),
            repr(self.agent_program), repr(self.agent_hostname),
            repr(self.timestamp), repr(self.polling_interval),
-           repr(self.active)))
+           repr(self.valid)))
         return result
 
     def add(self, items):
@@ -278,8 +278,8 @@ polling_interval={5}, active={6}>\
             if isinstance(item, DeviceGateway) is True:
                 self.data.append(item)
 
-                # Set object as being active
-                self.active = False not in [
+                # Set object as being.valid
+                self.valid = False not in [
                     bool(self.agent_id), bool(self.agent_program),
                     bool(self.agent_hostname), bool(self.timestamp),
                     bool(self.polling_interval), bool(self.data)]

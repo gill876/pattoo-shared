@@ -53,7 +53,7 @@ class ConvertAgentPolledData(object):
         if isinstance(self._gateway_data, list) is True:
             for gwd in self._gateway_data:
                 if isinstance(gwd, DeviceGateway) is True:
-                    if bool(gwd.active) is True:
+                    if bool(gwd.valid) is True:
                         # Get information from data
                         gwd_dict = _capd_gwd2dict(gwd)
                         for gateway, values in gwd_dict.items():
@@ -109,15 +109,15 @@ def convert(_data=None):
         for device, devicedata in sorted(gw_dict['devices'].items()):
             # Append the DeviceDataVariables to the DeviceGateway object
             ddv = _create_ddv(device, devicedata)
-            if ddv.active is True:
+            if ddv.valid is True:
                 gwd.add(ddv)
 
         # Append the DeviceGateway to the AgentPolledData object
-        if gwd.active is True:
+        if gwd.valid is True:
             agentdata.add(gwd)
 
     # Return
-    if agentdata.active is False:
+    if agentdata.valid is False:
         return None
     else:
         return agentdata
@@ -143,7 +143,7 @@ device data_label data_index value data_type''')
     # Only process valid data
     if isinstance(agentdata, AgentPolledData) is True:
         # Return if invalid data
-        if bool(agentdata.active) is False:
+        if bool(agentdata.valid) is False:
             return []
 
         # Assign agent values
@@ -157,7 +157,7 @@ device data_label data_index value data_type''')
         # Cycle through the data
         for gwd in agentdata.data:
             # Ignore bad data
-            if gwd.active is False:
+            if gwd.valid is False:
                 continue
 
             # Get gateway from which data came
@@ -165,7 +165,7 @@ device data_label data_index value data_type''')
 
             for ddv in gwd.data:
                 # Ignore bad data
-                if ddv.active is False:
+                if ddv.valid is False:
                     continue
 
                 # Get data
@@ -349,7 +349,7 @@ def _capd_gwd2dict(gwd):
 
     # Verify data type
     if isinstance(gwd, DeviceGateway) is True:
-        if bool(gwd.active) is True:
+        if bool(gwd.valid) is True:
             # Get information from data
             gateway = gwd.device
 
@@ -388,7 +388,7 @@ def _capd_ddv2dict(ddv):
 
     # Verify data type
     if isinstance(ddv, DeviceDataVariables) is True:
-        if bool(ddv.active) is True:
+        if bool(ddv.valid) is True:
             # Get information from data
             device = ddv.device
 
