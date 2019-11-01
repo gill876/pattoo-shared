@@ -47,6 +47,8 @@ class DataVariable(object):
         self.data_index = data_index
         self.value = value
         self.data_type = data_type
+
+        # False validity if value is not of the right type
         self.valid = False not in [
             data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT,
                           DATA_STRING, DATA_NONE],
@@ -54,6 +56,22 @@ class DataVariable(object):
             data_type is not True,
             data_type is not None
         ]
+        if False not in [
+                data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT],
+                self.valid is True, data.is_numeric(value) is False]:
+            self.valid = False
+
+        # Convert floatable strings to float, and integers to ints
+        if False not in [
+                self.valid is True,
+                data.is_numeric(value) is True,
+                isinstance(value, str) is True]:
+            if data_type in [DATA_FLOAT, DATA_COUNT64, DATA_COUNT]:
+                self.value = float(value)
+            elif data_type in [DATA_INT]:
+                self.value = int(float(value))
+
+        # Create checksum
         seed = '{}{}{}'.format(
             self.data_label, self.data_type, self.data_index)
         self.checksum = data.hashstring(seed)
