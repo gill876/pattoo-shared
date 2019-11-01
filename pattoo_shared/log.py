@@ -30,8 +30,7 @@ def check_environment():
             'Environment variable $PATTOO_CONFIGDIR needs '
             'to be set to the pattoo configuration directory.')
         # Must print statement as logging requires a config directory
-        print(log_message)
-        sys.exit(1)
+        log2die_safe(1019, log_message)
 
     # Verify configuration directory
     config_directory = os.environ['PATTOO_CONFIGDIR']
@@ -42,8 +41,7 @@ def check_environment():
             'directory {} that does not exist'
             ''.format(config_directory))
         # Must print statement as logging requires a config directory
-        print(log_message)
-        sys.exit(1)
+        log2die_safe(1020, log_message)
 
     # Return
     path = os.environ['PATTOO_CONFIGDIR']

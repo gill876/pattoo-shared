@@ -1,8 +1,10 @@
 """Module for classes that format variables."""
 
 # pattoo imports
-from .constants import DATA_INT
 from pattoo_shared import times
+from pattoo_shared import data
+from .constants import (
+    DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 
 
 class DataVariable(object):
@@ -34,12 +36,27 @@ class DataVariable(object):
         Returns:
             None
 
+        Variables:
+            self.valid: True if the object has a valid data_type
+            self.checksum: Hash of self.data_label, self.data_index and
+                self.data_type to ensure uniqueness when assigned to a device.
+
         """
         # Initialize variables
         self.data_label = data_label
         self.data_index = data_index
         self.value = value
         self.data_type = data_type
+        self.valid = False not in [
+            data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT,
+                          DATA_STRING, DATA_NONE],
+            data_type is not False,
+            data_type is not True,
+            data_type is not None
+        ]
+        seed = '{}{}{}'.format(
+            self.data_label, self.data_type, self.data_index)
+        self.checksum = data.hashstring(seed)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -53,13 +70,12 @@ class DataVariable(object):
         """
         # Create a printable variation of the value
         printable_value = _strip_non_printable(self.value)
-        result = (
-            '<{0} value={1}, data_label={2}, data_index={3}, data_type={4}>'
-            ''.format(
-                self.__class__.__name__,
-                repr(printable_value), repr(self.data_label),
-                repr(self.data_index), repr(self.data_type)
-            )
+        result = ('''\
+<{0} value={1}, data_label={2}, data_index={3}, data_type={4}, valid={5}>\
+'''.format(self.__class__.__name__,
+           repr(printable_value), repr(self.data_label),
+           repr(self.data_index), repr(self.data_type),
+           repr(self.valid))
         )
         return result
 
@@ -89,6 +105,7 @@ class DeviceDataVariables(object):
         self.data = []
         self.device = device
         self.valid = False
+        self._checksums = []
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -124,10 +141,12 @@ class DeviceDataVariables(object):
         if isinstance(items, list) is False:
             items = [items]
 
-        # Only append approved data types
+        # Only add DataVariable objects that are not duplicated
         for item in items:
             if isinstance(item, DataVariable) is True:
-                self.data.append(item)
+                if item.checksum not in self._checksums:
+                    self.data.append(item)
+                    self._checksums.append(item.checksum)
 
                 # Set object as being.valid
                 self.valid = False not in [bool(self.data), bool(self.device)]

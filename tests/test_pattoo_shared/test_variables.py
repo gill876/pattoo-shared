@@ -53,6 +53,23 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.value, value)
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, True)
+
+        # Setup DataVariable again
+        value = 1093454
+        data_label = 'testing'
+        data_index = 98766
+        data_type = 123
+        variable = DataVariable(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.data_label, data_label)
+        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, False)
 
     def test___repr__(self):
         """Testing function __repr__."""
@@ -67,7 +84,8 @@ class TestDataVariable(unittest.TestCase):
 
         # Test
         expected = ('''\
-<DataVariable value=10, data_label='testing', data_index=10, data_type=0>''')
+<DataVariable value=10, data_label='testing', data_index=10, data_type=0, \
+valid=True>''')
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
@@ -112,10 +130,19 @@ class TestDeviceDataVariables(unittest.TestCase):
         ddv.add(None)
         self.assertEqual(ddv.data, [])
 
+        # Test addding variable
         ddv.add(variable)
         self.assertTrue(bool(ddv.data))
         self.assertTrue(isinstance(ddv.data, list))
         self.assertEqual(len(ddv.data), 1)
+        checksum = ddv.data[0].checksum
+
+        # Test addding duplicate variable
+        ddv.add(variable)
+        self.assertTrue(bool(ddv.data))
+        self.assertTrue(isinstance(ddv.data, list))
+        self.assertEqual(len(ddv.data), 1)
+        self.assertEqual(checksum, ddv.data[0].checksum)
 
         # Test the values in the variable
         _variable = ddv.data[0]
