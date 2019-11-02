@@ -23,7 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import variables
-from pattoo_shared.constants import DATA_INT, DATA_STRING
+from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
 from pattoo_shared.variables import (
     DataVariable, DeviceDataVariables, DeviceGateway,
     AgentPolledData, AgentAPIVariable)
@@ -39,7 +39,7 @@ class TestDataVariable(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DataVariable
+        # Setup DataVariable - Valid
         value = 1093454
         data_label = 'testing'
         data_index = 98766
@@ -55,7 +55,7 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
 
-        # Setup DataVariable again
+        # Setup DataVariable - invalid data_type
         value = 1093454
         data_label = 'testing'
         data_index = 98766
@@ -70,6 +70,89 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, False)
+
+        # Setup DataVariable - invalid value for numeric data_type
+        value = '_123'
+        data_label = 'testing'
+        data_index = 98766
+        data_type = DATA_INT
+        variable = DataVariable(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.data_label, data_label)
+        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, False)
+
+        # Setup DataVariable - valid value for integer data_type but
+        # string for value
+        value = '1093454'
+        data_label = 'testing'
+        data_index = 98766
+        data_type = DATA_INT
+        variable = DataVariable(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, int(value))
+        self.assertEqual(variable.data_label, data_label)
+        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, True)
+
+        # Setup DataVariable - valid value for int data_type but
+        # string for value
+        value = '1093454.3'
+        data_label = 'testing'
+        data_index = 98766
+        data_type = DATA_INT
+        variable = DataVariable(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, int(float(value)))
+        self.assertEqual(variable.data_label, data_label)
+        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, True)
+
+        # Setup DataVariable - valid value for int data_type but
+        # string for value
+        value = '1093454.3'
+        data_label = 'testing'
+        data_index = 98766
+        data_type = DATA_FLOAT
+        variable = DataVariable(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, float(value))
+        self.assertEqual(variable.data_label, data_label)
+        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.valid, True)
+
+        # Setup DataVariable - valid value for str data_type
+        for value in [True, False, None, 0, 1, '1093454.3']:
+            data_label = 'testing'
+            data_index = 98766
+            data_type = DATA_STRING
+            variable = DataVariable(
+                value=value, data_label=data_label, data_index=data_index,
+                data_type=data_type)
+
+            # Test each variable
+            self.assertEqual(variable.data_type, data_type)
+            self.assertEqual(variable.value, str(value))
+            self.assertEqual(variable.data_label, data_label)
+            self.assertEqual(variable.data_index, data_index)
+            self.assertEqual(variable.valid, True)
 
     def test___repr__(self):
         """Testing function __repr__."""
