@@ -71,6 +71,10 @@ class DataVariable(object):
             elif data_type in [DATA_INT]:
                 self.value = int(float(value))
 
+        # Convert strings to string
+        if data_type in [DATA_STRING]:
+            self.value = str(value)
+
         # Create checksum
         seed = '{}{}{}'.format(
             self.data_label, self.data_type, self.data_index)
