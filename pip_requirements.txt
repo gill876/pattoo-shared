@@ -4,4 +4,3 @@ gunicorn
 requests
 PyYAML
 ipaddress
-sphinxcontrib-fulltoc
