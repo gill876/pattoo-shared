@@ -245,8 +245,9 @@ class Daemon(object):
             None
 
         """
-        # Restart
+        # Restart with a wait period to make sure things shutdown smoothly
         self.stop()
+        time.sleep(3)
         self.start()
 
     def status(self):
