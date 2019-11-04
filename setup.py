@@ -9,7 +9,7 @@ with open('README.rst', 'r') as fh:
     LONG_DESCRIPTION = fh.read()
 
 setuptools.setup(
-    # Background information on PIP package
+    # Background information on PIP package.
     name='PattooShared',
     url='https://github.com/PalisadoesFoundation/pattoo-shared',
     download_url='https://github.com/PalisadoesFoundation/pattoo-shared',
@@ -35,5 +35,5 @@ setuptools.setup(
     python_requires='>=3.6',
 
     # Set up the version
-    version='0.0.11',
+    version='0.0.12',
 )
