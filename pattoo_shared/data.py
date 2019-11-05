@@ -10,6 +10,9 @@ Description:
 # Standard libraries
 import hashlib
 
+# pattoo imports
+from .constants import DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT
+
 
 def hashstring(string, sha=256, utf8=False):
     """Create a UTF encoded SHA hash string.
@@ -67,6 +70,8 @@ def is_numeric(val):
         return False
     if val is False:
         return False
+    if val is None:
+        return False
 
     # Try conversions
     try:
@@ -78,3 +83,20 @@ def is_numeric(val):
         return False
     except:
         return False
+
+
+def is_data_type_numeric(data_type):
+    """Check if data_type argument is a number.
+
+    Args:
+        data_type: Value to check
+
+    Returns:
+        result: True if a number
+
+    """
+    # Try edge case
+    result = False not in [
+        data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT],
+        is_numeric(data_type) is True]
+    return result

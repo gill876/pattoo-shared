@@ -7,8 +7,9 @@ import os
 # Import project libraries
 from pattoo_shared import files
 from pattoo_shared import log
-from pattoo_shared.constants import (
+from .constants import (
     PATTOO_API_AGENT_PREFIX, PATTOO_API_AGENT_EXECUTABLE)
+from .variables import PollingTarget
 
 
 class Config(object):
@@ -347,6 +348,46 @@ class Config(object):
 
         # Return
         return result
+
+    def _polling_targets(self, _data):
+        """Create list of PollingTarget objects.
+
+        Args:
+            _data: List of dicts with 'address' and 'multiplier' as keys
+
+        Returns:
+            results: List of PollingTarget objects
+
+        """
+        # Start conversion
+        results = []
+
+        if isinstance(_data, list) is True:
+            # Cycle through list
+            for item in _data:
+                # Default multiplier
+                multiplier = 1
+
+                # Reject non dict data
+                if isinstance(item, dict) is False:
+                    continue
+
+                # Assign address value only if present
+                if 'address' in item:
+                    address = item['address']
+                else:
+                    continue
+
+                # Assign replacement multiplier
+                if 'multiplier' in item:
+                    multiplier = item['multiplier']
+
+                # Populate result
+                result = PollingTarget(address=address, multiplier=multiplier)
+                results.append(result)
+
+        # Return
+        return results
 
 
 def search(key, sub_key, config_dict, die=True):
