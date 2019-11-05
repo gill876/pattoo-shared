@@ -23,6 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import configuration
+from pattoo_shared.variables import PollingTarget
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -168,6 +169,25 @@ class TestConfig(unittest.TestCase):
         result = self.config.agent_cache_directory(agent_id)
         self.assertEqual(result, expected)
 
+    def test__polling_targets(self):
+        """Testing function _polling_targets."""
+        # Initialize key values
+        oids = ['.1.3.6.1.2.1.2.2.1.10', '.1.3.6.1.2.1.2.2.1.16']
+        data = [
+            {'address': '.1.3.6.1.2.1.2.2.1.10',
+             'multiplier': 8},
+            {'address': '.1.3.6.1.2.1.2.2.1.16',
+             'multiplier': 8}]
+
+        # Test with good data
+        result = self.config._polling_targets(data)
+        self.assertTrue(isinstance(result, list))
+        self.assertTrue(bool(result))
+        for index, value in enumerate(result):
+            self.assertTrue(isinstance(value, PollingTarget))
+            self.assertEqual(value.address, oids[index])
+            self.assertEqual(value.multiplier, 8)
+            
 
 class TestBasicFunctions(unittest.TestCase):
     """Checks all functions and methods."""

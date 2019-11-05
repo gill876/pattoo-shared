@@ -4,8 +4,8 @@
 import time
 
 # Pattoo libraries
-from pattoo_shared.configuration import Config
 from pattoo_shared import data
+from pattoo_shared import configuration
 
 
 def validate_timestamp(timestamp, polling_interval):
@@ -28,7 +28,7 @@ def validate_timestamp(timestamp, polling_interval):
     valids.append(data.is_numeric(timestamp))
     valids.append(data.is_numeric(polling_interval))
     valids.append(isinstance(polling_interval, (int, float)))
-        
+
     # Process data
     if False not in valids:
         test = (int(timestamp) // polling_interval) * polling_interval
@@ -52,7 +52,7 @@ def normalized_timestamp(_polling_interval, timestamp=None):
     """
     # Initialize key variables
     if isinstance(_polling_interval, int) is False:
-        polling_interval = abs(Config().polling_interval())
+        polling_interval = abs(configuration.Config().polling_interval())
     else:
         polling_interval = abs(_polling_interval)
 

@@ -26,6 +26,7 @@ from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
 from pattoo_shared.variables import (
     DataVariable, DeviceDataVariables, DeviceGateway,
+    PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
@@ -481,6 +482,95 @@ class TestAgentAPIVariable(unittest.TestCase):
 <AgentAPIVariable ip_bind_port=6000, listen_address='0.0.0.0'>''')
         result = aav.__repr__()
         self.assertEqual(expected, result)
+
+
+class TestPollingTarget(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup PollingTarget
+        address = 20
+        multiplier = 6
+        result = PollingTarget(address=address, multiplier=multiplier)
+        self.assertEqual(result.address, address)
+        self.assertEqual(result.multiplier, multiplier)
+
+        # Test with bad multiplier
+        address = 25
+        multipliers = [None, False, True, 'foo']
+        for multiplier in multipliers:
+            result = PollingTarget(address=address, multiplier=multiplier)
+            self.assertEqual(result.address, address)
+            self.assertEqual(result.multiplier, 1)
+
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup variable
+        address = 20
+        multiplier = 6
+        item = PollingTarget(address=address, multiplier=multiplier)
+
+        # Test
+        expected = ('''\
+<PollingTarget address={}, multiplier={}>'''.format(address, multiplier))
+        result = item.__repr__()
+        self.assertEqual(result, expected)
+
+
+class TestDevicePollingTargets(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup DevicePollingTargets
+        device = 'localhost'
+        dpt = DevicePollingTargets(device)
+        self.assertEqual(dpt.device, device)
+        self.assertFalse(dpt.valid)
+
+    def test_add(self):
+        """Testing function append."""
+        # Initialize DevicePollingTargets
+        device = 'localhost'
+        dpt = DevicePollingTargets(device)
+        self.assertEqual(dpt.device, device)
+        self.assertFalse(dpt.valid)
+
+        # Add bad values
+        values = [True, False, None, 'foo']
+        for value in values:
+            dpt.add(value)
+            self.assertFalse(dpt.valid)
+
+        # Add good values
+        address = 20
+        multiplier = 6
+        value = PollingTarget(address=address, multiplier=multiplier)
+        dpt.add(value)
+        self.assertTrue(dpt.valid)
+        self.assertEqual(len(dpt.data), 1)
+        for item in dpt.data:
+            self.assertEqual(item.address, address)
+            self.assertEqual(item.multiplier, multiplier)
+
+        # Try adding bad values and the results must be the same
+        values = [True, False, None, 'foo']
+        for value in values:
+            dpt.add(value)
+            self.assertTrue(dpt.valid)
+            self.assertEqual(len(dpt.data), 1)
+            item = dpt.data[0]
+            self.assertEqual(item.address, address)
+            self.assertEqual(item.multiplier, multiplier)
 
 
 class TestBasicFunctions(unittest.TestCase):

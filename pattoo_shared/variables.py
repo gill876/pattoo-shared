@@ -364,6 +364,127 @@ class AgentAPIVariable(object):
         return result
 
 
+class PollingTarget(object):
+    """Object used to track data to be polled."""
+
+    def __init__(self, address=None, multiplier=1):
+        """Initialize the class.
+
+        Args:
+            address: Address to poll
+            multiplier: Multiplier to use when polled
+
+        Returns:
+            None
+
+        """
+        # Initialize variables
+        self.address = address
+        if data.is_numeric(multiplier) is True:
+            self.multiplier = multiplier
+        else:
+            self.multiplier = 1
+        self.valid = address is not None
+
+        # Create checksum
+        seed = '{}{}'.format(address, multiplier)
+        self.checksum = data.hashstring(seed)
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        result = ('''\
+<{0} address={1}, multiplier={2}>\
+'''.format(self.__class__.__name__,
+           repr(self.address),
+           repr(self.multiplier)
+           ))
+        return result
+
+
+class DevicePollingTargets(object):
+    """Object defining a list of PollingTarget objects.
+
+    Stores PollingTargets polled from a specific ip_device.
+
+    """
+
+    def __init__(self, device):
+        """Initialize the class.
+
+        Args:
+            device: Device polled to get the PollingTarget objects
+
+        Returns:
+            None
+
+        Variables:
+            self.data: List of PollingTargets retrieved from the device
+            self.valid: True if the object is populated with PollingTargets
+
+        """
+        # Initialize key variables
+        self.data = []
+        self.device = device
+        self.valid = False
+        self._checksums = []
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = (
+            '<{0} device={1}.valid={2}, data={3}'
+            ''.format(
+                self.__class__.__name__,
+                repr(self.device), repr(self.valid), repr(self.data)
+            )
+        )
+        return result
+
+    def add(self, items):
+        """Append PollingTarget to the internal self.data list.
+
+        Args:
+            items: A PollingTarget object list
+
+        Returns:
+            None
+
+        """
+        # Ensure there is a list of objects
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only add PollingTarget objects that are not duplicated
+        for item in items:
+            if isinstance(item, PollingTarget) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Add data to the list
+                if item.checksum not in self._checksums:
+                    self.data.append(item)
+
+                # Set object as being.valid
+                self.valid = False not in [bool(self.data), bool(self.device)]
+
+
 def _strip_non_printable(value):
     """Strip non printable characters.
 
