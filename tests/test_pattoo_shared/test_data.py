@@ -23,6 +23,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import data
+from pattoo_shared.constants import (
+    DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT64)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -73,22 +75,33 @@ def51cb07699f90b1613d0f4da13574e415323b2fcb98c1f072218a8ba82a44432da79bdf90ebf\
 
     def test_is_numeric(self):
         """Testing function is_numeric."""
-        # Test
-        result = data.is_numeric(None)
-        self.assertFalse(result)
-        result = data.is_numeric(True)
-        self.assertFalse(result)
-        result = data.is_numeric(False)
-        self.assertFalse(result)
-        result = data.is_numeric('False')
-        self.assertFalse(result)
-        result = data.is_numeric('1')
-        self.assertTrue(result)
-        result = data.is_numeric('1.1')
-        self.assertTrue(result)
-        result = data.is_numeric(1.1)
-        self.assertTrue(result)
+        # Test False
+        items = [None, True, False, 'False']
+        for item in items:
+            result = data.is_numeric(item)
+            self.assertFalse(result)
 
+        # Test True
+        items = [1, 1.1, '1.1']
+        for item in items:
+            result = data.is_numeric(item)
+            self.assertTrue(result)
+
+    def test_is_data_type_numeric(self):
+        """Testing function is_data_type_numeric."""
+        # Test False
+        items = [None, True, False, 'False', 20, 30, 40]
+        for item in items:
+            result = data.is_data_type_numeric(item)
+            self.assertFalse(result)
+
+        # Test True
+        items = [
+            1, 0, 32, 64, DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT64]
+        for item in items:
+            result = data.is_data_type_numeric(item)
+            self.assertTrue(result)
+            
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests
