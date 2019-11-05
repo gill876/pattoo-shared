@@ -92,7 +92,7 @@ def is_data_type_numeric(data_type):
         data_type: Value to check
 
     Returns:
-        result: True if a number
+        result: True if a number.
 
     """
     # Try edge case
