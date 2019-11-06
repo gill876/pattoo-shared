@@ -212,7 +212,7 @@ class DeviceGateway(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}.valid={2}, data={3}>'
+            '<{0} device={1}, valid={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
                 repr(self.device), repr(self.valid), repr(self.data)
@@ -292,7 +292,7 @@ class AgentPolledData(object):
         # Return
         result = ('''\
 <{0} agent_id={1} agent_program={2}, agent_hostname={3}, timestamp={4} \
-polling_interval={5},.valid={6}>\
+polling_interval={5}, valid={6}>\
 '''.format(self.__class__.__name__, repr(self.agent_id),
            repr(self.agent_program), repr(self.agent_hostname),
            repr(self.timestamp), repr(self.polling_interval),
