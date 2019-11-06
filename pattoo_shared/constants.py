@@ -44,4 +44,4 @@ PATTOO_AGENT_SNMPD = 'pattoo-agent-snmpd'
 PATTOO_AGENT_MODBUSTCPD = 'pattoo-agent-modbustcpd'
 
 # pattoo-modbus-tcp constants
-PATTOO_AGENT_BACNETIP = 'pattoo-agent-bacnetipd'
+PATTOO_AGENT_BACNETIPD = 'pattoo-agent-bacnetipd'
