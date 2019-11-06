@@ -7,9 +7,9 @@ import os
 # Import project libraries
 from pattoo_shared import files
 from pattoo_shared import log
-from .constants import (
+from pattoo_shared.constants import (
     PATTOO_API_AGENT_PREFIX, PATTOO_API_AGENT_EXECUTABLE)
-from .variables import PollingTarget
+from pattoo_shared.variables import PollingTarget
 
 
 class Config(object):

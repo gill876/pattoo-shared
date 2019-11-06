@@ -5,7 +5,7 @@ import time
 
 # Pattoo libraries
 from pattoo_shared import data
-from pattoo_shared import configuration
+from pattoo_shared import log
 
 
 def validate_timestamp(timestamp, polling_interval):
@@ -51,8 +51,11 @@ def normalized_timestamp(_polling_interval, timestamp=None):
 
     """
     # Initialize key variables
-    if isinstance(_polling_interval, int) is False:
-        polling_interval = abs(configuration.Config().polling_interval())
+    if isinstance(_polling_interval, int) is False or (
+            _polling_interval is True or _polling_interval is False):
+        log_message = (
+            'Invalid non-integer value for {}'.format(_polling_interval))
+        log.log2die(1029, log_message)
     else:
         polling_interval = abs(_polling_interval)
 

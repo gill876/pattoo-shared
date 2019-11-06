@@ -40,6 +40,7 @@ from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
 from pattoo_shared.constants import PATTOO_API_AGENT_GUNICORN_AGENT
 from pattoo_shared.constants import PATTOO_AGENT_MODBUSTCPD
+from pattoo_shared.constants import PATTOO_AGENT_BACNETIPD
 
 
 class TestConstants(unittest.TestCase):
@@ -86,6 +87,8 @@ class TestConstants(unittest.TestCase):
             PATTOO_AGENT_SNMPD, 'pattoo-agent-snmpd')
         self.assertEqual(
             PATTOO_AGENT_MODBUSTCPD, 'pattoo-agent-modbustcpd')
+        self.assertEqual(
+            PATTOO_AGENT_BACNETIPD, 'pattoo-agent-bacnetipd')
 
 
 if __name__ == '__main__':

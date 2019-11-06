@@ -278,7 +278,7 @@ class TestAgentPolledData(unittest.TestCase):
         # Test
         expected = ('''\
 <AgentPolledData agent_id='polar_bear' agent_program='brown_bear', \
-agent_hostname='localhost', timestamp=60 polling_interval=30,.valid=False>''')
+agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
         result = apd.__repr__()
         self.assertEqual(result, expected)
 
@@ -390,7 +390,7 @@ class TestDeviceGateway(unittest.TestCase):
 
         # Test
         expected = ('''\
-<DeviceGateway device='polar_bear'.valid=False, data=[]>''')
+<DeviceGateway device='polar_bear', valid=False, data=[]>''')
         result = dgw.__repr__()
         self.assertEqual(result, expected)
 
