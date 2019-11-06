@@ -13,20 +13,25 @@ import collections
 from pattoo_shared import log
 
 
-def check(root):
-    """Get all the error codes used in pattoo-shared.
+def check_source_code(root, minimum=0, maximum=0):
+    """Get all the error codes used in pattoo related projects.
 
     Args:
-        root: Root directory
+        root: Root directory from which to search for error codes
+        minimum: Minimum error code value to be found
+        maximum: Maximum error code value to be found
 
     Returns:
         None
 
     """
-    # Define min and max code values. This range is set to prevent different
-    # pattoo projects from having overlapping numbers
-    code_min_limit = 1000
-    code_max_limit = 19999
+    # Make sure minimum < maximum
+    if minimum > maximum:
+        log_message = ('''\
+Minimum value {} is greater than {}. Please fix.\
+'''.format(minimum, maximum))
+        print(log_message)
+        sys.exit(2)
 
     # Define where pattoo lives
     ignore_paths = [
@@ -67,13 +72,23 @@ def check(root):
     else:
         duplicates = _duplicates
 
-    # Get available codes
+    # Determine whether codes are in range (MAX)
     code_max = max(error_codes)
-    if int(code_max) >= code_max_limit:
+    if int(code_max) > maximum:
         log_message = ('''\
 Extremely large error code {} found. Must be less than {}. Please fix.\
-'''.format(code_max, code_max_limit))
-        log.log2die(1571, log_message)
+'''.format(code_max, maximum))
+        print(log_message)
+        sys.exit(2)
+
+    # Determine whether codes are in range (MIN)
+    code_min = min(error_codes)
+    if int(code_min) < minimum:
+        log_message = ('''\
+Extremely small error code {} found. Must be greater than {}. Please fix.\
+'''.format(code_min, minimum))
+        print(log_message)
+        sys.exit(2)
 
     # Process error codes
     for next_code in range(min(error_codes), code_max):
@@ -108,12 +123,12 @@ ERROR: Duplicate error codes found. Please resolve.
         sys.exit(1)
 
     # Exit with error if code values are out of range
-    if (min(error_codes) < code_min_limit) or (max(error_codes) > code_max_limit):
+    if (min(error_codes) < minimum) or (max(error_codes) > maximum):
         print('''
 
 ERROR: Error codes values out of range {} to {}. Please resolve.
 
-'''.format(code_min_limit, code_max_limit))
+'''.format(minimum, maximum))
         sys.exit(1)
 
 
