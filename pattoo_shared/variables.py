@@ -237,10 +237,16 @@ class DeviceGateway(object):
         # Only append approved data types
         for item in items:
             if isinstance(item, DeviceDataVariables) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Process
                 self.data.append(item)
 
-                # Set object as being.valid
-                self.valid = False not in [bool(self.data), bool(self.device)]
+                # Set object as being valid
+                self.valid = False not in [
+                    bool(self.data), bool(self.device)]
 
 
 class AgentPolledData(object):
@@ -317,6 +323,11 @@ polling_interval={5}, valid={6}>\
         for item in items:
             # Only append approved data types
             if isinstance(item, DeviceGateway) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Process
                 self.data.append(item)
 
                 # Set object as being.valid
