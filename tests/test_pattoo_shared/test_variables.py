@@ -252,8 +252,8 @@ class TestAgentPolledData(unittest.TestCase):
         timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname,
-            timestamp=timestamp, polling_interval=polling_interval)
+            agent_id, agent_program, agent_hostname, polling_interval,
+            timestamp=timestamp)
 
         # Test
         self.assertEqual(apd.timestamp, 60)
@@ -272,8 +272,8 @@ class TestAgentPolledData(unittest.TestCase):
         timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname,
-            timestamp=timestamp, polling_interval=polling_interval)
+            agent_id, agent_program, agent_hostname, polling_interval,
+            timestamp=timestamp)
 
         # Test
         expected = ('''\
@@ -291,8 +291,8 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
         timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname,
-            timestamp=timestamp, polling_interval=polling_interval)
+            agent_id, agent_program, agent_hostname, polling_interval,
+            timestamp=timestamp)
 
         # Initialize DeviceGateway
         gateway = 'grizzly_bear'
