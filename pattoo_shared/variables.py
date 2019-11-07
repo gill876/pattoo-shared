@@ -258,15 +258,15 @@ class AgentPolledData(object):
     """
 
     def __init__(self, agent_id, agent_program, agent_hostname,
-                 timestamp=None, polling_interval=None):
+                 polling_interval, timestamp=None):
         """Initialize the class.
 
         Args:
             agent_id: Agent ID
             agent_program: Name of agent program collecting the data
             agent_hostname: Hostname on which the agent ran
-            timestamp: Timestamp of data
             polling_interval: Polling interval used to collect the data
+            timestamp: Timestamp of data
 
         Returns:
             None

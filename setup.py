@@ -35,5 +35,5 @@ setuptools.setup(
     python_requires='>=3.6',
 
     # Set up the version
-    version='0.0.15',
+    version='0.0.16',
 )
