@@ -23,6 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import converter
+from pattoo_shared import data as lib_data
 from pattoo_shared.variables import (
     DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
 from pattoo_shared.configuration import Config
@@ -433,8 +434,7 @@ class TestBasicFunctions(unittest.TestCase):
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            print(row)
-            self.assertEqual(len(row), 11)
+            self.assertEqual(len(row), 12)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
@@ -444,6 +444,14 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertTrue(isinstance(row.value, int))
             self.assertTrue(isinstance(row.data_type, int))
             self.assertTrue(isinstance(row.data_index, str))
+            self.assertTrue(isinstance(row.checksum, str))
+
+            checksum = lib_data.hashstring('''\
+{}{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
+                             row.agent_hostname, row.polling_interval,
+                             row.gateway, row.device,
+                             row.data_label, row.data_index, row.data_type))
+            self.assertEqual(row.checksum, checksum)
 
 
 if __name__ == '__main__':
