@@ -141,7 +141,7 @@ class DeviceDataVariables(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}.valid={2}, data={3}'
+            '<{0} device={1}, valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
                 repr(self.device), repr(self.valid), repr(self.data)
@@ -459,7 +459,7 @@ class DevicePollingTargets(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}.valid={2}, data={3}'
+            '<{0} device={1}, valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
                 repr(self.device), repr(self.valid), repr(self.data)

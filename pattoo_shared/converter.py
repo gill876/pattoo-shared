@@ -5,6 +5,7 @@
 from collections import defaultdict
 from copy import deepcopy
 import collections
+from operator import attrgetter
 
 # Pattoo libraries
 from .variables import (
@@ -131,7 +132,7 @@ def extract(agentdata):
         agentdata: AgentPolledData object
 
     Returns:
-        rows: List of named tuples containing data
+        _rows: List of named tuples containing data
 
     """
     # Initialize key variables
@@ -191,8 +192,14 @@ device data_label data_index value data_type checksum''')
                         checksum=checksum, value=value, timestamp=timestamp)
                     rows.append(row)
 
-    # Return
-    return rows
+    '''
+    Return a sorted list. We use a reverse order so that the metadata is
+    updated with the most recent last_timestamp on the first iteration. This
+    reduces the risk of insertion errors from other parallel processes doing
+    simultaneous updates.
+    '''
+    _rows = sorted(rows, key=attrgetter('timestamp'))
+    return _rows
 
 
 def _valid_agent(_data):

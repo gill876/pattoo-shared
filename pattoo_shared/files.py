@@ -135,8 +135,11 @@ def read_json_files(_directory, die=True):
         tuples:
 
     Returns:
-        result: List of tuples containing JSON read from each file and filepath
-            [(filepath, JSON), (filepath, JSON) ...]
+        result: sorted list of tuples containing JSON read from each file and
+            filepath. Sorting is important as it causes the files with the
+            older timestamp names to be processed first. This allows the
+            last_timestamp column to be incrementally processed versus some
+            unexpected order. [(filepath, JSON), (filepath, JSON) ...]
 
     """
     # Initialize key variables
@@ -168,6 +171,7 @@ def read_json_files(_directory, die=True):
         log.log2die_safe(1102, log_message)
 
     # Return
+    result.sort()
     return result
 
 
