@@ -12,6 +12,7 @@ from .variables import (
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 from pattoo_shared import times
+from pattoo_shared import data as lib_data
 
 
 class ConvertAgentPolledData(object):
@@ -138,7 +139,7 @@ def extract(agentdata):
     datatuple = collections.namedtuple(
         'Values', '''\
 agent_id agent_program agent_hostname timestamp polling_interval gateway \
-device data_label data_index value data_type''')
+device data_label data_index value data_type checksum''')
 
     # Only process valid data
     if isinstance(agentdata, AgentPolledData) is True:
@@ -177,13 +178,17 @@ device data_label data_index value data_type''')
                     data_type = _dv.data_type
 
                     # Assign values to tuple
+                    checksum = lib_data.hashstring('''\
+{}{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
+                             polling_interval, gateway, device,
+                             data_label, data_index, data_type))
                     row = datatuple(
                         agent_id=agent_id, agent_program=agent_program,
-                        agent_hostname=agent_hostname, timestamp=timestamp,
+                        agent_hostname=agent_hostname,
                         polling_interval=polling_interval, gateway=gateway,
                         device=device, data_label=data_label,
-                        data_index=data_index,
-                        value=value, data_type=data_type)
+                        data_index=data_index, data_type=data_type,
+                        checksum=checksum, value=value, timestamp=timestamp)
                     rows.append(row)
 
     # Return

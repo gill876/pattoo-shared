@@ -12,7 +12,7 @@ import requests
 
 # Pattoo libraries
 from pattoo_shared import log
-from pattoo_shared import configuration
+from pattoo_shared.configuration import Config
 from pattoo_shared import converter
 from pattoo_shared import data as lib_data
 from .converter import ConvertAgentPolledData
@@ -33,7 +33,7 @@ class Post(object):
 
         """
         # Initialize key variables
-        config = configuration.Config()
+        config = Config()
 
         # Test validity
         if isinstance(agentdata, AgentPolledData) is False:
