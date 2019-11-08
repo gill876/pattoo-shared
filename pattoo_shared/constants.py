@@ -4,6 +4,7 @@ The aim is to have a single location for constants that may be used across
 agents to prevent the risk of duplication.
 
 """
+import collections
 
 ###############################################################################
 # Universal constants for all agents
@@ -15,6 +16,15 @@ DATA_COUNT64 = 64
 DATA_COUNT = 32
 DATA_STRING = 2
 DATA_NONE = None
+
+###############################################################################
+# Constants for data DB ingestion
+###############################################################################
+
+PattooDBrecord = collections.namedtuple(
+        'PattooDBrecord', '''\
+agent_id agent_program agent_hostname timestamp polling_interval gateway \
+device data_label data_index value data_type checksum''')
 
 ###############################################################################
 # Constants for pattoo API

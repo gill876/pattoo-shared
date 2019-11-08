@@ -4,13 +4,13 @@
 # Standard libraries
 from collections import defaultdict
 from copy import deepcopy
-import collections
 from operator import attrgetter
 
 # Pattoo libraries
 from .variables import (
     DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
 from .constants import (
+    PattooDBrecord,
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 from pattoo_shared import times
 from pattoo_shared import data as lib_data
@@ -137,10 +137,6 @@ def extract(agentdata):
     """
     # Initialize key variables
     rows = []
-    datatuple = collections.namedtuple(
-        'Values', '''\
-agent_id agent_program agent_hostname timestamp polling_interval gateway \
-device data_label data_index value data_type checksum''')
 
     # Only process valid data
     if isinstance(agentdata, AgentPolledData) is True:
@@ -183,7 +179,7 @@ device data_label data_index value data_type checksum''')
 {}{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
                              polling_interval, gateway, device,
                              data_label, data_index, data_type))
-                    row = datatuple(
+                    row = PattooDBrecord(
                         agent_id=agent_id, agent_program=agent_program,
                         agent_hostname=agent_hostname,
                         polling_interval=polling_interval, gateway=gateway,
