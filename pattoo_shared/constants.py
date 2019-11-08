@@ -26,6 +26,9 @@ PattooDBrecord = collections.namedtuple(
 agent_id agent_program agent_hostname timestamp polling_interval gateway \
 device data_label data_index value data_type checksum''')
 
+LastTimestamp = collections.namedtuple(
+    'LastTimestamp', 'idx_datavariable last_timestamp')
+
 ###############################################################################
 # Constants for pattoo API
 ###############################################################################
