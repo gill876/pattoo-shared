@@ -21,7 +21,6 @@ from random import random
 
 # PIP3 libraries
 from gunicorn.app.base import BaseApplication
-from gunicorn.six import iteritems
 
 # Pattoo libraries
 from pattoo_shared import daemon
@@ -351,11 +350,11 @@ class _StandaloneApplication(BaseApplication):
     def load_config(self):
         """Load the configuration."""
         # Initialize key variables
-        config = dict([(key, value) for key, value in iteritems(self.options)
+        config = dict([(key, value) for key, value in self.options.items()
                        if key in self.cfg.settings and value is not None])
 
         # Assign configuration parameters
-        for key, value in iteritems(config):
+        for key, value in config.items():
             self.cfg.set(key.lower(), value)
 
     def load(self):
