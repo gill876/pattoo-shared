@@ -2,7 +2,7 @@
 """Pattoo files library."""
 
 import os
-import sys
+import time
 import json
 import yaml
 
@@ -126,13 +126,13 @@ def read_yaml_file(filepath, as_string=False, die=True):
     return result
 
 
-def read_json_files(_directory, die=True):
+def read_json_files(_directory, die=True, age=0):
     """Read the contents of all JSON files in a directory.
 
     Args:
         _directory: Directory with JSON files
         die: Die if there is an error
-        tuples:
+        age: Minimum age of files in seconds
 
     Returns:
         result: sorted list of tuples containing JSON read from each file and
@@ -157,9 +157,11 @@ def read_json_files(_directory, die=True):
             # JSON files found
             json_found = True
 
-            # Read file and add to string
+            # Read file and add to tuple list
             filepath = '{}{}{}'.format(_directory, os.sep, filename)
-            result.append((filepath, read_json_file(filepath, die=die)))
+            fileage = time.time() - os.stat(filepath).st_mtime
+            if fileage > age:
+                result.append((filepath, read_json_file(filepath, die=die)))
 
     # Verify JSON files found in directory. We cannot use logging as it
     # requires a logfile location from the configuration directory to work

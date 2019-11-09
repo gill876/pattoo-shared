@@ -42,7 +42,8 @@ Minimum value {} is greater than {}. Please fix.\
         'log2die_safe(', 'log2warning(',
         'log2debug(', 'log2live(', 'log2warn(', 'log2die(', 'log2quiet(',
         'log2info(', 'log2screen(', 'log2see(', r'.db_modify(', r'.db_query(',
-        r'.db_commit(', r'.db_replace(', r'.db_add(', '.db_add_all(')
+        r'.db_commit(', r'.db_replace(', r'.db_add(', '.db_add_all(',
+        r'.db_modify(', r'.db_query(', r'.add_all(', '.add(')
     error_codes = []
     available_codes = []
     entries = 5
