@@ -1,6 +1,7 @@
 # These additional PIP3 packages are required
 Flask
 gunicorn
+six
 requests
 PyYAML
 ipaddress
