@@ -126,13 +126,14 @@ def read_yaml_file(filepath, as_string=False, die=True):
     return result
 
 
-def read_json_files(_directory, die=True, age=0):
+def read_json_files(_directory, die=True, age=0, count=None):
     """Read the contents of all JSON files in a directory.
 
     Args:
         _directory: Directory with JSON files
         die: Die if there is an error
         age: Minimum age of files in seconds
+        count: Return first X number of sorted filenames is not None
 
     Returns:
         result: sorted list of tuples containing JSON read from each file and
@@ -145,13 +146,14 @@ def read_json_files(_directory, die=True, age=0):
     # Initialize key variables
     json_found = False
     result = []
+    processed = 0
 
     if os.path.isdir(_directory) is False:
         log_message = 'Directory "{}" doesn\'t exist!'.format(_directory)
         log.log2die(1009, log_message)
 
     # Cycle through list of files in directory
-    for filename in os.listdir(_directory):
+    for filename in sorted(os.listdir(_directory)):
         # Examine all the '.json' files in directory
         if filename.endswith('.json'):
             # JSON files found
@@ -162,6 +164,12 @@ def read_json_files(_directory, die=True, age=0):
             fileage = time.time() - os.stat(filepath).st_mtime
             if fileage > age:
                 result.append((filepath, read_json_file(filepath, die=die)))
+
+            # Stop if necessary
+            processed += 1
+            if bool(count) is True:
+                if processed == count:
+                    break
 
     # Verify JSON files found in directory. We cannot use logging as it
     # requires a logfile location from the configuration directory to work
