@@ -7,7 +7,7 @@ from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 
 
-class DataVariable(object):
+class DataPoint(object):
     """Variable representation for data retreived from a device.
 
     Stores individual datapoints polled by pattoo agents
@@ -102,10 +102,10 @@ class DataVariable(object):
         return result
 
 
-class DeviceDataVariables(object):
-    """Object defining a list of DataVariable objects.
+class DeviceDataPoints(object):
+    """Object defining a list of DataPoint objects.
 
-    Stores DataVariables polled from a specific ip_device.
+    Stores DataPoints polled from a specific ip_device.
 
     """
 
@@ -113,14 +113,14 @@ class DeviceDataVariables(object):
         """Initialize the class.
 
         Args:
-            device: Device polled to get the DataVariable objects
+            device: Device polled to get the DataPoint objects
 
         Returns:
             None
 
         Variables:
-            self.data: List of DataVariables retrieved from the device
-            self.valid: True if the object is populated with DataVariables
+            self.data: List of DataPoints retrieved from the device
+            self.valid: True if the object is populated with DataPoints
 
         """
         # Initialize key variables
@@ -150,10 +150,10 @@ class DeviceDataVariables(object):
         return result
 
     def add(self, items):
-        """Append DataVariable to the internal self.data list.
+        """Append DataPoint to the internal self.data list.
 
         Args:
-            items: A DataVariable object list
+            items: A DataPoint object list
 
         Returns:
             None
@@ -163,9 +163,9 @@ class DeviceDataVariables(object):
         if isinstance(items, list) is False:
             items = [items]
 
-        # Only add DataVariable objects that are not duplicated
+        # Only add DataPoint objects that are not duplicated
         for item in items:
-            if isinstance(item, DataVariable) is True:
+            if isinstance(item, DataPoint) is True:
                 if item.checksum not in self._checksums:
                     self.data.append(item)
                     self._checksums.append(item.checksum)
@@ -175,9 +175,9 @@ class DeviceDataVariables(object):
 
 
 class DeviceGateway(object):
-    """Object defining a list of DeviceDataVariables objects.
+    """Object defining a list of DeviceDataPoints objects.
 
-    Stores DeviceDataVariables polled from a specific ip_device.
+    Stores DeviceDataPoints polled from a specific ip_device.
 
     """
 
@@ -185,14 +185,14 @@ class DeviceGateway(object):
         """Initialize the class.
 
         Args:
-            device: Device polled to get the DeviceDataVariables objects
+            device: Device polled to get the DeviceDataPoints objects
 
         Returns:
             None
 
         Variables:
-            self.data: List of DeviceDataVariables retrieved from the device
-            self.valid: True if the object has assigned DeviceDataVariables
+            self.data: List of DeviceDataPoints retrieved from the device
+            self.valid: True if the object has assigned DeviceDataPoints
 
         """
         # Initialize key variables
@@ -221,10 +221,10 @@ class DeviceGateway(object):
         return result
 
     def add(self, items):
-        """Add DeviceDataVariables to the internal self.data list.
+        """Add DeviceDataPoints to the internal self.data list.
 
         Args:
-            items: A DeviceDataVariables object list
+            items: A DeviceDataPoints object list
 
         Returns:
             None
@@ -236,7 +236,7 @@ class DeviceGateway(object):
 
         # Only append approved data types
         for item in items:
-            if isinstance(item, DeviceDataVariables) is True:
+            if isinstance(item, DeviceDataPoints) is True:
                 # Ignore invalid values
                 if item.valid is False:
                     continue

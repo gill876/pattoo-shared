@@ -25,13 +25,13 @@ directory. Please fix.''')
 from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
 from pattoo_shared.variables import (
-    DataVariable, DeviceDataVariables, DeviceGateway,
+    DataPoint, DeviceDataPoints, DeviceGateway,
     PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
 
-class TestDataVariable(unittest.TestCase):
+class TestDataPoint(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -40,12 +40,12 @@ class TestDataVariable(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DataVariable - Valid
+        # Setup DataPoint - Valid
         value = 1093454
         data_label = 'testing'
         data_index = 98766
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -56,12 +56,12 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
 
-        # Setup DataVariable - invalid data_type
+        # Setup DataPoint - invalid data_type
         value = 1093454
         data_label = 'testing'
         data_index = 98766
         data_type = 123
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -72,12 +72,12 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, False)
 
-        # Setup DataVariable - invalid value for numeric data_type
+        # Setup DataPoint - invalid value for numeric data_type
         value = '_123'
         data_label = 'testing'
         data_index = 98766
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -88,13 +88,13 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, False)
 
-        # Setup DataVariable - valid value for integer data_type but
+        # Setup DataPoint - valid value for integer data_type but
         # string for value
         value = '1093454'
         data_label = 'testing'
         data_index = 98766
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -105,13 +105,13 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
 
-        # Setup DataVariable - valid value for int data_type but
+        # Setup DataPoint - valid value for int data_type but
         # string for value
         value = '1093454.3'
         data_label = 'testing'
         data_index = 98766
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -122,13 +122,13 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
 
-        # Setup DataVariable - valid value for int data_type but
+        # Setup DataPoint - valid value for int data_type but
         # string for value
         value = '1093454.3'
         data_label = 'testing'
         data_index = 98766
         data_type = DATA_FLOAT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -139,12 +139,12 @@ class TestDataVariable(unittest.TestCase):
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
 
-        # Setup DataVariable - valid value for str data_type
+        # Setup DataPoint - valid value for str data_type
         for value in [True, False, None, 0, 1, '1093454.3']:
             data_label = 'testing'
             data_index = 98766
             data_type = DATA_STRING
-            variable = DataVariable(
+            variable = DataPoint(
                 value=value, data_label=data_label, data_index=data_index,
                 data_type=data_type)
 
@@ -157,24 +157,24 @@ class TestDataVariable(unittest.TestCase):
 
     def test___repr__(self):
         """Testing function __repr__."""
-        # Setup DataVariable
+        # Setup DataPoint
         value = 10
         data_label = 'testing'
         data_index = 10
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test
         expected = ('''\
-<DataVariable value=10, data_label='testing', data_index=10, data_type=0, \
+<DataPoint value=10, data_label='testing', data_index=10, data_type=0, \
 valid=True>''')
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
 
-class TestDeviceDataVariables(unittest.TestCase):
+class TestDeviceDataPoints(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -183,9 +183,9 @@ class TestDeviceDataVariables(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DeviceDataVariables
+        # Setup DeviceDataPoints
         device = 'localhost'
-        ddv = DeviceDataVariables(device)
+        ddv = DeviceDataPoints(device)
 
         # Test initial vlues
         self.assertEqual(ddv.device, device)
@@ -194,19 +194,19 @@ class TestDeviceDataVariables(unittest.TestCase):
 
     def test_add(self):
         """Testing function append."""
-        # Initialize DeviceDataVariables
+        # Initialize DeviceDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataVariables(device)
+        ddv = DeviceDataPoints(device)
         self.assertEqual(ddv.device, device)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
-        # Setup DataVariable
+        # Setup DataPoint
         value = 457
         data_label = 'gummy_bear'
         data_index = 999
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
@@ -301,23 +301,23 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
         self.assertFalse(dgw.valid)
         self.assertEqual(dgw.data, [])
 
-        # Initialize DeviceDataVariables
+        # Initialize DeviceDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataVariables(device)
+        ddv = DeviceDataPoints(device)
         self.assertEqual(ddv.device, device)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
-        # Setup DataVariable
+        # Setup DataPoint
         value = 457
         data_label = 'gummy_bear'
         data_index = 999
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
-        # Add data to DeviceDataVariables
+        # Add data to DeviceDataPoints
         self.assertFalse(ddv.valid)
         ddv.add(variable)
         self.assertTrue(ddv.valid)
@@ -350,7 +350,7 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
 
         data = _dgw.data
         _ddv = data[0]
-        self.assertTrue(isinstance(_ddv, DeviceDataVariables))
+        self.assertTrue(isinstance(_ddv, DeviceDataPoints))
         self.assertEqual(_ddv.device, device)
         self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))
@@ -403,23 +403,23 @@ class TestDeviceGateway(unittest.TestCase):
         self.assertFalse(dgw.valid)
         self.assertEqual(dgw.data, [])
 
-        # Initialize DeviceDataVariables
+        # Initialize DeviceDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataVariables(device)
+        ddv = DeviceDataPoints(device)
         self.assertEqual(ddv.device, device)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
-        # Setup DataVariable
+        # Setup DataPoint
         value = 457
         data_label = 'gummy_bear'
         data_index = 999
         data_type = DATA_INT
-        variable = DataVariable(
+        variable = DataPoint(
             value=value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
-        # Add data to DeviceDataVariables
+        # Add data to DeviceDataPoints
         self.assertFalse(ddv.valid)
         ddv.add(variable)
         self.assertTrue(ddv.valid)
@@ -436,7 +436,7 @@ class TestDeviceGateway(unittest.TestCase):
         # Test contents
         data = dgw.data
         _ddv = data[0]
-        self.assertTrue(isinstance(_ddv, DeviceDataVariables))
+        self.assertTrue(isinstance(_ddv, DeviceDataPoints))
         self.assertEqual(_ddv.device, device)
         self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))
