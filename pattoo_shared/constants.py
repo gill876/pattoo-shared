@@ -27,14 +27,23 @@ agent_id agent_program agent_hostname timestamp polling_interval gateway \
 device data_label data_index value data_type checksum''')
 
 ###############################################################################
-# Constants for pattoo API
+# Constants for pattoo Agent API
 ###############################################################################
 
 PATTOO_API_SITE_PREFIX = '/pattoo'
 PATTOO_API_AGENT_PREFIX = '{}/agent'.format(PATTOO_API_SITE_PREFIX)
 PATTOO_API_AGENT_EXECUTABLE = 'pattoo-api-agentd'
-PATTOO_API_AGENT_GUNICORN_AGENT = '{}-gunicorn'.format(
+PATTOO_API_AGENT_GUNICORN = '{}-gunicorn'.format(
     PATTOO_API_AGENT_EXECUTABLE)
+
+###############################################################################
+# Constants for pattoo Web API
+###############################################################################
+
+PATTOO_API_WEB_PREFIX = '{}/web'.format(PATTOO_API_SITE_PREFIX)
+PATTOO_API_WEB_EXECUTABLE = 'pattoo-apid'
+PATTOO_API_WEB_GUNICORN = '{}-gunicorn'.format(
+    PATTOO_API_WEB_EXECUTABLE)
 
 ###############################################################################
 # Constants for standard agents

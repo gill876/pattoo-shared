@@ -7,9 +7,9 @@ How Agents Poll Data
 --------------------
 Follow this process if you are attempting to creating your own ``pattoo`` agent.
 
-#. Agents poll devices for ``DataVariable`` values.
-#. All the ``DataVariable`` values polled from a device are added to a ``DeviceDataVariables`` object.
-#. All the ``DeviceDataVariables`` objects polled by an agent are packaged into a ``AgentPolledData`` object.
+#. Agents poll devices for ``DataPoint`` values.
+#. All the ``DataPoint`` values polled from a device are added to a ``DeviceDataPoints`` object.
+#. All the ``DeviceDataPoints`` objects polled by an agent are packaged into a ``AgentPolledData`` object.
 #. The ``AgentPolledData`` object is then posted to the ``pattoo`` API through phttp.Post()
 
 Variable Class Descriptions
@@ -22,12 +22,12 @@ This section describes the `PattooShared Variable Classes <https://github.com/Pa
 
    * - Class
      - Description
-   * - ``DataVariable``
+   * - ``DataPoint``
      - Stores individual datapoints polled by ``pattoo`` agents
-   * - ``DeviceDataVariables``
-     - Stores ``DataVariables`` polled from a specific ``ip_device``.
+   * - ``DeviceDataPoints``
+     - Stores ``DataPoints`` polled from a specific ``ip_device``.
    * - ``AgentPolledData``
-     - Stores data polled by an agent from all its assigned ``ip_devices``. The ``AgentPolledData`` object contains a list of ``DeviceDataVariables`` objects.
+     - Stores data polled by an agent from all its assigned ``ip_devices``. The ``AgentPolledData`` object contains a list of ``DeviceDataPoints`` objects.
    * - ``AgentAPIVariable``
      - Stores data used by ``pattoo`` APIs to serve data
 

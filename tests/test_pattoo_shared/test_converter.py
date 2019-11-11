@@ -25,7 +25,7 @@ directory. Please fix.''')
 from pattoo_shared import converter
 from pattoo_shared import data as lib_data
 from pattoo_shared.variables import (
-    DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
+    DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -89,7 +89,7 @@ class TestConvertAgentPolledData(unittest.TestCase):
             self.assertTrue(bool(dgw.data))
             self.assertTrue(isinstance(dgw.data, list))
             for dvh in dgw.data:
-                self.assertTrue(isinstance(dvh, DeviceDataVariables))
+                self.assertTrue(isinstance(dvh, DeviceDataPoints))
                 self.assertTrue(bool(dvh.data))
                 for _dv in dvh.data:
                     self.assertTrue(isinstance(_dv.value, int))
@@ -137,7 +137,7 @@ class TestBasicFunctions(unittest.TestCase):
         }
     ]
 
-    # Bad data for DeviceDataVariables testing
+    # Bad data for DeviceDataPoints testing
     # - Data not a list of lists
     # - Data has bad data_type
     # - Data is None
@@ -194,7 +194,7 @@ class TestBasicFunctions(unittest.TestCase):
         },
     }
 
-    # Almost good data for DeviceDataVariables testing
+    # Almost good data for DeviceDataPoints testing
     # - Data has None in list
     # - Data has list with 3 values
     bad_dvh_02 = {
@@ -348,54 +348,54 @@ class TestBasicFunctions(unittest.TestCase):
         # Test expected OK
         data = deepcopy(APD)['gateways']['gw01']['devices']
         dv_host = converter._create_ddv(device, data[device])
-        self.assertTrue(isinstance(dv_host, DeviceDataVariables))
+        self.assertTrue(isinstance(dv_host, DeviceDataPoints))
         self.assertEqual(dv_host.device, device)
         self.assertTrue(dv_host.valid)
         self.assertTrue(bool(dv_host.data))
         self.assertTrue(isinstance(dv_host.data, list))
         for _dv in dv_host.data:
-            self.assertTrue(isinstance(_dv, DataVariable))
+            self.assertTrue(isinstance(_dv, DataPoint))
 
         # Test with bad data
         for data in self.bad_data:
             dv_host = converter._create_ddv(data, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
+            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertEqual(dv_host.device, data)
             self.assertFalse(dv_host.valid)
             self.assertFalse(bool(dv_host.data))
             self.assertTrue(isinstance(dv_host.data, list))
             for _dv in dv_host.data:
-                self.assertFalse(isinstance(_dv, DataVariable))
+                self.assertFalse(isinstance(_dv, DataPoint))
 
         # Test with bad data
         for device, data in sorted(self.bad_dvh_01.items()):
             dv_host = converter._create_ddv(device, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
+            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)
             self.assertFalse(dv_host.valid)
             self.assertFalse(bool(dv_host.data))
             self.assertTrue(isinstance(dv_host.data, list))
             for _dv in dv_host.data:
-                self.assertFalse(isinstance(_dv, DataVariable))
+                self.assertFalse(isinstance(_dv, DataPoint))
 
         # Test with partially corrupted data
         for device, data in sorted(self.bad_dvh_02.items()):
             dv_host = converter._create_ddv(device, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataVariables))
+            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)
             self.assertTrue(dv_host.valid)
             self.assertTrue(bool(dv_host.data))
             self.assertTrue(isinstance(dv_host.data, list))
             self.assertTrue(len(dv_host.data), 1)
             for _dv in dv_host.data:
-                self.assertTrue(isinstance(_dv, DataVariable))
+                self.assertTrue(isinstance(_dv, DataPoint))
                 self.assertEqual(_dv.value, 1999)
                 self.assertEqual(_dv.data_index, '1')
                 self.assertEqual(_dv.data_type, 32)
                 self.assertEqual(_dv.data_label, 'bad_key_01')
 
-    def test__create_datavariables(self):
-        """Testing method / function _create_datavariables."""
+    def test__create_datapoints(self):
+        """Testing method / function _create_datapoints."""
         # Initialize key variables
         valid_types = [
             DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
@@ -409,25 +409,25 @@ class TestBasicFunctions(unittest.TestCase):
         # Test valid types
         for next_type in valid_types:
             label_dict['data_type'] = next_type
-            result = converter._create_datavariables(data_label, label_dict)
+            result = converter._create_datapoints(data_label, label_dict)
             self.assertTrue(isinstance(result, list))
             self.assertTrue(bool(result))
             for _dv in result:
-                self.assertTrue(isinstance(_dv, DataVariable))
+                self.assertTrue(isinstance(_dv, DataPoint))
                 self.assertEqual(_dv.data_type, next_type)
 
         # Test invalid types
         for next_type in invalid_types:
             label_dict['data_type'] = next_type
-            result = converter._create_datavariables(data_label, label_dict)
+            result = converter._create_datapoints(data_label, label_dict)
             self.assertTrue(isinstance(result, list))
             self.assertFalse(bool(result))
             for _dv in result:
-                self.assertTrue(isinstance(_dv, DataVariable))
+                self.assertTrue(isinstance(_dv, DataPoint))
                 self.assertEqual(_dv.data_type, next_type)
 
     def test_extract(self):
-        """Testing method / function _create_datavariables."""
+        """Testing method / function _create_datapoints."""
         # Test expected OK
         data = deepcopy(APD)
         agentdata = converter.convert(data)

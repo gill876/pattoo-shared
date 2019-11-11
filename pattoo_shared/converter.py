@@ -8,7 +8,7 @@ from operator import attrgetter
 
 # Pattoo libraries
 from .variables import (
-    DataVariable, DeviceDataVariables, DeviceGateway, AgentPolledData)
+    DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from .constants import (
     PattooDBrecord,
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -109,7 +109,7 @@ def convert(_data=None):
         # Create an populate the DeviceGateway object
         gwd = DeviceGateway(gateway)
         for device, devicedata in sorted(gw_dict['devices'].items()):
-            # Append the DeviceDataVariables to the DeviceGateway object
+            # Append the DeviceDataPoints to the DeviceGateway object
             ddv = _create_ddv(device, devicedata)
             if ddv.valid is True:
                 gwd.add(ddv)
@@ -255,18 +255,18 @@ def _valid_agent(_data):
 
 
 def _create_ddv(device, devicedata):
-    """Create a DeviceDataVariables object from Agent data.
+    """Create a DeviceDataPoints object from Agent data.
 
     Args:
         device: Device polled by agent
         devicedata: Data polled from device by agent
 
     Returns:
-        ddv: DeviceDataVariables object
+        ddv: DeviceDataPoints object
 
     """
     # Initialize key variables
-    ddv = DeviceDataVariables(device)
+    ddv = DeviceDataPoints(device)
 
     # Ignore invalid data
     if isinstance(devicedata, dict) is True:
@@ -282,27 +282,27 @@ def _create_ddv(device, devicedata):
                 if isinstance(label_dict['data'], list) is False:
                     continue
 
-                # Add to the DeviceDataVariables
-                datavariables = _create_datavariables(data_label, label_dict)
-                ddv.add(datavariables)
+                # Add to the DeviceDataPoints
+                datapoints = _create_datapoints(data_label, label_dict)
+                ddv.add(datapoints)
 
     # Return
     return ddv
 
 
-def _create_datavariables(data_label, label_dict):
-    """Create a valid list of DataVariables for a specific label.
+def _create_datapoints(data_label, label_dict):
+    """Create a valid list of DataPoints for a specific label.
 
     Args:
         data_label: Label for data
         label_dict: Dict of data represented by the data_label
 
     Returns:
-        datavariables: List of DataVariable objects
+        datapoints: List of DataPoint objects
 
     """
     # Initialize key variables
-    datavariables = []
+    datapoints = []
     data_type = label_dict['data_type']
     found_type = False
 
@@ -316,7 +316,7 @@ def _create_datavariables(data_label, label_dict):
     if found_type is False:
         return []
 
-    # Add the data to the DeviceDataVariables
+    # Add the data to the DeviceDataPoints
     for item in label_dict['data']:
         if isinstance(item, list) is True:
             if len(item) == 2:
@@ -330,16 +330,16 @@ def _create_datavariables(data_label, label_dict):
                     except:
                         continue
 
-                # Update DataVariable with valid data
-                datavariable = DataVariable(
+                # Update DataPoint with valid data
+                datapoint = DataPoint(
                     value=value,
                     data_label=data_label,
                     data_index=data_index,
                     data_type=label_dict['data_type'])
-                datavariables.append(datavariable)
+                datapoints.append(datapoint)
 
     # Return
-    return datavariables
+    return datapoints
 
 
 def _capd_gwd2dict(gwd):
@@ -361,7 +361,7 @@ def _capd_gwd2dict(gwd):
             # Get information from data
             gateway = gwd.device
 
-            # Analyze each DeviceDataVariables  object in data
+            # Analyze each DeviceDataPoints  object in data
             gwd_data_dict = {}
             for ddv in gwd.data:
                 ddv_data_dict = _capd_ddv2dict(ddv)
@@ -382,20 +382,20 @@ def _capd_gwd2dict(gwd):
 
 
 def _capd_ddv2dict(ddv):
-    """Create dict representation of DeviceDataVariables object.
+    """Create dict representation of DeviceDataPoints object.
 
     Args:
-        ddv: DeviceDataVariables object
+        ddv: DeviceDataPoints object
 
     Returns:
-        result: Representation of DeviceDataVariables as a dict
+        result: Representation of DeviceDataPoints as a dict
 
     """
     # Intitialize key variables
     result = {}
 
     # Verify data type
-    if isinstance(ddv, DeviceDataVariables) is True:
+    if isinstance(ddv, DeviceDataPoints) is True:
         if bool(ddv.valid) is True:
             # Get information from data
             device = ddv.device
@@ -403,7 +403,7 @@ def _capd_ddv2dict(ddv):
             # Pre-populate the result with empty dicts
             result[device] = {}
 
-            # Analyze each DataVariable for the ddv
+            # Analyze each DataPoint for the ddv
             for _dvar in ddv.data:
                 # Add keys if not already there
                 if _dvar.data_label not in result[device]:

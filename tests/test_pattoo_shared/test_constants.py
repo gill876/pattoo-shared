@@ -29,16 +29,21 @@ from pattoo_shared.constants import DATA_COUNT64
 from pattoo_shared.constants import DATA_COUNT
 from pattoo_shared.constants import DATA_STRING
 from pattoo_shared.constants import DATA_NONE
+
+from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
+from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
+from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
+from pattoo_shared.constants import PATTOO_API_AGENT_GUNICORN
+from pattoo_shared.constants import PATTOO_API_WEB_PREFIX
+from pattoo_shared.constants import PATTOO_API_WEB_EXECUTABLE
+from pattoo_shared.constants import PATTOO_API_WEB_GUNICORN
+
 from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED_API_PREFIX
 from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED
 from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED_PROXY
 from pattoo_shared.constants import PATTOO_AGENT_OS_AUTONOMOUSD
 from pattoo_shared.constants import PATTOO_AGENT_OS_HUBD
 from pattoo_shared.constants import PATTOO_AGENT_SNMPD
-from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
-from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
-from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
-from pattoo_shared.constants import PATTOO_API_AGENT_GUNICORN_AGENT
 from pattoo_shared.constants import PATTOO_AGENT_MODBUSTCPD
 from pattoo_shared.constants import PATTOO_AGENT_BACNETIPD
 
@@ -68,9 +73,16 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(
             PATTOO_API_AGENT_EXECUTABLE, 'pattoo-api-agentd')
         self.assertEqual(
-            PATTOO_API_AGENT_GUNICORN_AGENT,
+            PATTOO_API_AGENT_GUNICORN,
             '{}-gunicorn'.format(PATTOO_API_AGENT_EXECUTABLE))
-
+        self.assertEqual(
+            PATTOO_API_WEB_PREFIX, '{}/web'.format(PATTOO_API_SITE_PREFIX))
+        self.assertEqual(
+            PATTOO_API_WEB_EXECUTABLE, 'pattoo-apid')
+        self.assertEqual(
+            PATTOO_API_WEB_GUNICORN,
+            '{}-gunicorn'.format(PATTOO_API_WEB_EXECUTABLE))
+            
         # Test agent constants
         self.assertEqual(
             PATTOO_AGENT_OS_SPOKED_API_PREFIX, '/pattoo-agent-os')
