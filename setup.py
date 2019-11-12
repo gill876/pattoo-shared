@@ -32,8 +32,8 @@ setuptools.setup(
     long_description_content_type='text/x-rst',
 
     # Minium python version
-    python_requires='>=3.6',
+    python_requires='>=3.5',
 
     # Set up the version
-    version='0.0.26',
+    version='0.0.27',
 )
