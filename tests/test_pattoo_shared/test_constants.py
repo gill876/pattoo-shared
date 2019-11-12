@@ -34,9 +34,6 @@ from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
 from pattoo_shared.constants import PATTOO_API_AGENT_PROXY
-from pattoo_shared.constants import PATTOO_API_WEB_PREFIX
-from pattoo_shared.constants import PATTOO_API_WEB_EXECUTABLE
-from pattoo_shared.constants import PATTOO_API_WEB_PROXY
 
 from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED_API_PREFIX
 from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED
@@ -75,14 +72,7 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(
             PATTOO_API_AGENT_PROXY,
             '{}-gunicorn'.format(PATTOO_API_AGENT_EXECUTABLE))
-        self.assertEqual(
-            PATTOO_API_WEB_PREFIX, '{}/web'.format(PATTOO_API_SITE_PREFIX))
-        self.assertEqual(
-            PATTOO_API_WEB_EXECUTABLE, 'pattoo-apid')
-        self.assertEqual(
-            PATTOO_API_WEB_PROXY,
-            '{}-gunicorn'.format(PATTOO_API_WEB_EXECUTABLE))
-            
+
         # Test agent constants
         self.assertEqual(
             PATTOO_AGENT_OS_SPOKED_API_PREFIX, '/pattoo-agent-os')
