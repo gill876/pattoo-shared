@@ -114,7 +114,7 @@ class Post(object):
             log_message = (
                 'Agent "{}" successfully contacted server {}'
                 ''.format(self._agentdata.agent_program, self._url))
-            log.log2info(1027, log_message)
+            log.log2debug(1027, log_message)
         else:
             log_message = (
                 'Agent "{}" failed to contact server {}'
