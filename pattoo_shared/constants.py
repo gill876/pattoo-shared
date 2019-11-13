@@ -30,7 +30,7 @@ device data_label data_index value data_type checksum''')
 # Constants for pattoo Agent API
 ###############################################################################
 
-PATTOO_API_SITE_PREFIX = '/pattoo'
+PATTOO_API_SITE_PREFIX = '/pattoo/api/v1'
 PATTOO_API_AGENT_PREFIX = '{}/agent'.format(PATTOO_API_SITE_PREFIX)
 PATTOO_API_AGENT_EXECUTABLE = 'pattoo-api-agentd'
 PATTOO_API_AGENT_PROXY = '{}-gunicorn'.format(

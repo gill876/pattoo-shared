@@ -88,7 +88,7 @@ class TestConfig(unittest.TestCase):
     def test_api_uri(self):
         """Testing function api_uri."""
         # Initialize key values
-        expected = '/pattoo/agent/receive'
+        expected = '/pattoo/api/v1/agent/receive'
 
         # Test
         result = self.config.api_uri()
@@ -97,7 +97,7 @@ class TestConfig(unittest.TestCase):
     def test_api_server_url(self):
         """Testing function api_server_url."""
         # Initialize key values
-        expected = 'http://127.0.0.1:6060/pattoo/agent/receive/123'
+        expected = 'http://127.0.0.1:6060/pattoo/api/v1/agent/receive/123'
         agent_id = 123
 
         # Test
@@ -187,7 +187,7 @@ class TestConfig(unittest.TestCase):
             self.assertTrue(isinstance(value, PollingTarget))
             self.assertEqual(value.address, oids[index])
             self.assertEqual(value.multiplier, 8)
-            
+
 
 class TestBasicFunctions(unittest.TestCase):
     """Checks all functions and methods."""
