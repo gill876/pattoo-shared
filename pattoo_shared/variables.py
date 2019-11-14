@@ -114,8 +114,12 @@ class DeviceDataPoints(object):
 
         Args:
             device: Device polled to get the DataPoint objects
-            device_type: Integer value identifying the type of device
-
+            device_type: Integer value identifying the type of device.
+                Device_types are specific to the agent_program name. The
+                intention is to make the combination of device_type and
+                agent_program be the combined key in doing datapoint
+                description lookups.
+                
         Returns:
             None
 
@@ -436,7 +440,11 @@ class DevicePollingTargets(object):
 
         Args:
             device: Device polled to get the PollingTarget objects
-            device_type: Integer value identifying the type of device
+            device_type: Integer value identifying the type of device.
+                Device_types are specific to the agent_program name. The
+                intention is to make the combination of device_type and
+                agent_program be the combined key in doing datapoint
+                description lookups.
 
         Returns:
             None
