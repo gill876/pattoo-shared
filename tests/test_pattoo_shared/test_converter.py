@@ -6,6 +6,7 @@ import unittest
 import os
 import sys
 from copy import deepcopy
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -478,15 +479,17 @@ class TestBasicFunctions(unittest.TestCase):
         # Test expected OK
         data = deepcopy(APD)
         agentdata = converter.convert(data)
+        pprint(agentdata.data[0].data[0])
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            self.assertEqual(len(row), 12)
+            self.assertEqual(len(row), 13)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
             self.assertEqual(row.timestamp, 1571951520)
             self.assertEqual(row.polling_interval, 10)
+            self.assertEqual(row.device_type, 8)
             self.assertEqual(row.gateway, 'gw01')
             self.assertTrue(isinstance(row.value, int))
             self.assertTrue(isinstance(row.data_type, int))
@@ -494,10 +497,10 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertTrue(isinstance(row.checksum, str))
 
             checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
-                             row.agent_hostname, row.polling_interval,
-                             row.gateway, row.device,
-                             row.data_label, row.data_index, row.data_type))
+{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
+                           row.agent_hostname,
+                           row.gateway, row.device,
+                           row.data_label, row.data_index, row.data_type))
             self.assertEqual(row.checksum, checksum)
 
 

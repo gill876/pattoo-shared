@@ -549,14 +549,16 @@ def _device_type(device_type):
 
     """
     # Initialize key variables
-    result = None
-    
+    valid = True
+
     # Set the device_type
     if device_type is None or device_type is True or device_type is False:
-        result = None
-    if result is not None:
+        valid = False
+    if valid is True:
         try:
             result = abs(int(device_type))
         except:
             result = None
+    else:
+        result = None
     return result

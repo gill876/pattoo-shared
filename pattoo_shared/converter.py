@@ -168,6 +168,7 @@ def extract(agentdata):
 
                 # Get data
                 device = ddv.device
+                device_type = ddv.device_type
                 for _dv in ddv.data:
                     data_label = _dv.data_label
                     data_index = _dv.data_index
@@ -176,15 +177,14 @@ def extract(agentdata):
 
                     # Assign values to tuple
                     checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
-                             polling_interval, gateway, device,
-                             data_label, data_index, data_type))
+{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
+                           gateway, device, data_label, data_index, data_type))
                     row = PattooDBrecord(
                         agent_id=agent_id, agent_program=agent_program,
-                        agent_hostname=agent_hostname,
+                        agent_hostname=agent_hostname, data_type=data_type,
                         polling_interval=polling_interval, gateway=gateway,
-                        device=device, data_label=data_label,
-                        data_index=data_index, data_type=data_type,
+                        device=device, device_type=device_type,
+                        data_label=data_label, data_index=data_index,
                         checksum=checksum, value=value, timestamp=timestamp)
                     rows.append(row)
 
