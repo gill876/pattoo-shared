@@ -192,6 +192,19 @@ class TestDeviceDataPoints(unittest.TestCase):
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup DeviceDataPoints
+        device = 'localhost'
+        ddv = DeviceDataPoints(device)
+
+        # Test
+        expected = ('''\
+<DeviceDataPoints device='localhost', device_type=None, valid=False, \
+data=[]''')
+        result = ddv.__repr__()
+        self.assertEqual(result, expected)
+
     def test_add(self):
         """Testing function append."""
         # Initialize DeviceDataPoints
@@ -536,6 +549,20 @@ class TestDevicePollingTargets(unittest.TestCase):
         dpt = DevicePollingTargets(device)
         self.assertEqual(dpt.device, device)
         self.assertFalse(dpt.valid)
+
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup variable
+        device = 'localhost'
+        item = DevicePollingTargets(device)
+        result = item.__repr__()
+
+        # Test
+        expected = ('''\
+<DevicePollingTargets device='localhost', device_type=None, valid=False, \
+data=[]>''')
+        result = item.__repr__()
+        self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""

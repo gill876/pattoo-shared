@@ -399,26 +399,36 @@ def _capd_ddv2dict(ddv):
         if bool(ddv.valid) is True:
             # Get information from data
             device = ddv.device
+            device_type = ddv.device_type
 
             # Pre-populate the result with empty dicts
-            result[device] = {}
+            datapoints = {}
 
             # Analyze each DataPoint for the ddv
             for _dvar in ddv.data:
                 # Add keys if not already there
-                if _dvar.data_label not in result[device]:
-                    result[device][_dvar.data_label] = {}
+                if _dvar.data_label not in datapoints:
+                    datapoints[_dvar.data_label] = {}
 
                 # Assign data values to result
                 data_tuple = (_dvar.data_index, _dvar.value)
-                if 'data' in result[device][_dvar.data_label]:
-                    result[device][_dvar.data_label][
+                if 'data' in datapoints[_dvar.data_label]:
+                    datapoints[_dvar.data_label][
                         'data'].append(data_tuple)
                 else:
-                    result[device][_dvar.data_label][
+                    datapoints[_dvar.data_label][
                         'data_type'] = _dvar.data_type
-                    result[device][_dvar.data_label][
+                    datapoints[_dvar.data_label][
                         'data'] = [data_tuple]
+
+            # Create a dict specific to the the device
+            device_dict = {
+                'datapoints': datapoints,
+                'device_type': device_type
+            }
+
+            # Add it all to the result
+            result[device] = device_dict
 
     # Return
     return result
