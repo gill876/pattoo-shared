@@ -266,25 +266,31 @@ def _create_ddv(device, devicedata):
 
     """
     # Initialize key variables
-    ddv = DeviceDataPoints(device)
+    ddv = DeviceDataPoints(device, device_type=None)
 
     # Ignore invalid data
     if isinstance(devicedata, dict) is True:
-        # Iterate through the expected data_labels in the dict
-        for data_label, label_dict in sorted(devicedata.items()):
-            # Ignore invalid data
-            if isinstance(label_dict, dict) is False:
-                continue
+        if ('datapoints' in devicedata) and ('device_type' in devicedata):
+            # Create a valid DeviceDataPoint object
+            device_type = devicedata['device_type']
+            ddv = DeviceDataPoints(device, device_type=device_type)
 
-            # Validate the presence of required keys, then process
-            if ('data' in label_dict) and ('data_type' in label_dict):
-                # Skip invalid data formats
-                if isinstance(label_dict['data'], list) is False:
+            # Iterate through the expected data_labels in the dict
+            datapoint_dict = devicedata['datapoints']
+            for data_label, label_dict in sorted(datapoint_dict.items()):
+                # Ignore invalid data
+                if isinstance(label_dict, dict) is False:
                     continue
 
-                # Add to the DeviceDataPoints
-                datapoints = _create_datapoints(data_label, label_dict)
-                ddv.add(datapoints)
+                # Validate the presence of required keys, then process
+                if ('data' in label_dict) and ('data_type' in label_dict):
+                    # Skip invalid data formats
+                    if isinstance(label_dict['data'], list) is False:
+                        continue
+
+                    # Add to the DeviceDataPoints
+                    datapoints = _create_datapoints(data_label, label_dict)
+                    ddv.add(datapoints)
 
     # Return
     return ddv

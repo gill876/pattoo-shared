@@ -41,20 +41,26 @@ APD = {
         'gw01': {
             'devices': {
                 'device_1': {
-                    '.1.3.6.1.2.1.2.2.1.10': {
-                        'data': [['1', 1999], ['100', 2999]],
-                        'data_type': 32},
-                    '.1.3.6.1.2.1.2.2.1.16': {
-                        'data': [['1', 3999], ['100', 4999]],
-                        'data_type': 32}
+                    'datapoints': {
+                        '.1.3.6.1.2.1.2.2.1.10': {
+                            'data': [['1', 1999], ['100', 2999]],
+                            'data_type': 32},
+                        '.1.3.6.1.2.1.2.2.1.16': {
+                            'data': [['1', 3999], ['100', 4999]],
+                            'data_type': 32}
+                    },
+                    'device_type': 8
                 },
                 'device_2': {
-                    '.1.3.6.1.2.1.2.2.1.10': {
-                        'data': [['1', 1888], ['100', 2888]],
-                        'data_type': 32},
-                    '.1.3.6.1.2.1.2.2.1.16': {
-                        'data': [['2', 3888], ['102', 4888]],
-                        'data_type': 32}
+                    'datapoints': {
+                        '.1.3.6.1.2.1.2.2.1.10': {
+                            'data': [['1', 1888], ['100', 2888]],
+                            'data_type': 32},
+                        '.1.3.6.1.2.1.2.2.1.16': {
+                            'data': [['2', 3888], ['102', 4888]],
+                            'data_type': 32}
+                        },
+                    'device_type': 8
                 },
             },
         },
@@ -149,48 +155,75 @@ class TestBasicFunctions(unittest.TestCase):
     # - Data is empty list of lists of lists
     bad_dvh_01 = {
         'bad_dev_01': {
-            'bad_key_01': {
-                'data': [{'1': 1999}, {'100': 2999}],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [{'1': 1999}, {'100': 2999}],
+                    'data_type': 32}
+                    }
         },
         'bad_dev_02': {
-            'bad_key_01': {
-                'data': [['1', 1999], ['100', 2999]],
-                'data_type': 23}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], ['100', 2999]],
+                    'data_type': 23}
+                    }
         },
         'bad_dev_03': {
-            'bad_key_01': {
-                'data': None,
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': None,
+                    'data_type': 32}
+                }
         },
         'bad_dev_04': {
-            'bad_key_01': {
-                'data': {},
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': {},
+                    'data_type': 32}
+                }
         },
         'bad_dev_05': {
-            'bad_key_01': {
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data_type': 32}
+                }
         },
         'bad_dev_06': {
-            'bad_key_01': {
-                'data': {},
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': {},
+                }
             }
         },
         'bad_dev_07': {
-            'bad_key_01': {
-                'data': [[]],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [[]],
+                    'data_type': 32}
+                }
         },
         'bad_dev_08': {
-            'bad_key_01': {
-                'data': [],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [],
+                    'data_type': 32}
+                }
         },
         'bad_dev_09': {
-            'bad_key_01': {
-                'data': [[[]]],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [[[]]],
+                    'data_type': 32}
+                }
         },
     }
 
@@ -199,15 +232,21 @@ class TestBasicFunctions(unittest.TestCase):
     # - Data has list with 3 values
     bad_dvh_02 = {
         'bad_dev_01': {
-            'bad_key_01': {
-                'data': [['1', 1999], None],
-                'data_type': 32}
+            'device_type': 9,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], None],
+                    'data_type': 32}
+                }
         },
         'bad_dev_02': {
-            'bad_key_01': {
-                'data': [['1', 1999], [1, 2, 3]],
-                'data_type': 32}
-        },
+            'device_type': 9,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], [1, 2, 3]],
+                    'data_type': 32}
+            }
+        }
     }
 
     def test_convert(self):
@@ -369,6 +408,10 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with bad data
         for device, data in sorted(self.bad_dvh_01.items()):
+            # Make sure we have the correct keys
+            self.assertEqual(data['device_type'], 10)
+            self.assertTrue(isinstance(data['datapoints'], dict))
+
             dv_host = converter._create_ddv(device, data)
             self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)
@@ -380,6 +423,10 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with partially corrupted data
         for device, data in sorted(self.bad_dvh_02.items()):
+            # Make sure we have the correct keys
+            self.assertEqual(data['device_type'], 9)
+            self.assertTrue(isinstance(data['datapoints'], dict))
+
             dv_host = converter._create_ddv(device, data)
             self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)

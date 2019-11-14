@@ -548,6 +548,9 @@ def _device_type(device_type):
         result: Standardized device_type
 
     """
+    # Initialize key variables
+    result = None
+    
     # Set the device_type
     if device_type is None or device_type is True or device_type is False:
         result = None
