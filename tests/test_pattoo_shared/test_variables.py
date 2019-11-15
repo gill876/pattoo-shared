@@ -54,7 +54,6 @@ class TestDataPointMeta(unittest.TestCase):
                 (None, 2), ('1', None), (True, '2'), ('1', True),
                 ({}, 2.1), ('1.1', {2: 1}), (False, '2.1'), ('1.1', False)]:
             result = DataPointMeta(key, value)
-            print(result.key, result.value, result.valid)
             self.assertFalse(result.valid)
 
     def test___repr__(self):

@@ -6,7 +6,6 @@ import unittest
 import os
 import sys
 from copy import deepcopy
-from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -29,7 +28,8 @@ from pattoo_shared.variables import (
     DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
-    DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
+    DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
+    PattooDBrecord)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -479,11 +479,10 @@ class TestBasicFunctions(unittest.TestCase):
         # Test expected OK
         data = deepcopy(APD)
         agentdata = converter.convert(data)
-        pprint(agentdata.data[0].data[0])
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            self.assertEqual(len(row), 13)
+            self.assertEqual(len(row), 14)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
@@ -495,14 +494,54 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertTrue(isinstance(row.data_type, int))
             self.assertTrue(isinstance(row.data_index, str))
             self.assertTrue(isinstance(row.checksum, str))
+            self.assertTrue(isinstance(row.metadata, dict))
 
-            checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
-                           row.agent_hostname,
-                           row.gateway, row.device,
-                           row.data_label, row.data_index, row.data_type))
-            self.assertEqual(row.checksum, checksum)
+            pdbr = converter._add_checksum(row)
+            self.assertEqual(row.checksum, pdbr.checksum)
 
+    def test__add_checksum(self):
+        """Testing method / function _add_checksum."""
+        # Test OK
+        seed = PattooDBrecord(
+            agent_id=1, agent_program=1,
+            agent_hostname=1, data_type=1,
+            polling_interval=1, gateway=1,
+            device=1, device_type=1,
+            metadata=1,
+            data_label=1, data_index=1,
+            checksum=None, value=1, timestamp=1)
+        row = converter._add_checksum(seed)
+        self.assertEqual(
+            row.checksum,
+            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
+
+        # Nothing should change
+        seed = PattooDBrecord(
+            agent_id=1, agent_program=1,
+            agent_hostname=1, data_type=1,
+            polling_interval=1, gateway=1,
+            device=1, device_type=1,
+            metadata=1,
+            data_label=1, data_index=1,
+            checksum=None, value=1, timestamp=False)
+        row = converter._add_checksum(seed)
+        self.assertEqual(
+            row.checksum,
+            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
+
+        # Nothing should change
+        seed = PattooDBrecord(
+            agent_id=1, agent_program=1,
+            agent_hostname=1, data_type=1,
+            polling_interval=1, gateway=1,
+            device=1, device_type=1,
+            metadata=1,
+            data_label=1, data_index=1,
+            checksum=None, value=True, timestamp=False)
+        row = converter._add_checksum(seed)
+        self.assertEqual(
+            row.checksum,
+            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

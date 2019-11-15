@@ -5,6 +5,7 @@
 from collections import defaultdict
 from copy import deepcopy
 from operator import attrgetter
+import json
 
 # Pattoo libraries
 from .variables import (
@@ -174,28 +175,55 @@ def extract(agentdata):
                     data_index = _dv.data_index
                     value = _dv.value
                     data_type = _dv.data_type
+                    metadata = _dv.metadata
 
                     # Assign values to tuple
-                    checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
-                           gateway, device, data_label, data_index, data_type))
-                    row = PattooDBrecord(
+                    _row = PattooDBrecord(
                         agent_id=agent_id, agent_program=agent_program,
                         agent_hostname=agent_hostname, data_type=data_type,
                         polling_interval=polling_interval, gateway=gateway,
                         device=device, device_type=device_type,
+                        metadata=metadata,
                         data_label=data_label, data_index=data_index,
-                        checksum=checksum, value=value, timestamp=timestamp)
+                        checksum=None, value=value, timestamp=timestamp)
+                    row = _add_checksum(_row)
                     rows.append(row)
 
     '''
-    Return a sorted list. We use a reverse order so that the metadata is
+    Return a sorted list. We use a reverse order so that the information is
     updated with the most recent last_timestamp on the first iteration. This
     reduces the risk of insertion errors from other parallel processes doing
     simultaneous updates.
     '''
     _rows = sorted(rows, key=attrgetter('timestamp'))
     return _rows
+
+
+def _add_checksum(row):
+    """Determine the validity of the Agent's data.
+
+    Args:
+        row: PattooDBrecord object
+
+    Returns:
+        checksum: Calculated checksum
+
+    """
+    json_metadata = json.dumps(row.metadata, sort_keys=True)
+    checksum = lib_data.hashstring('''{}{}{}{}{}{}{}{}{}{}\
+'''.format(row.agent_id, row.agent_program, row.agent_hostname, row.gateway,
+           row.device, row.data_label, row.data_index, row.data_type,
+           row.device_type, json_metadata))
+
+    result = PattooDBrecord(
+        agent_id=row.agent_id, agent_program=row.agent_program,
+        agent_hostname=row.agent_hostname, data_type=row.data_type,
+        polling_interval=row.polling_interval, gateway=row.gateway,
+        device=row.device, device_type=row.device_type,
+        metadata=row.metadata,
+        data_label=row.data_label, data_index=row.data_index,
+        checksum=checksum, value=row.value, timestamp=row.timestamp)
+    return result
 
 
 def _valid_agent(_data):
