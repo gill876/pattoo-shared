@@ -25,10 +25,47 @@ directory. Please fix.''')
 from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
 from pattoo_shared.variables import (
-    DataPoint, DeviceDataPoints, DeviceGateway,
+    DataPoint, DataPointMeta, DeviceDataPoints, DeviceGateway,
     PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
+
+
+class TestDataPointMeta(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup DataPoint - Valid
+        for key, value in [
+                (1, 2), ('1', 2), (1, '2'), ('1', '2'),
+                (1.1, 2.1), ('1.1', 2.1), (1.1, '2.1'), ('1.1', '2.1')]:
+            result = DataPointMeta(key, value)
+            self.assertEqual(result.key, str(key))
+            self.assertEqual(result.value, str(value))
+            self.assertTrue(result.valid)
+
+        # Setup DataPoint - Valid
+        for key, value in [
+                (None, 2), ('1', None), (True, '2'), ('1', True),
+                ({}, 2.1), ('1.1', {2: 1}), (False, '2.1'), ('1.1', False)]:
+            result = DataPointMeta(key, value)
+            print(result.key, result.value, result.valid)
+            self.assertFalse(result.valid)
+
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup DataPointMeta
+        variable = DataPointMeta(5, 6)
+
+        # Test
+        expected = ('''<DataPointMeta key='5', value='6'>''')
+        result = variable.__repr__()
+        self.assertEqual(result, expected)
 
 
 class TestDataPoint(unittest.TestCase):

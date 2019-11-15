@@ -7,6 +7,65 @@ from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
 
 
+class DataPointMeta(object):
+    """Metadata related to a DataPoint."""
+
+    def __init__(self, key, value):
+        """Initialize the class.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+
+        Returns:
+            None
+
+        Variables:
+            self.key: Metadata key
+            self.value: Metadata value
+            self.valid: True if valid
+
+        """
+        # Initialize variables
+        self.key = None
+        self.value = None
+
+        # Set variables
+        if isinstance(key, (str, int, float)) is True and key is not True and (
+                key is not False):
+            self.key = str(key)
+        if isinstance(value, (str, int, float)) is True and (
+                value is not True and value is not False):
+            self.value = str(value)
+
+        self.valid = False not in [
+            bool(self.key),
+            self.key is not True,
+            self.key is not False,
+            self.key is not None,
+            bool(self.value),
+            self.value is not True,
+            self.value is not False,
+            self.value is not None,
+            ]
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = ('<{0} key={1}, value={2}>'.format(
+            self.__class__.__name__, repr(self.key), repr(self.value))
+        )
+        return result
+
+
 class DataPoint(object):
     """Variable representation for data retreived from a device.
 
@@ -119,7 +178,7 @@ class DeviceDataPoints(object):
                 intention is to make the combination of device_type and
                 agent_program be the combined key in doing datapoint
                 description lookups.
-                
+
         Returns:
             None
 
