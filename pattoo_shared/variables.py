@@ -106,6 +106,7 @@ class DataPoint(object):
         self.data_index = data_index
         self.value = value
         self.data_type = data_type
+        self.metadata = {}
 
         # False validity if value is not of the right type
         self.valid = False not in [
@@ -159,6 +160,30 @@ class DataPoint(object):
            repr(self.valid))
         )
         return result
+
+    def add(self, items):
+        """Add DataPointMeta to the internal self.metadata list.
+
+        Args:
+            items: A DataPointMeta object list
+
+        Returns:
+            None
+
+        """
+        # Ensure there is a list of objects
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only append approved data types
+        for item in items:
+            if isinstance(item, DataPointMeta) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Process
+                self.metadata[item.key] = item.value
 
 
 class DeviceDataPoints(object):

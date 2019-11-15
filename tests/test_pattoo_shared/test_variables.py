@@ -210,6 +210,22 @@ valid=True>''')
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
+    def test_add(self):
+        """Testing function add."""
+        # Setup DataPoint - Valid
+        value = 1093454
+        data_label = 'testing'
+        data_index = 98766
+        data_type = DATA_INT
+        variable = DataPoint(
+            value=value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        for key, value in [(1, 2), (3, 4), (5, 6)]:
+            metadata = DataPointMeta(key, value)
+            variable.add(metadata)
+            self.assertEqual(variable.metadata[str(key)], str(value))
+
 
 class TestDeviceDataPoints(unittest.TestCase):
     """Checks all functions and methods."""
