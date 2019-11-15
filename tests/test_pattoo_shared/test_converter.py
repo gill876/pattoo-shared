@@ -6,6 +6,7 @@ import unittest
 import os
 import sys
 from copy import deepcopy
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -41,20 +42,26 @@ APD = {
         'gw01': {
             'devices': {
                 'device_1': {
-                    '.1.3.6.1.2.1.2.2.1.10': {
-                        'data': [['1', 1999], ['100', 2999]],
-                        'data_type': 32},
-                    '.1.3.6.1.2.1.2.2.1.16': {
-                        'data': [['1', 3999], ['100', 4999]],
-                        'data_type': 32}
+                    'datapoints': {
+                        '.1.3.6.1.2.1.2.2.1.10': {
+                            'data': [['1', 1999], ['100', 2999]],
+                            'data_type': 32},
+                        '.1.3.6.1.2.1.2.2.1.16': {
+                            'data': [['1', 3999], ['100', 4999]],
+                            'data_type': 32}
+                    },
+                    'device_type': 8
                 },
                 'device_2': {
-                    '.1.3.6.1.2.1.2.2.1.10': {
-                        'data': [['1', 1888], ['100', 2888]],
-                        'data_type': 32},
-                    '.1.3.6.1.2.1.2.2.1.16': {
-                        'data': [['2', 3888], ['102', 4888]],
-                        'data_type': 32}
+                    'datapoints': {
+                        '.1.3.6.1.2.1.2.2.1.10': {
+                            'data': [['1', 1888], ['100', 2888]],
+                            'data_type': 32},
+                        '.1.3.6.1.2.1.2.2.1.16': {
+                            'data': [['2', 3888], ['102', 4888]],
+                            'data_type': 32}
+                        },
+                    'device_type': 8
                 },
             },
         },
@@ -149,48 +156,75 @@ class TestBasicFunctions(unittest.TestCase):
     # - Data is empty list of lists of lists
     bad_dvh_01 = {
         'bad_dev_01': {
-            'bad_key_01': {
-                'data': [{'1': 1999}, {'100': 2999}],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [{'1': 1999}, {'100': 2999}],
+                    'data_type': 32}
+                    }
         },
         'bad_dev_02': {
-            'bad_key_01': {
-                'data': [['1', 1999], ['100', 2999]],
-                'data_type': 23}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], ['100', 2999]],
+                    'data_type': 23}
+                    }
         },
         'bad_dev_03': {
-            'bad_key_01': {
-                'data': None,
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': None,
+                    'data_type': 32}
+                }
         },
         'bad_dev_04': {
-            'bad_key_01': {
-                'data': {},
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': {},
+                    'data_type': 32}
+                }
         },
         'bad_dev_05': {
-            'bad_key_01': {
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data_type': 32}
+                }
         },
         'bad_dev_06': {
-            'bad_key_01': {
-                'data': {},
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': {},
+                }
             }
         },
         'bad_dev_07': {
-            'bad_key_01': {
-                'data': [[]],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [[]],
+                    'data_type': 32}
+                }
         },
         'bad_dev_08': {
-            'bad_key_01': {
-                'data': [],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [],
+                    'data_type': 32}
+                }
         },
         'bad_dev_09': {
-            'bad_key_01': {
-                'data': [[[]]],
-                'data_type': 32}
+            'device_type': 10,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [[[]]],
+                    'data_type': 32}
+                }
         },
     }
 
@@ -199,15 +233,21 @@ class TestBasicFunctions(unittest.TestCase):
     # - Data has list with 3 values
     bad_dvh_02 = {
         'bad_dev_01': {
-            'bad_key_01': {
-                'data': [['1', 1999], None],
-                'data_type': 32}
+            'device_type': 9,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], None],
+                    'data_type': 32}
+                }
         },
         'bad_dev_02': {
-            'bad_key_01': {
-                'data': [['1', 1999], [1, 2, 3]],
-                'data_type': 32}
-        },
+            'device_type': 9,
+            'datapoints': {
+                'bad_key_01': {
+                    'data': [['1', 1999], [1, 2, 3]],
+                    'data_type': 32}
+            }
+        }
     }
 
     def test_convert(self):
@@ -369,6 +409,10 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with bad data
         for device, data in sorted(self.bad_dvh_01.items()):
+            # Make sure we have the correct keys
+            self.assertEqual(data['device_type'], 10)
+            self.assertTrue(isinstance(data['datapoints'], dict))
+
             dv_host = converter._create_ddv(device, data)
             self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)
@@ -380,6 +424,10 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test with partially corrupted data
         for device, data in sorted(self.bad_dvh_02.items()):
+            # Make sure we have the correct keys
+            self.assertEqual(data['device_type'], 9)
+            self.assertTrue(isinstance(data['datapoints'], dict))
+
             dv_host = converter._create_ddv(device, data)
             self.assertTrue(isinstance(dv_host, DeviceDataPoints))
             self.assertTrue(dv_host.device, device)
@@ -431,15 +479,17 @@ class TestBasicFunctions(unittest.TestCase):
         # Test expected OK
         data = deepcopy(APD)
         agentdata = converter.convert(data)
+        pprint(agentdata.data[0].data[0])
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            self.assertEqual(len(row), 12)
+            self.assertEqual(len(row), 13)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
             self.assertEqual(row.timestamp, 1571951520)
             self.assertEqual(row.polling_interval, 10)
+            self.assertEqual(row.device_type, 8)
             self.assertEqual(row.gateway, 'gw01')
             self.assertTrue(isinstance(row.value, int))
             self.assertTrue(isinstance(row.data_type, int))
@@ -447,10 +497,10 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertTrue(isinstance(row.checksum, str))
 
             checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
-                             row.agent_hostname, row.polling_interval,
-                             row.gateway, row.device,
-                             row.data_label, row.data_index, row.data_type))
+{}{}{}{}{}{}{}{}'''.format(row.agent_id, row.agent_program,
+                           row.agent_hostname,
+                           row.gateway, row.device,
+                           row.data_label, row.data_index, row.data_type))
             self.assertEqual(row.checksum, checksum)
 
 

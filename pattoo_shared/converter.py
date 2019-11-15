@@ -168,6 +168,7 @@ def extract(agentdata):
 
                 # Get data
                 device = ddv.device
+                device_type = ddv.device_type
                 for _dv in ddv.data:
                     data_label = _dv.data_label
                     data_index = _dv.data_index
@@ -176,15 +177,14 @@ def extract(agentdata):
 
                     # Assign values to tuple
                     checksum = lib_data.hashstring('''\
-{}{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
-                             polling_interval, gateway, device,
-                             data_label, data_index, data_type))
+{}{}{}{}{}{}{}{}'''.format(agent_id, agent_program, agent_hostname,
+                           gateway, device, data_label, data_index, data_type))
                     row = PattooDBrecord(
                         agent_id=agent_id, agent_program=agent_program,
-                        agent_hostname=agent_hostname,
+                        agent_hostname=agent_hostname, data_type=data_type,
                         polling_interval=polling_interval, gateway=gateway,
-                        device=device, data_label=data_label,
-                        data_index=data_index, data_type=data_type,
+                        device=device, device_type=device_type,
+                        data_label=data_label, data_index=data_index,
                         checksum=checksum, value=value, timestamp=timestamp)
                     rows.append(row)
 
@@ -266,25 +266,31 @@ def _create_ddv(device, devicedata):
 
     """
     # Initialize key variables
-    ddv = DeviceDataPoints(device)
+    ddv = DeviceDataPoints(device, device_type=None)
 
     # Ignore invalid data
     if isinstance(devicedata, dict) is True:
-        # Iterate through the expected data_labels in the dict
-        for data_label, label_dict in sorted(devicedata.items()):
-            # Ignore invalid data
-            if isinstance(label_dict, dict) is False:
-                continue
+        if ('datapoints' in devicedata) and ('device_type' in devicedata):
+            # Create a valid DeviceDataPoint object
+            device_type = devicedata['device_type']
+            ddv = DeviceDataPoints(device, device_type=device_type)
 
-            # Validate the presence of required keys, then process
-            if ('data' in label_dict) and ('data_type' in label_dict):
-                # Skip invalid data formats
-                if isinstance(label_dict['data'], list) is False:
+            # Iterate through the expected data_labels in the dict
+            datapoint_dict = devicedata['datapoints']
+            for data_label, label_dict in sorted(datapoint_dict.items()):
+                # Ignore invalid data
+                if isinstance(label_dict, dict) is False:
                     continue
 
-                # Add to the DeviceDataPoints
-                datapoints = _create_datapoints(data_label, label_dict)
-                ddv.add(datapoints)
+                # Validate the presence of required keys, then process
+                if ('data' in label_dict) and ('data_type' in label_dict):
+                    # Skip invalid data formats
+                    if isinstance(label_dict['data'], list) is False:
+                        continue
+
+                    # Add to the DeviceDataPoints
+                    datapoints = _create_datapoints(data_label, label_dict)
+                    ddv.add(datapoints)
 
     # Return
     return ddv
@@ -399,26 +405,36 @@ def _capd_ddv2dict(ddv):
         if bool(ddv.valid) is True:
             # Get information from data
             device = ddv.device
+            device_type = ddv.device_type
 
             # Pre-populate the result with empty dicts
-            result[device] = {}
+            datapoints = {}
 
             # Analyze each DataPoint for the ddv
             for _dvar in ddv.data:
                 # Add keys if not already there
-                if _dvar.data_label not in result[device]:
-                    result[device][_dvar.data_label] = {}
+                if _dvar.data_label not in datapoints:
+                    datapoints[_dvar.data_label] = {}
 
                 # Assign data values to result
                 data_tuple = (_dvar.data_index, _dvar.value)
-                if 'data' in result[device][_dvar.data_label]:
-                    result[device][_dvar.data_label][
+                if 'data' in datapoints[_dvar.data_label]:
+                    datapoints[_dvar.data_label][
                         'data'].append(data_tuple)
                 else:
-                    result[device][_dvar.data_label][
+                    datapoints[_dvar.data_label][
                         'data_type'] = _dvar.data_type
-                    result[device][_dvar.data_label][
+                    datapoints[_dvar.data_label][
                         'data'] = [data_tuple]
+
+            # Create a dict specific to the the device
+            device_dict = {
+                'datapoints': datapoints,
+                'device_type': device_type
+            }
+
+            # Add it all to the result
+            result[device] = device_dict
 
     # Return
     return result

@@ -24,7 +24,7 @@ DATA_NONE = None
 PattooDBrecord = collections.namedtuple(
         'PattooDBrecord', '''\
 agent_id agent_program agent_hostname timestamp polling_interval gateway \
-device data_label data_index value data_type checksum''')
+device device_type data_label data_index value data_type checksum''')
 
 ###############################################################################
 # Constants for pattoo Agent API

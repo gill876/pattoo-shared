@@ -109,12 +109,17 @@ class DeviceDataPoints(object):
 
     """
 
-    def __init__(self, device):
+    def __init__(self, device, device_type=None):
         """Initialize the class.
 
         Args:
             device: Device polled to get the DataPoint objects
-
+            device_type: Integer value identifying the type of device.
+                Device_types are specific to the agent_program name. The
+                intention is to make the combination of device_type and
+                agent_program be the combined key in doing datapoint
+                description lookups.
+                
         Returns:
             None
 
@@ -127,7 +132,9 @@ class DeviceDataPoints(object):
         self.data = []
         self.device = device
         self.valid = False
+        self.device_type = None
         self._checksums = []
+        self.device_type = _device_type(device_type)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -141,10 +148,11 @@ class DeviceDataPoints(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, valid={2}, data={3}'
+            '<{0} device={1}, device_type={4}, valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
+                repr(self.device), repr(self.valid), repr(self.data),
+                repr(self.device_type)
             )
         )
         return result
@@ -427,17 +435,24 @@ class DevicePollingTargets(object):
 
     """
 
-    def __init__(self, device):
+    def __init__(self, device, device_type=None):
         """Initialize the class.
 
         Args:
             device: Device polled to get the PollingTarget objects
+            device_type: Integer value identifying the type of device.
+                Device_types are specific to the agent_program name. The
+                intention is to make the combination of device_type and
+                agent_program be the combined key in doing datapoint
+                description lookups.
 
         Returns:
             None
 
         Variables:
             self.data: List of PollingTargets retrieved from the device
+            self.device: Name of device from which the data was received
+            self.device_type: Type of device
             self.valid: True if the object is populated with PollingTargets
 
         """
@@ -446,6 +461,7 @@ class DevicePollingTargets(object):
         self.device = device
         self.valid = False
         self._checksums = []
+        self.device_type = _device_type(device_type)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -459,10 +475,11 @@ class DevicePollingTargets(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, valid={2}, data={3}'
+            '<{0} device={1}, device_type={4}, valid={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
+                repr(self.device), repr(self.valid), repr(self.data),
+                repr(self.device_type)
             )
         )
         return result
@@ -527,3 +544,29 @@ def _strip_non_printable(value):
 
     # Return
     return printable_value
+
+
+def _device_type(device_type):
+    """Create a standardized device type.
+
+    Args:
+        device_type: Type of device
+
+    Returns:
+        result: Standardized device_type
+
+    """
+    # Initialize key variables
+    valid = True
+
+    # Set the device_type
+    if device_type is None or device_type is True or device_type is False:
+        valid = False
+    if valid is True:
+        try:
+            result = abs(int(device_type))
+        except:
+            result = None
+    else:
+        result = None
+    return result
