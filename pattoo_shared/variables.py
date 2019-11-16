@@ -1,5 +1,8 @@
 """Module for classes that format variables."""
 
+# Standard imports
+import import time
+
 # pattoo imports
 from pattoo_shared import times
 from pattoo_shared import data
@@ -96,6 +99,7 @@ class DataPoint(object):
             None
 
         Variables:
+            self.timestamp: Integer of epoch milliseconds
             self.valid: True if the object has a valid data_type
             self.checksum: Hash of self.data_label, self.data_index and
                 self.data_type to ensure uniqueness when assigned to a device.
@@ -106,6 +110,7 @@ class DataPoint(object):
         self.data_index = data_index
         self.value = value
         self.data_type = data_type
+        self.timestamp = int(time() * 1000)
         self.metadata = {}
 
         # False validity if value is not of the right type
