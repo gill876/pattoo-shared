@@ -67,7 +67,7 @@ APD = {
         },
     },
     'polling_interval': 10,
-    'timestamp': 1571951520}
+    'agent_timestamp': 1571951520}
 
 
 class TestConvertAgentPolledData(unittest.TestCase):
@@ -86,7 +86,6 @@ class TestConvertAgentPolledData(unittest.TestCase):
         self.assertEqual(agentdata.valid, True)
         self.assertEqual(agentdata.agent_program, data['agent_program'])
         self.assertEqual(agentdata.agent_hostname, data['agent_hostname'])
-        self.assertEqual(agentdata.timestamp, data['timestamp'])
         self.assertEqual(agentdata.polling_interval, data['polling_interval'])
         self.assertEqual(agentdata.agent_id, data['agent_id'])
         self.assertTrue(bool(agentdata.data))
@@ -259,20 +258,19 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result.valid, True)
         self.assertEqual(result.agent_program, data['agent_program'])
         self.assertEqual(result.agent_hostname, data['agent_hostname'])
-        self.assertEqual(result.timestamp, data['timestamp'])
         self.assertEqual(result.polling_interval, data['polling_interval'])
         self.assertEqual(result.agent_id, data['agent_id'])
+        self.assertTrue(bool(result.agent_timestamp))
 
     def test__valid_agent(self):
         """Testing method / function _valid_agent."""
         # Test expected OK
         data = deepcopy(APD)
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertEqual(agent_valid, True)
         self.assertEqual(agent_program, data['agent_program'])
         self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertEqual(polling_interval, data['polling_interval'])
         self.assertEqual(agent_id, data['agent_id'])
         self.assertTrue(bool(polled_data))
@@ -282,12 +280,11 @@ class TestBasicFunctions(unittest.TestCase):
         # No agent_id
         data = deepcopy(APD)
         del data['agent_id']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
         self.assertEqual(agent_program, data['agent_program'])
         self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertEqual(polling_interval, data['polling_interval'])
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
@@ -297,12 +294,11 @@ class TestBasicFunctions(unittest.TestCase):
         # No agent_program
         data = deepcopy(APD)
         del data['agent_program']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
         self.assertEqual(agent_id, data['agent_id'])
         self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertEqual(polling_interval, data['polling_interval'])
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
@@ -312,42 +308,25 @@ class TestBasicFunctions(unittest.TestCase):
         # No agent_hostname
         data = deepcopy(APD)
         del data['agent_hostname']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
         self.assertEqual(agent_id, data['agent_id'])
         self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertEqual(polling_interval, data['polling_interval'])
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertIsNone(agent_hostname)
         self.assertTrue('gw01' in polled_data)
 
-        # No timestamp
-        data = deepcopy(APD)
-        del data['timestamp']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertIsNone(timestamp)
-        self.assertTrue('gw01' in polled_data)
-
         # No polling_interval
         data = deepcopy(APD)
         del data['polling_interval']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
         self.assertEqual(agent_id, data['agent_id'])
         self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertTrue(bool(polled_data))
         self.assertTrue(isinstance(polled_data, dict))
         self.assertEqual(agent_hostname, data['agent_hostname'])
@@ -357,25 +336,23 @@ class TestBasicFunctions(unittest.TestCase):
         # No gateways
         data = deepcopy(APD)
         del data['gateways']
-        (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+        (agent_id, agent_program, agent_hostname, polling_interval,
          polled_data, agent_valid) = converter._valid_agent(data)
         self.assertFalse(agent_valid)
         self.assertEqual(agent_id, data['agent_id'])
         self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(timestamp, data['timestamp'])
         self.assertEqual(polling_interval, data['polling_interval'])
         self.assertEqual(agent_hostname, data['agent_hostname'])
         self.assertIsNone(polled_data)
 
         # Test with bad data
         for data in self.bad_data:
-            (agent_id, agent_program, agent_hostname, timestamp,
+            (agent_id, agent_program, agent_hostname,
              polling_interval, polled_data, agent_valid
              ) = converter._valid_agent(data)
             self.assertFalse(agent_valid)
             self.assertIsNone(agent_id)
             self.assertIsNone(agent_program)
-            self.assertIsNone(timestamp)
             self.assertIsNone(polling_interval)
             self.assertIsNone(agent_hostname)
             self.assertIsNone(polled_data)
@@ -482,11 +459,11 @@ class TestBasicFunctions(unittest.TestCase):
         result = converter.extract(agentdata)
         self.assertTrue(isinstance(result, list))
         for row in result:
-            self.assertEqual(len(row), 14)
+            self.assertEqual(len(row), 15)
             self.assertEqual(row.agent_id, '9088a13f')
             self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
             self.assertEqual(row.agent_hostname, 'palisadoes')
-            self.assertEqual(row.timestamp, 1571951520)
+            self.assertTrue(bool(row.agent_timestamp))
             self.assertEqual(row.polling_interval, 10)
             self.assertEqual(row.device_type, 8)
             self.assertEqual(row.gateway, 'gw01')
@@ -509,6 +486,7 @@ class TestBasicFunctions(unittest.TestCase):
             device=1, device_type=1,
             metadata=1,
             data_label=1, data_index=1,
+            agent_timestamp=1,
             checksum=None, value=1, timestamp=1)
         row = converter._add_checksum(seed)
         self.assertEqual(
@@ -522,6 +500,7 @@ class TestBasicFunctions(unittest.TestCase):
             polling_interval=1, gateway=1,
             device=1, device_type=1,
             metadata=1,
+            agent_timestamp=1,
             data_label=1, data_index=1,
             checksum=None, value=1, timestamp=False)
         row = converter._add_checksum(seed)
@@ -536,12 +515,14 @@ class TestBasicFunctions(unittest.TestCase):
             polling_interval=1, gateway=1,
             device=1, device_type=1,
             metadata=1,
+            agent_timestamp=1,
             data_label=1, data_index=1,
             checksum=None, value=True, timestamp=False)
         row = converter._add_checksum(seed)
         self.assertEqual(
             row.checksum,
             'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
+
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

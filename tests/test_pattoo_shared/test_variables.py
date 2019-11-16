@@ -204,8 +204,8 @@ class TestDataPoint(unittest.TestCase):
 
         # Test
         expected = ('''\
-<DataPoint value=10, data_label='testing', data_index=10, data_type=0, \
-valid=True>''')
+<DataPoint value=10, data_label='testing', data_index=10, data_type=99, \
+timestamp={}, valid=True>'''.format(variable.timestamp))
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
@@ -314,14 +314,12 @@ class TestAgentPolledData(unittest.TestCase):
         agent_id = 'polar_bear'
         agent_program = 'brown_bear'
         agent_hostname = 'localhost'
-        timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval,
-            timestamp=timestamp)
+            agent_id, agent_program, agent_hostname, polling_interval)
 
         # Test
-        self.assertEqual(apd.timestamp, 60)
+        self.assertTrue(bool(apd.agent_timestamp))
         self.assertEqual(apd.polling_interval, 30)
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
@@ -334,16 +332,15 @@ class TestAgentPolledData(unittest.TestCase):
         agent_id = 'polar_bear'
         agent_program = 'brown_bear'
         agent_hostname = 'localhost'
-        timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval,
-            timestamp=timestamp)
+            agent_id, agent_program, agent_hostname, polling_interval)
 
         # Test
         expected = ('''\
 <AgentPolledData agent_id='polar_bear' agent_program='brown_bear', \
-agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
+agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
+'''.format(apd.agent_timestamp, 3))
         result = apd.__repr__()
         self.assertEqual(result, expected)
 
@@ -353,11 +350,9 @@ agent_hostname='localhost', timestamp=60 polling_interval=30, valid=False>''')
         agent_id = 'koala_bear'
         agent_program = 'panda_bear'
         agent_hostname = 'localhost'
-        timestamp = 68
         polling_interval = 30
         apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval,
-            timestamp=timestamp)
+            agent_id, agent_program, agent_hostname, polling_interval)
 
         # Initialize DeviceGateway
         gateway = 'grizzly_bear'

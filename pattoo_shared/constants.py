@@ -10,8 +10,8 @@ import collections
 # Universal constants for all agents
 ###############################################################################
 
-DATA_FLOAT = 1
-DATA_INT = 0
+DATA_FLOAT = 101
+DATA_INT = 99
 DATA_COUNT64 = 64
 DATA_COUNT = 32
 DATA_STRING = 2
@@ -24,7 +24,8 @@ DATA_NONE = None
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', '''\
 agent_id agent_program agent_hostname timestamp polling_interval gateway \
-device device_type data_label data_index value data_type checksum metadata''')
+device device_type data_label data_index value data_type checksum metadata \
+agent_timestamp''')
 
 ###############################################################################
 # Constants for pattoo Agent API

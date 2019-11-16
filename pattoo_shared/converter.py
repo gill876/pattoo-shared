@@ -33,7 +33,7 @@ class ConvertAgentPolledData(object):
         # Initialize key variables
         self._data = defaultdict(lambda: defaultdict(dict))
         self._gateway_data = agentdata.data
-        self._data['timestamp'] = agentdata.timestamp
+        self._data['agent_timestamp'] = agentdata.timestamp
         self._data['polling_interval'] = agentdata.polling_interval
         self._data['agent_id'] = agentdata.agent_id
         self._data['agent_program'] = agentdata.agent_program
@@ -93,17 +93,15 @@ def convert(_data=None):
     agent_id = None
     agent_program = None
     agent_hostname = None
-    timestamp = None
     polling_interval = None
 
     # Get values to instantiate an AgentPolledData object
-    (agent_id, agent_program, agent_hostname, timestamp, polling_interval,
+    (agent_id, agent_program, agent_hostname, polling_interval,
      polled_data, agent_valid) = _valid_agent(_data)
     if agent_valid is False:
         return None
     agentdata = AgentPolledData(
-        agent_id, agent_program, agent_hostname,
-        timestamp=timestamp, polling_interval=polling_interval)
+        agent_id, agent_program, agent_hostname, polling_interval)
 
     # Iterate through devices polled by the agent
     for gateway, gw_dict in sorted(polled_data.items()):
@@ -151,7 +149,7 @@ def extract(agentdata):
         agent_hostname = agentdata.agent_hostname
         polling_interval = agentdata.polling_interval
         agent_program = agentdata.agent_program
-        timestamp = agentdata.timestamp
+        agent_timestamp = agentdata.agent_timestamp
 
         # Cycle through the data
         for gwd in agentdata.data:
@@ -171,21 +169,23 @@ def extract(agentdata):
                 device = ddv.device
                 device_type = ddv.device_type
                 for _dv in ddv.data:
-                    data_label = _dv.data_label
-                    data_index = _dv.data_index
-                    value = _dv.value
-                    data_type = _dv.data_type
-                    metadata = _dv.metadata
-
                     # Assign values to tuple
                     _row = PattooDBrecord(
-                        agent_id=agent_id, agent_program=agent_program,
-                        agent_hostname=agent_hostname, data_type=data_type,
-                        polling_interval=polling_interval, gateway=gateway,
-                        device=device, device_type=device_type,
-                        metadata=metadata,
-                        data_label=data_label, data_index=data_index,
-                        checksum=None, value=value, timestamp=timestamp)
+                        agent_id=agent_id,
+                        agent_program=agent_program,
+                        agent_hostname=agent_hostname,
+                        data_type=_dv.data_type,
+                        agent_timestamp=agent_timestamp,
+                        polling_interval=polling_interval,
+                        gateway=gateway,
+                        device=device,
+                        device_type=device_type,
+                        metadata=_dv.metadata,
+                        data_label=_dv.data_label,
+                        data_index=_dv.data_index,
+                        checksum=None,
+                        value=_dv.value,
+                        timestamp=_dv.timestamp)
                     row = _add_checksum(_row)
                     rows.append(row)
 
@@ -216,13 +216,21 @@ def _add_checksum(row):
            row.device_type, json_metadata))
 
     result = PattooDBrecord(
-        agent_id=row.agent_id, agent_program=row.agent_program,
-        agent_hostname=row.agent_hostname, data_type=row.data_type,
-        polling_interval=row.polling_interval, gateway=row.gateway,
-        device=row.device, device_type=row.device_type,
+        agent_id=row.agent_id,
+        agent_program=row.agent_program,
+        agent_hostname=row.agent_hostname,
+        data_type=row.data_type,
+        polling_interval=row.polling_interval,
+        gateway=row.gateway,
+        device=row.device,
+        device_type=row.device_type,
         metadata=row.metadata,
-        data_label=row.data_label, data_index=row.data_index,
-        checksum=checksum, value=row.value, timestamp=row.timestamp)
+        data_label=row.data_label,
+        data_index=row.data_index,
+        checksum=checksum,
+        value=row.value,
+        agent_timestamp=row.agent_timestamp,
+        timestamp=row.timestamp)
     return result
 
 
@@ -242,7 +250,6 @@ def _valid_agent(_data):
     agent_id = None
     agent_program = None
     agent_hostname = None
-    timestamp = None
     polling_interval = None
     polled_data = None
     agent_valid = False
@@ -255,9 +262,6 @@ def _valid_agent(_data):
             agent_program = _data['agent_program']
         if 'agent_hostname' in _data:
             agent_hostname = _data['agent_hostname']
-        if 'timestamp' in _data:
-            if isinstance(_data['timestamp'], int) is True:
-                timestamp = _data['timestamp']
         if 'polling_interval' in _data:
             if isinstance(_data['polling_interval'], int) is True:
                 polling_interval = _data['polling_interval']
@@ -265,20 +269,16 @@ def _valid_agent(_data):
             if isinstance(_data['gateways'], dict) is True:
                 polled_data = deepcopy(_data['gateways'])
 
-    # Valid timestamp related data?
-    valid_times = times.validate_timestamp(timestamp, polling_interval)
-
     # Determine validity
     agent_valid = False not in [
         bool(agent_id), bool(agent_program),
-        bool(agent_hostname), bool(timestamp),
-        bool(polling_interval), bool(polled_data),
-        bool(valid_times)]
+        bool(agent_hostname),
+        bool(polling_interval), bool(polled_data)]
 
     # Return
     result = (
         agent_id, agent_program, agent_hostname,
-        timestamp, polling_interval, polled_data, agent_valid)
+        polling_interval, polled_data, agent_valid)
     return result
 
 

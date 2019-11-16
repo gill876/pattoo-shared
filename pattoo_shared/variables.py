@@ -158,11 +158,12 @@ class DataPoint(object):
         # Create a printable variation of the value
         printable_value = _strip_non_printable(self.value)
         result = ('''\
-<{0} value={1}, data_label={2}, data_index={3}, data_type={4}, valid={5}>\
+<{0} value={1}, data_label={2}, data_index={3}, data_type={4}, \
+timestamp={6}, valid={5}>\
 '''.format(self.__class__.__name__,
            repr(printable_value), repr(self.data_label),
            repr(self.data_index), repr(self.data_type),
-           repr(self.valid))
+           repr(self.valid), repr(self.timestamp))
         )
         return result
 
@@ -355,7 +356,7 @@ class AgentPolledData(object):
     """
 
     def __init__(self, agent_id, agent_program, agent_hostname,
-                 polling_interval, timestamp=None):
+                 polling_interval):
         """Initialize the class.
 
         Args:
@@ -363,7 +364,6 @@ class AgentPolledData(object):
             agent_program: Name of agent program collecting the data
             agent_hostname: Hostname on which the agent ran
             polling_interval: Polling interval used to collect the data
-            timestamp: Timestamp of data
 
         Returns:
             None
@@ -377,8 +377,8 @@ class AgentPolledData(object):
         self.agent_id = agent_id
         self.agent_program = agent_program
         self.agent_hostname = agent_hostname
-        (self.timestamp, self.polling_interval) = times.normalized_timestamp(
-            polling_interval, timestamp=timestamp)
+        self.agent_timestamp = int(time() * 1000)
+        self.polling_interval = polling_interval
         self.data = []
         self.valid = False
 
@@ -398,7 +398,7 @@ class AgentPolledData(object):
 polling_interval={5}, valid={6}>\
 '''.format(self.__class__.__name__, repr(self.agent_id),
            repr(self.agent_program), repr(self.agent_hostname),
-           repr(self.timestamp), repr(self.polling_interval),
+           repr(self.agent_timestamp), repr(self.polling_interval),
            repr(self.valid)))
         return result
 
@@ -430,8 +430,8 @@ polling_interval={5}, valid={6}>\
                 # Set object as being.valid
                 self.valid = False not in [
                     bool(self.agent_id), bool(self.agent_program),
-                    bool(self.agent_hostname), bool(self.timestamp),
-                    bool(self.polling_interval), bool(self.data)]
+                    bool(self.agent_hostname), bool(self.polling_interval),
+                    bool(self.data)]
 
 
 class AgentAPIVariable(object):
