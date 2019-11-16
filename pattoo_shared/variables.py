@@ -1,7 +1,7 @@
 """Module for classes that format variables."""
 
 # Standard imports
-import import time
+from time import time
 
 # pattoo imports
 from pattoo_shared import times

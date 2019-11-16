@@ -149,9 +149,9 @@ def extract(agentdata):
         agent_id = agentdata.agent_id
         agent_program = agentdata.agent_program
         agent_hostname = agentdata.agent_hostname
-        timestamp = agentdata.timestamp
         polling_interval = agentdata.polling_interval
         agent_program = agentdata.agent_program
+        timestamp = agentdata.timestamp
 
         # Cycle through the data
         for gwd in agentdata.data:
