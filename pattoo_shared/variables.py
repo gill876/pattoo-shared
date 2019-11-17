@@ -155,8 +155,8 @@ class DataPoint(object):
         # Create a printable variation of the value
         printable_value = _strip_non_printable(self.data_value)
         result = ('''\
-<{0} value={1}, data_label={2}, data_index={3}, data_type={4}, \
-timestamp={6}, valid={5}>\
+<{0} data_value={1}, data_label={2}, data_index={3}, data_type={4}, \
+data_timestamp={6}, valid={5}>\
 '''.format(self.__class__.__name__,
            repr(printable_value), repr(self.data_label),
            repr(self.data_index), repr(self.data_type),

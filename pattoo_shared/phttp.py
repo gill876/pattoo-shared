@@ -94,7 +94,7 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
                 log_message = (
                     'HTTP {} error for identifier "{}" posted to server {}'
                     ''.format(result.status_code, self._identifier, self._url))
-                log.log2debug(1029, log_message)
+                log.log2debug(1017, log_message)
                 # Save data to cache, remote webserver isn't working properly
                 self._save(valid_data)
 

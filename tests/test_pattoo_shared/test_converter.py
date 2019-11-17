@@ -5,7 +5,7 @@
 import unittest
 import os
 import sys
-from copy import deepcopy
+import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -25,95 +25,12 @@ directory. Please fix.''')
 from pattoo_shared import converter
 from pattoo_shared import data as lib_data
 from pattoo_shared.variables import (
-    DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
+    DataPointMeta, DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     PattooDBrecord)
 from tests.libraries.configuration import UnittestConfig
-
-
-# Known working data
-APD = {
-    'agent_hostname': 'palisadoes',
-    'agent_id': '9088a13f',
-    'agent_program': 'pattoo-agent-snmpd',
-    'gateways': {
-        'gw01': {
-            'devices': {
-                'device_1': {
-                    'datapoints': {
-                        '.1.3.6.1.2.1.2.2.1.10': {
-                            'data': [['1', 1999], ['100', 2999]],
-                            'data_type': 32},
-                        '.1.3.6.1.2.1.2.2.1.16': {
-                            'data': [['1', 3999], ['100', 4999]],
-                            'data_type': 32}
-                    },
-                    'device_type': 8
-                },
-                'device_2': {
-                    'datapoints': {
-                        '.1.3.6.1.2.1.2.2.1.10': {
-                            'data': [['1', 1888], ['100', 2888]],
-                            'data_type': 32},
-                        '.1.3.6.1.2.1.2.2.1.16': {
-                            'data': [['2', 3888], ['102', 4888]],
-                            'data_type': 32}
-                        },
-                    'device_type': 8
-                },
-            },
-        },
-    },
-    'polling_interval': 10,
-    'agent_timestamp': 1571951520}
-
-
-class TestConvertAgentPolledData(unittest.TestCase):
-    """Checks all functions and methods."""
-
-    #########################################################################
-    # General object setup
-    #########################################################################
-
-    def test___init__(self):
-        """Testing method / function __init__."""
-        # Test expected OK
-        data = deepcopy(APD)
-        agentdata = converter.convert(data)
-        self.assertTrue(isinstance(agentdata, AgentPolledData))
-        self.assertEqual(agentdata.valid, True)
-        self.assertEqual(agentdata.agent_program, data['agent_program'])
-        self.assertEqual(agentdata.agent_hostname, data['agent_hostname'])
-        self.assertEqual(agentdata.polling_interval, data['polling_interval'])
-        self.assertEqual(agentdata.agent_id, data['agent_id'])
-        self.assertTrue(bool(agentdata.data))
-        self.assertTrue(isinstance(agentdata.data, list))
-        for dgw in agentdata.data:
-            self.assertTrue(isinstance(dgw, DeviceGateway))
-            self.assertTrue(bool(dgw.data))
-            self.assertTrue(isinstance(dgw.data, list))
-            for dvh in dgw.data:
-                self.assertTrue(isinstance(dvh, DeviceDataPoints))
-                self.assertTrue(bool(dvh.data))
-                for _dv in dvh.data:
-                    self.assertTrue(isinstance(_dv.value, int))
-                    self.assertTrue(isinstance(_dv.data_index, str))
-                    self.assertTrue(isinstance(_dv.data_label, str))
-                    self.assertEqual(_dv.data_type, 32)
-                    self.assertTrue(_dv.data_label.startswith(
-                        '.1.3.6.1.2.1.2.2.1.1'))
-
-    def test__process(self):
-        """Testing method / function _process."""
-        # Tested by test___init__
-        pass
-
-    def test_data(self):
-        """Testing method / function data."""
-        # Tested by test___init__
-        pass
 
 
 class TestBasicFunctions(unittest.TestCase):
@@ -123,405 +40,148 @@ class TestBasicFunctions(unittest.TestCase):
     # General object setup
     #########################################################################
 
-    # Bad data for testing. Empty list, dict, None, fake dict
-    bad_data = [
-        'test_string',
-        1,
-        1.1,
-        [],
-        {},
-        None,
-        {
-            'key1': 1,
-            'key2': 2,
-            'key3': 3,
-            'key4': 4
-        },
-        {
-            'data': [],
-            'data_type': 26
+    def test_cache_to_keypairs(self):
+        """Testing method / function cache_to_keypairs."""
+        cache = [
+            "1234",
+            [{"metadata": [
+                {"agent_hostname": "palisadoes"},
+                {"agent_id": "1234"},
+                {"agent_program": "program_1"},
+                {"device": "device_1"},
+                {"gateway": "palisadoes"},
+                {"polling_interval": "10"}],
+              "data_label": 30386,
+              "data_type": 99,
+              "data_index": "index_1",
+              "data_value": 523.0,
+              "data_timestamp": 1574011824387,
+              "checksum": '''\
+b6c093d976251b97d00324bb65b6f3319c4df1f1c90c94c564014165bf6672b4'''},
+             {"metadata": [
+                 {"agent_hostname": "palisadoes"},
+                 {"agent_id": "1234"},
+                 {"agent_program": "program_1"},
+                 {"device": "device_1"},
+                 {"gateway": "palisadoes"},
+                 {"polling_interval": "10"}],
+              "data_label": 30386 * 2,
+              "data_type": 99,
+              "data_index": "index_1",
+              "data_value": 523.0 * 2,
+              "data_timestamp": 1574011824390,
+              "checksum": '''\
+7ed9053508b247fe1f1749594fda40cf8e2292c786e438b935ff11193ae07640'''}]]
+
+        # Test
+        results = converter.cache_to_keypairs(cache[0], cache[1])
+        self.assertTrue(isinstance(results, list))
+        for index, result in enumerate(results):
+            pass
+
+    def test_agentdata_to_datapoints(self):
+        """Testing method / function agentdata_to_datapoints."""
+        # Setup AgentPolledData
+        agent_id = 'koala_bear'
+        agent_program = 'panda_bear'
+        agent_hostname = 'localhost'
+        polling_interval = 30
+        apd = AgentPolledData(
+            agent_id, agent_program, agent_hostname, polling_interval)
+
+        # Initialize DeviceGateway
+        gateway = 'grizzly_bear'
+        dgw = DeviceGateway(gateway)
+
+        # Initialize DeviceDataPoints
+        device = 'teddy_bear'
+        ddv = DeviceDataPoints(device)
+
+        # Setup DataPoint
+        value = 457
+        data_label = 'gummy_bear'
+        data_index = 999
+        data_type = DATA_INT
+        variable = DataPoint(
+            value, data_label=data_label, data_index=data_index,
+            data_type=data_type)
+
+        # Add data to DeviceDataPoints
+        ddv.add(variable)
+
+        # Add data to DeviceGateway
+        dgw.add(ddv)
+
+        # Test DeviceGateway to AgentPolledData
+        apd.add(dgw)
+
+        # Test contents
+        expected_metadata = {
+            'agent_id': agent_id,
+            'agent_program': agent_program,
+            'agent_hostname': agent_hostname,
+            'polling_interval': polling_interval,
+            'gateway': gateway,
+            'device': device
         }
-    ]
+        result = converter.agentdata_to_datapoints(apd)
 
-    # Bad data for DeviceDataPoints testing
-    # - Data not a list of lists
-    # - Data has bad data_type
-    # - Data is None
-    # - Data is dict
-    # - No Data
-    # - No data_type
-    # - Data is empty list of lists
-    # - Data is empty list
-    # - Data is empty list of lists of lists
-    bad_dvh_01 = {
-        'bad_dev_01': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [{'1': 1999}, {'100': 2999}],
-                    'data_type': 32}
-                    }
-        },
-        'bad_dev_02': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [['1', 1999], ['100', 2999]],
-                    'data_type': 23}
-                    }
-        },
-        'bad_dev_03': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': None,
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_04': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': {},
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_05': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_06': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': {},
-                }
-            }
-        },
-        'bad_dev_07': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [[]],
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_08': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [],
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_09': {
-            'device_type': 10,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [[[]]],
-                    'data_type': 32}
-                }
-        },
-    }
+        self.assertEqual(len(result), 1)
+        item = result[0]
+        self.assertTrue(isinstance(item, DataPoint))
+        self.assertEqual(item.data_value, value)
+        self.assertEqual(item.data_type, DATA_INT)
+        self.assertEqual(item.data_index, data_index)
+        self.assertEqual(item.data_label, data_label)
+        self.assertEqual(
+            item.checksum,
+            '''\
+adaa977bbc2f3b0cae66f4c3021963a34ef16077e3ad54d2ae3736b3842c85b0''')
+        self.assertTrue(isinstance(item.metadata, dict))
+        self.assertEqual(len(item.metadata), len(expected_metadata))
+        for key, value in item.metadata.items():
+            self.assertTrue(isinstance(value, str))
+            self.assertTrue(isinstance(key, str))
+            self.assertEqual(value, str(expected_metadata[key]))
 
-    # Almost good data for DeviceDataPoints testing
-    # - Data has None in list
-    # - Data has list with 3 values
-    bad_dvh_02 = {
-        'bad_dev_01': {
-            'device_type': 9,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [['1', 1999], None],
-                    'data_type': 32}
-                }
-        },
-        'bad_dev_02': {
-            'device_type': 9,
-            'datapoints': {
-                'bad_key_01': {
-                    'data': [['1', 1999], [1, 2, 3]],
-                    'data_type': 32}
-            }
-        }
-    }
-
-    def test_convert(self):
-        """Testing method / function convert."""
-        # Test expected OK
-        data = deepcopy(APD)
-        result = converter.convert(data)
-        self.assertTrue(isinstance(result, AgentPolledData))
-        self.assertEqual(result.valid, True)
-        self.assertEqual(result.agent_program, data['agent_program'])
-        self.assertEqual(result.agent_hostname, data['agent_hostname'])
-        self.assertEqual(result.polling_interval, data['polling_interval'])
-        self.assertEqual(result.agent_id, data['agent_id'])
-        self.assertTrue(bool(result.agent_timestamp))
-
-    def test__valid_agent(self):
-        """Testing method / function _valid_agent."""
-        # Test expected OK
-        data = deepcopy(APD)
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertEqual(agent_valid, True)
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertTrue('gw01' in polled_data)
-
-        # No agent_id
-        data = deepcopy(APD)
-        del data['agent_id']
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertIsNone(agent_id)
-        self.assertTrue('gw01' in polled_data)
-
-        # No agent_program
-        data = deepcopy(APD)
-        del data['agent_program']
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertIsNone(agent_program)
-        self.assertTrue('gw01' in polled_data)
-
-        # No agent_hostname
-        data = deepcopy(APD)
-        del data['agent_hostname']
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertIsNone(agent_hostname)
-        self.assertTrue('gw01' in polled_data)
-
-        # No polling_interval
-        data = deepcopy(APD)
-        del data['polling_interval']
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertTrue(bool(polled_data))
-        self.assertTrue(isinstance(polled_data, dict))
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertIsNone(polling_interval)
-        self.assertTrue('gw01' in polled_data)
-
-        # No gateways
-        data = deepcopy(APD)
-        del data['gateways']
-        (agent_id, agent_program, agent_hostname, polling_interval,
-         polled_data, agent_valid) = converter._valid_agent(data)
-        self.assertFalse(agent_valid)
-        self.assertEqual(agent_id, data['agent_id'])
-        self.assertEqual(agent_program, data['agent_program'])
-        self.assertEqual(polling_interval, data['polling_interval'])
-        self.assertEqual(agent_hostname, data['agent_hostname'])
-        self.assertIsNone(polled_data)
-
-        # Test with bad data
-        for data in self.bad_data:
-            (agent_id, agent_program, agent_hostname,
-             polling_interval, polled_data, agent_valid
-             ) = converter._valid_agent(data)
-            self.assertFalse(agent_valid)
-            self.assertIsNone(agent_id)
-            self.assertIsNone(agent_program)
-            self.assertIsNone(polling_interval)
-            self.assertIsNone(agent_hostname)
-            self.assertIsNone(polled_data)
-
-    def test__create_ddv(self):
-        """Testing method / function _create_ddv."""
+    def test_datapoints_to_dicts(self):
+        """Testing method / function datapoints_to_dicts."""
         # Initialize key variables
-        device = 'device_1'
+        datapoints = []
+        now = time.time()
 
-        # Test expected OK
-        data = deepcopy(APD)['gateways']['gw01']['devices']
-        dv_host = converter._create_ddv(device, data[device])
-        self.assertTrue(isinstance(dv_host, DeviceDataPoints))
-        self.assertEqual(dv_host.device, device)
-        self.assertTrue(dv_host.valid)
-        self.assertTrue(bool(dv_host.data))
-        self.assertTrue(isinstance(dv_host.data, list))
-        for _dv in dv_host.data:
-            self.assertTrue(isinstance(_dv, DataPoint))
+        # Create DataPoints
+        for value in range(0, 5):
+            metadata = []
+            for meta in range(0, 22, 7):
+                metadata.append(DataPointMeta(int(meta), str(meta * 2)))
+            datapoint = DataPoint(
+                value,
+                data_index=(value * 10),
+                data_type=('type_{}'.format(value)),
+                data_label=('label_{}'.format(value)),
+            )
+            for meta in metadata:
+                datapoint.add(meta)
+            datapoints.append(datapoint)
 
-        # Test with bad data
-        for data in self.bad_data:
-            dv_host = converter._create_ddv(data, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
-            self.assertEqual(dv_host.device, data)
-            self.assertFalse(dv_host.valid)
-            self.assertFalse(bool(dv_host.data))
-            self.assertTrue(isinstance(dv_host.data, list))
-            for _dv in dv_host.data:
-                self.assertFalse(isinstance(_dv, DataPoint))
-
-        # Test with bad data
-        for device, data in sorted(self.bad_dvh_01.items()):
-            # Make sure we have the correct keys
-            self.assertEqual(data['device_type'], 10)
-            self.assertTrue(isinstance(data['datapoints'], dict))
-
-            dv_host = converter._create_ddv(device, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
-            self.assertTrue(dv_host.device, device)
-            self.assertFalse(dv_host.valid)
-            self.assertFalse(bool(dv_host.data))
-            self.assertTrue(isinstance(dv_host.data, list))
-            for _dv in dv_host.data:
-                self.assertFalse(isinstance(_dv, DataPoint))
-
-        # Test with partially corrupted data
-        for device, data in sorted(self.bad_dvh_02.items()):
-            # Make sure we have the correct keys
-            self.assertEqual(data['device_type'], 9)
-            self.assertTrue(isinstance(data['datapoints'], dict))
-
-            dv_host = converter._create_ddv(device, data)
-            self.assertTrue(isinstance(dv_host, DeviceDataPoints))
-            self.assertTrue(dv_host.device, device)
-            self.assertTrue(dv_host.valid)
-            self.assertTrue(bool(dv_host.data))
-            self.assertTrue(isinstance(dv_host.data, list))
-            self.assertTrue(len(dv_host.data), 1)
-            for _dv in dv_host.data:
-                self.assertTrue(isinstance(_dv, DataPoint))
-                self.assertEqual(_dv.value, 1999)
-                self.assertEqual(_dv.data_index, '1')
-                self.assertEqual(_dv.data_type, 32)
-                self.assertEqual(_dv.data_label, 'bad_key_01')
-
-    def test__create_datapoints(self):
-        """Testing method / function _create_datapoints."""
-        # Initialize key variables
-        valid_types = [
-            DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
-            DATA_STRING, DATA_NONE]
-        invalid_types = [True, False, '', 1.2]
-        data_label = '.1.3.6.1.2.1.2.2.1.16'
-        label_dict = {
-            'data': [['2', 3888], ['102', 4888]],
-            'data_type': 32}
-
-        # Test valid types
-        for next_type in valid_types:
-            label_dict['data_type'] = next_type
-            result = converter._create_datapoints(data_label, label_dict)
-            self.assertTrue(isinstance(result, list))
-            self.assertTrue(bool(result))
-            for _dv in result:
-                self.assertTrue(isinstance(_dv, DataPoint))
-                self.assertEqual(_dv.data_type, next_type)
-
-        # Test invalid types
-        for next_type in invalid_types:
-            label_dict['data_type'] = next_type
-            result = converter._create_datapoints(data_label, label_dict)
-            self.assertTrue(isinstance(result, list))
-            self.assertFalse(bool(result))
-            for _dv in result:
-                self.assertTrue(isinstance(_dv, DataPoint))
-                self.assertEqual(_dv.data_type, next_type)
-
-    def test_extract(self):
-        """Testing method / function _create_datapoints."""
-        # Test expected OK
-        data = deepcopy(APD)
-        agentdata = converter.convert(data)
-        result = converter.extract(agentdata)
+        # Start testing
+        result = converter.datapoints_to_dicts(datapoints)
         self.assertTrue(isinstance(result, list))
-        for row in result:
-            self.assertEqual(len(row), 15)
-            self.assertEqual(row.agent_id, '9088a13f')
-            self.assertEqual(row.agent_program, 'pattoo-agent-snmpd')
-            self.assertEqual(row.agent_hostname, 'palisadoes')
-            self.assertTrue(bool(row.agent_timestamp))
-            self.assertEqual(row.polling_interval, 10)
-            self.assertEqual(row.device_type, 8)
-            self.assertEqual(row.gateway, 'gw01')
-            self.assertTrue(isinstance(row.value, int))
-            self.assertTrue(isinstance(row.data_type, int))
-            self.assertTrue(isinstance(row.data_index, str))
-            self.assertTrue(isinstance(row.checksum, str))
-            self.assertTrue(isinstance(row.metadata, dict))
-
-            pdbr = converter._add_checksum(row)
-            self.assertEqual(row.checksum, pdbr.checksum)
-
-    def test__add_checksum(self):
-        """Testing method / function _add_checksum."""
-        # Test OK
-        seed = PattooDBrecord(
-            agent_id=1, agent_program=1,
-            agent_hostname=1, data_type=1,
-            polling_interval=1, gateway=1,
-            device=1, device_type=1,
-            metadata=1,
-            data_label=1, data_index=1,
-            agent_timestamp=1,
-            checksum=None, value=1, timestamp=1)
-        row = converter._add_checksum(seed)
-        self.assertEqual(
-            row.checksum,
-            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
-
-        # Nothing should change
-        seed = PattooDBrecord(
-            agent_id=1, agent_program=1,
-            agent_hostname=1, data_type=1,
-            polling_interval=1, gateway=1,
-            device=1, device_type=1,
-            metadata=1,
-            agent_timestamp=1,
-            data_label=1, data_index=1,
-            checksum=None, value=1, timestamp=False)
-        row = converter._add_checksum(seed)
-        self.assertEqual(
-            row.checksum,
-            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
-
-        # Nothing should change
-        seed = PattooDBrecord(
-            agent_id=1, agent_program=1,
-            agent_hostname=1, data_type=1,
-            polling_interval=1, gateway=1,
-            device=1, device_type=1,
-            metadata=1,
-            agent_timestamp=1,
-            data_label=1, data_index=1,
-            checksum=None, value=True, timestamp=False)
-        row = converter._add_checksum(seed)
-        self.assertEqual(
-            row.checksum,
-            'd2d02ea74de2c9fab1d802db969c18d409a8663a9697977bb1c98ccdd9de4372')
+        for value, item in enumerate(result):
+            self.assertEqual(item['data_index'], value * 10)
+            self.assertEqual(item['data_type'], 'type_{}'.format(value))
+            self.assertEqual(item['data_label'], 'label_{}'.format(value))
+            self.assertTrue(item['data_timestamp'] >= now)
+            self.assertTrue(item['data_timestamp'] <= now + 1000)
+            self.assertTrue(isinstance(item['checksum'], str))
+            self.assertTrue(isinstance(item['metadata'], list))
+            self.assertTrue(len(item['metadata'], 4))
+            for meta, metadata in enumerate(item['metadata']):
+                self.assertTrue(metadata, dict)
+                for m_key, m_value in metadata.items():
+                    self.assertEqual(2 * int(m_key), int(m_value))
+                    self.assertEqual(int(m_key) % 7, 0)
 
 
 if __name__ == '__main__':

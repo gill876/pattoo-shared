@@ -158,7 +158,9 @@ def datapoints_to_dicts(items):
         # Only convert valid data
         if datapoint.valid is True:
             data_dict = {
-                'metadata': datapoint.metadata,
+                'metadata': [
+                    {str(key): str(value)} for key, value in sorted(
+                        datapoint.metadata.items())],
                 'data_label': datapoint.data_label,
                 'data_type': datapoint.data_type,
                 'data_index': datapoint.data_index,

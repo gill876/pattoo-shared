@@ -82,12 +82,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.data_value, value)
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
@@ -98,12 +98,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = 123
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.data_value, value)
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, False)
@@ -114,12 +114,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.data_value, value)
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, False)
@@ -131,12 +131,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, int(value))
+        self.assertEqual(variable.data_value, int(value))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
@@ -148,12 +148,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, int(float(value)))
+        self.assertEqual(variable.data_value, int(float(value)))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
@@ -165,12 +165,12 @@ class TestDataPoint(unittest.TestCase):
         data_index = 98766
         data_type = DATA_FLOAT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.value, float(value))
+        self.assertEqual(variable.data_value, float(value))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
         self.assertEqual(variable.valid, True)
@@ -181,14 +181,15 @@ class TestDataPoint(unittest.TestCase):
             data_index = 98766
             data_type = DATA_STRING
             variable = DataPoint(
-                value=value, data_label=data_label, data_index=data_index,
+                value, data_label=data_label, data_index=data_index,
                 data_type=data_type)
 
             # Test each variable
             self.assertEqual(variable.data_type, data_type)
-            self.assertEqual(variable.value, str(value))
+            self.assertEqual(variable.data_value, str(value))
             self.assertEqual(variable.data_label, data_label)
             self.assertEqual(variable.data_index, data_index)
+            self.assertEqual(len(variable.checksum), 64)
             self.assertEqual(variable.valid, True)
 
     def test___repr__(self):
@@ -199,13 +200,13 @@ class TestDataPoint(unittest.TestCase):
         data_index = 10
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test
         expected = ('''\
-<DataPoint value=10, data_label='testing', data_index=10, data_type=99, \
-timestamp={}, valid=True>'''.format(variable.timestamp))
+<DataPoint data_value=10, data_label='testing', data_index=10, data_type=99, \
+data_timestamp={}, valid=True>'''.format(variable.data_timestamp))
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
@@ -217,7 +218,7 @@ timestamp={}, valid=True>'''.format(variable.timestamp))
         data_index = 98766
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         for key, value in [(1, 2), (3, 4), (5, 6)]:
@@ -272,7 +273,7 @@ data=[]''')
         data_index = 999
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Test add
@@ -296,7 +297,7 @@ data=[]''')
         # Test the values in the variable
         _variable = ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.data_value, value)
         self.assertEqual(_variable.data_label, data_label)
         self.assertEqual(_variable.data_index, data_index)
 
@@ -374,7 +375,7 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         data_index = 999
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Add data to DeviceDataPoints
@@ -419,7 +420,7 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         data = _ddv.data
         _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.data_value, value)
         self.assertEqual(_variable.data_label, data_label)
         self.assertEqual(_variable.data_index, data_index)
 
@@ -476,7 +477,7 @@ class TestDeviceGateway(unittest.TestCase):
         data_index = 999
         data_type = DATA_INT
         variable = DataPoint(
-            value=value, data_label=data_label, data_index=data_index,
+            value, data_label=data_label, data_index=data_index,
             data_type=data_type)
 
         # Add data to DeviceDataPoints
@@ -505,7 +506,7 @@ class TestDeviceGateway(unittest.TestCase):
         data = _ddv.data
         _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.data_value, value)
         self.assertEqual(_variable.data_label, data_label)
         self.assertEqual(_variable.data_index, data_index)
 
