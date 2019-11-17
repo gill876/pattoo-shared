@@ -141,9 +141,7 @@ class DataPoint(object):
             self.value = str(value)
 
         # Create checksum
-        seed = '{}{}{}'.format(
-            self.data_label, self.data_type, self.data_index)
-        self.checksum = data.hashstring(seed)
+        self.checksum = self._checksum()
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -191,6 +189,26 @@ timestamp={6}, valid={5}>\
                 # Process
                 self.metadata[item.key] = item.value
 
+    def _checksum(self):
+        """Calculate a checksum for the DataPoint.
+
+        Args:
+            None
+
+        Returns:
+            checksum: Hash.
+
+        """
+        # Initialize key variables
+        seed = '{}{}{}'.format(
+            self.data_label, self.data_type, self.data_index)
+        checksum = seed
+
+        # Generate checksum
+        for key, value in sorted(self.metadata.items()):
+            checksum = data.hashstring('{}{}{}'.format(checksum, key, value))
+        return checksum
+        
 
 class DeviceDataPoints(object):
     """Object defining a list of DataPoint objects.

@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import urllib
+from time import time
 
 # pip3 libraries
 import requests
@@ -14,19 +15,18 @@ import requests
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared import converter
-from pattoo_shared import data as lib_data
-from .converter import ConvertAgentPolledData
-from .variables import AgentPolledData
+from .variables import DataPoint
 
 
 class Post(object):
     """Class to prepare data for posting to remote pattoo server."""
 
-    def __init__(self, agentdata):
+    def __init__(self, identifier, identifier_data=None):
         """Initialize the class.
 
         Args:
-            agentdata: AgentPolledData object of data polled by agent
+            identifier: Unique identifer for the source of the data.
+            identifier_data: Data from the data source to post
 
         Returns:
             None
@@ -36,22 +36,16 @@ class Post(object):
         config = Config()
 
         # Test validity
-        if isinstance(agentdata, AgentPolledData) is False:
-            log_message = ('Data to post is not of type AgentPolledData')
+        if isinstance(identifier, str) is False:
+            log_message = ('''\
+Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
             log.log2die(1018, log_message)
 
         # Get posting URL
-        self._agentdata = agentdata
-        self._url = config.api_server_url(agentdata.agent_id)
-
-        # Get the agent cache directory
-        self._cache_dir = config.agent_cache_directory(
-            self._agentdata.agent_program)
-
-        # All cache files created by this agent will end with this suffix.
-        devicehash = lib_data.hashstring(agentdata.agent_hostname, sha=1)
-        self._cache_filename_suffix = '{}_{}.json'.format(
-            agentdata.agent_id, devicehash)
+        self._identifier = identifier
+        self._url = config.api_server_url(identifier)
+        self._cache_dir = config.agent_cache_directory(identifier)
+        self._identifier_data = identifier_data
 
     def post(self, save=True, data=None):
         """Post data to central server.
@@ -68,37 +62,49 @@ class Post(object):
         # Initialize key variables
         success = False
         response = False
-        timestamp = self._agentdata.timestamp
+        datapoints = []
+        valid_data = []
 
         # Create data to post
-        if data is None:
-            if self._agentdata.valid is True:
-                process = ConvertAgentPolledData(self._agentdata)
-                data2post = process.data()
-            else:
-                # Invalid data. Return False
-                log_message = (
-                    'Agent data invalid agent_id "{}". Will not post.'
-                    ''.format(self._agentdata.agent_id))
-                log.log2info(1017, log_message)
-                success = False
+        if bool(data) is True:
+            # Test validity
+            data2post = self._identifier_data
+            if isinstance(data2post, list) is False:
+                log_message = 'Data to post is not a list'
+                log.log2info(1019, log_message)
                 return success
+
+            # Convert the DataPoint objects into a dict list and return
+            for item in data2post:
+                if isinstance(item, DataPoint):
+                    datapoints.append(item)
+
+            for datapoint in datapoints:
+                data_dict = {
+                    'metadata': datapoint.metadata,
+                    'data_label': datapoint.data_label,
+                    'data_type': datapoint.data_type,
+                    'data_index': datapoint.data_index,
+                    'value': datapoint.value,
+                    'timestamp': datapoint.timestamp,
+                    'checksum': datapoint.checksum
+                }
+                valid_data.append(data_dict)
         else:
-            data2post = data
+            valid_data = data
+
+        # Fail if nothing to post
+        if bool(valid_data) is False:
+            return success
 
         # Post data save to cache if this fails
         try:
-            result = requests.post(self._url, json=data2post)
+            result = requests.post(self._url, json=valid_data)
             response = True
         except:
             if save is True:
-                # Create a unique very long filename to reduce risk of
-                filename = '{}/{}_{}'.format(
-                    self._cache_dir, timestamp, self._cache_filename_suffix)
-
-                # Save data
-                with open(filename, 'w') as f_handle:
-                    json.dump(data2post, f_handle)
+                # Save data to cache
+                self._save(valid_data)
             else:
                 # Proceed normally if there is a failure.
                 # This will be logged later
@@ -108,17 +114,20 @@ class Post(object):
         if response is True:
             if result.status_code == 200:
                 success = True
+            else:
+                # Save data to cache, remote webserver isn't working properly
+                self._save(valid_data)
 
         # Log message
         if success is True:
             log_message = (
-                'Agent "{}" successfully contacted server {}'
-                ''.format(self._agentdata.agent_program, self._url))
+                'Data for identifier "{}" posted to server {}'
+                ''.format(self._identifier, self._url))
             log.log2debug(1027, log_message)
         else:
             log_message = (
-                'Agent "{}" failed to contact server {}'
-                ''.format(self._agentdata.agent_program, self._url))
+                'Data for identifier "{}" failed to post to server {}'
+                ''.format(self._identifier, self._url))
             log.log2warning(1028, log_message)
 
         # Return
@@ -135,7 +144,7 @@ class Post(object):
 
         """
         # Initialize key variables
-        agent_id = self._agentdata.agent_id
+        identifier = self._identifier
 
         # Add files in cache directory to list only if they match the
         # cache suffix
@@ -144,12 +153,12 @@ class Post(object):
                 os.path.join(self._cache_dir, filename))]
         filenames = [
             filename for filename in all_filenames if filename.endswith(
-                self._cache_filename_suffix)]
+                '.json')]
 
         # Read cache file
         for filename in filenames:
             # Only post files for our own UID value
-            if agent_id not in filename:
+            if identifier not in filename:
                 continue
 
             # Get the full filepath for the cache file and post
@@ -161,8 +170,8 @@ class Post(object):
                     # Log removal
                     log_message = (
                         'Error reading previously cached agent data file {} '
-                        'for agent {}. May be corrupted.'
-                        ''.format(filepath, self._agentdata.agent_program))
+                        'for identifier {}. May be corrupted.'
+                        ''.format(filepath, self._identifier))
                     log.log2die(1064, log_message)
 
             # Post file
@@ -178,6 +187,52 @@ class Post(object):
                     'contacting server {}'
                     ''.format(filepath, self._url))
                 log.log2info(1007, log_message)
+
+    def _save(self, data):
+        """Save data to cache file.
+
+        Args:
+            cache_dir: Cache directory
+            identifier: Identifier
+            data: Dict to save
+
+        Returns:
+            success: True: if successful
+
+        """
+        # Initialize key variables
+        cache_dir = self._cache_dir
+        identifier = self._identifier
+        timestamp = int(time() * 1000)
+
+        # Create a unique very long filename to reduce risk of
+        filename = '{}/{}_{}.json'.format(cache_dir, timestamp, identifier)
+
+        # Save data
+        with open(filename, 'w') as f_handle:
+            json.dump(data, f_handle)
+
+
+class PostAgent(Post):
+    """Class to prepare data for posting to remote pattoo server."""
+
+    def __init__(self, agentdata):
+        """Initialize the class.
+
+        Args:
+            identifier: Unique identifer for the source of the data.
+            identifier_data: Data from the data source to post
+
+        Returns:
+            None
+
+        """
+        # Get extracted data
+        data = converter.extract(agentdata)
+
+        # Initialize key variables
+        Post.__init__(
+            self, agentdata.agent_id, identifier_data=data)
 
 
 class PassiveAgent(object):
@@ -212,8 +267,8 @@ class PassiveAgent(object):
         # Post data
         if bool(data_dict) is True:
             # Post to remote server
-            agentdata = converter.convert(data_dict)
-            server = Post(agentdata)
+            identifier = converter.convert(data_dict)
+            server = Post(identifier)
             success = server.post()
 
             # Purge cache if success is True

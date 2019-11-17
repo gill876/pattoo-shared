@@ -9,7 +9,7 @@ import json
 
 # Pattoo libraries
 from .variables import (
-    DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
+    DataPointMeta, DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from .constants import (
     PattooDBrecord,
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -33,7 +33,7 @@ class ConvertAgentPolledData(object):
         # Initialize key variables
         self._data = defaultdict(lambda: defaultdict(dict))
         self._gateway_data = agentdata.data
-        self._data['agent_timestamp'] = agentdata.timestamp
+        self._data['agent_timestamp'] = agentdata.agent_timestamp
         self._data['polling_interval'] = agentdata.polling_interval
         self._data['agent_id'] = agentdata.agent_id
         self._data['agent_program'] = agentdata.agent_program
@@ -131,7 +131,7 @@ def extract(agentdata):
         agentdata: AgentPolledData object
 
     Returns:
-        _rows: List of named tuples containing data
+        rows: List of named tuples containing data
 
     """
     # Initialize key variables
@@ -169,34 +169,23 @@ def extract(agentdata):
                 device = ddv.device
                 device_type = ddv.device_type
                 for _dv in ddv.data:
-                    # Assign values to tuple
-                    _row = PattooDBrecord(
-                        agent_id=agent_id,
-                        agent_program=agent_program,
-                        agent_hostname=agent_hostname,
-                        data_type=_dv.data_type,
-                        agent_timestamp=agent_timestamp,
-                        polling_interval=polling_interval,
-                        gateway=gateway,
-                        device=device,
-                        device_type=device_type,
-                        metadata=_dv.metadata,
-                        data_label=_dv.data_label,
-                        data_index=_dv.data_index,
-                        checksum=None,
-                        value=_dv.value,
-                        timestamp=_dv.timestamp)
-                    row = _add_checksum(_row)
-                    rows.append(row)
+                    # Assign values to DataPoints
+                    metadata = {
+                        'agent_id': agent_id,
+                        'agent_program': agent_program,
+                        'agent_hostname': agent_hostname,
+                        'agent_timestamp': agent_timestamp,
+                        'polling_interval': polling_interval,
+                        'gateway': gateway,
+                        'device': device,
+                        'device_type': device_type
+                    }
+                    for key, value in metadata.items():
+                        _dv.add(DataPointMeta(key, value))
+                    rows.append(_dv)
 
-    '''
-    Return a sorted list. We use a reverse order so that the information is
-    updated with the most recent last_timestamp on the first iteration. This
-    reduces the risk of insertion errors from other parallel processes doing
-    simultaneous updates.
-    '''
-    _rows = sorted(rows, key=attrgetter('timestamp'))
-    return _rows
+    # Return
+    return rows
 
 
 def _add_checksum(row):
@@ -242,8 +231,7 @@ def _valid_agent(_data):
 
     Returns:
         result: Tuple of (
-            agent_id, agent_program, agent_hostname,
-            timestamp, polled_data, agent_valid)
+            agent_id, agent_program, agent_hostname, polled_data, agent_valid)
 
     """
     # Initialize key variables
