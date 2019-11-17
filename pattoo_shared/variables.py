@@ -4,7 +4,6 @@
 from time import time
 
 # pattoo imports
-from pattoo_shared import times
 from pattoo_shared import data
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
@@ -76,7 +75,7 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, value=None, data_label=None,
+    def __init__(self, value, data_label=None,
                  data_index=0, data_type=DATA_INT):
         """Initialize the class.
 
@@ -99,7 +98,7 @@ class DataPoint(object):
             None
 
         Variables:
-            self.timestamp: Integer of epoch milliseconds
+            self.data_timestamp: Integer of epoch milliseconds
             self.valid: True if the object has a valid data_type
             self.checksum: Hash of self.data_label, self.data_index and
                 self.data_type to ensure uniqueness when assigned to a device.
@@ -108,9 +107,9 @@ class DataPoint(object):
         # Initialize variables
         self.data_label = data_label
         self.data_index = data_index
-        self.value = value
+        self.data_value = value
         self.data_type = data_type
-        self.timestamp = int(time() * 1000)
+        self.data_timestamp = int(time() * 1000)
         self.metadata = {}
 
         # False validity if value is not of the right type
@@ -132,13 +131,13 @@ class DataPoint(object):
                 data.is_numeric(value) is True,
                 isinstance(value, str) is True]:
             if data_type in [DATA_FLOAT, DATA_COUNT64, DATA_COUNT]:
-                self.value = float(value)
+                self.data_value = float(value)
             elif data_type in [DATA_INT]:
-                self.value = int(float(value))
+                self.data_value = int(float(value))
 
         # Convert strings to string
         if data_type in [DATA_STRING]:
-            self.value = str(value)
+            self.data_value = str(value)
 
         # Create checksum
         self.checksum = self._checksum()
@@ -154,14 +153,14 @@ class DataPoint(object):
 
         """
         # Create a printable variation of the value
-        printable_value = _strip_non_printable(self.value)
+        printable_value = _strip_non_printable(self.data_value)
         result = ('''\
 <{0} value={1}, data_label={2}, data_index={3}, data_type={4}, \
 timestamp={6}, valid={5}>\
 '''.format(self.__class__.__name__,
            repr(printable_value), repr(self.data_label),
            repr(self.data_index), repr(self.data_type),
-           repr(self.valid), repr(self.timestamp))
+           repr(self.valid), repr(self.data_timestamp))
         )
         return result
 
@@ -202,13 +201,13 @@ timestamp={6}, valid={5}>\
         # Initialize key variables
         seed = '{}{}{}'.format(
             self.data_label, self.data_type, self.data_index)
-        checksum = seed
+        checksum = data.hashstring(seed)
 
         # Generate checksum
         for key, value in sorted(self.metadata.items()):
             checksum = data.hashstring('{}{}{}'.format(checksum, key, value))
         return checksum
-        
+
 
 class DeviceDataPoints(object):
     """Object defining a list of DataPoint objects.

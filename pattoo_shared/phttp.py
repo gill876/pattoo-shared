@@ -15,7 +15,6 @@ import requests
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared import converter
-from .variables import DataPoint
 
 
 class Post(object):
@@ -62,39 +61,16 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
         # Initialize key variables
         success = False
         response = False
-        datapoints = []
-        valid_data = []
+        valid_data = False
 
         # Create data to post
         if bool(data) is True:
-            # Test validity
-            data2post = self._identifier_data
-            if isinstance(data2post, list) is False:
-                log_message = 'Data to post is not a list'
-                log.log2info(1019, log_message)
-                return success
-
-            # Convert the DataPoint objects into a dict list and return
-            for item in data2post:
-                if isinstance(item, DataPoint):
-                    datapoints.append(item)
-
-            for datapoint in datapoints:
-                data_dict = {
-                    'metadata': datapoint.metadata,
-                    'data_label': datapoint.data_label,
-                    'data_type': datapoint.data_type,
-                    'data_index': datapoint.data_index,
-                    'value': datapoint.value,
-                    'timestamp': datapoint.timestamp,
-                    'checksum': datapoint.checksum
-                }
-                valid_data.append(data_dict)
-        else:
             valid_data = data
+        else:
+            valid_data = converter.datapoints_to_dicts(self._identifier_data)
 
         # Fail if nothing to post
-        if bool(valid_data) is False:
+        if isinstance(valid_data, list) is False or bool(valid_data) is False:
             return success
 
         # Post data save to cache if this fails
@@ -115,6 +91,10 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
             if result.status_code == 200:
                 success = True
             else:
+                log_message = (
+                    'HTTP {} error for identifier "{}" posted to server {}'
+                    ''.format(result.status_code, self._identifier, self._url))
+                log.log2debug(1029, log_message)
                 # Save data to cache, remote webserver isn't working properly
                 self._save(valid_data)
 
@@ -228,7 +208,7 @@ class PostAgent(Post):
 
         """
         # Get extracted data
-        data = converter.extract(agentdata)
+        data = converter.agentdata_to_datapoints(agentdata)
 
         # Initialize key variables
         Post.__init__(

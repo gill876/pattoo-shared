@@ -21,11 +21,12 @@ DATA_NONE = None
 # Constants for data DB ingestion
 ###############################################################################
 
+MAX_KEYPAIR_LENGTH = 512
+
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', '''\
-agent_id agent_program agent_hostname timestamp polling_interval gateway \
-device device_type data_label data_index value data_type checksum metadata \
-agent_timestamp''')
+checksum data_index data_label data_source data_timestamp data_type \
+data_value metadata''')
 
 ###############################################################################
 # Constants for pattoo Agent API
