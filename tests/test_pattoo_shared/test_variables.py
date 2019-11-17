@@ -90,6 +90,9 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.data_value, value)
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - invalid data_type
@@ -139,6 +142,9 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.data_value, int(value))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for int data_type but
@@ -156,6 +162,9 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.data_value, int(float(value)))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for int data_type but
@@ -173,6 +182,9 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.data_value, float(value))
         self.assertEqual(variable.data_label, data_label)
         self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+b555c7d50d836597959e58369357a20c8e89b6b14a4a147618afc9aad2a8dc82''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for str data_type
@@ -190,6 +202,8 @@ class TestDataPoint(unittest.TestCase):
             self.assertEqual(variable.data_label, data_label)
             self.assertEqual(variable.data_index, data_index)
             self.assertEqual(len(variable.checksum), 64)
+            self.assertEqual(variable.checksum, '''\
+7dbd9767177b3c07aab11a299a3619a7f0427adc64e779a15968b7818a618a14''')
             self.assertEqual(variable.valid, True)
 
     def test___repr__(self):
@@ -225,6 +239,10 @@ data_timestamp={}, valid=True>'''.format(variable.data_timestamp))
             metadata = DataPointMeta(key, value)
             variable.add(metadata)
             self.assertEqual(variable.metadata[str(key)], str(value))
+
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
 
 
 class TestDeviceDataPoints(unittest.TestCase):

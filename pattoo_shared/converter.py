@@ -7,6 +7,7 @@ from .variables import (
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     MAX_KEYPAIR_LENGTH, PattooDBrecord)
+from pattoo_shared import data
 
 
 def cache_to_keypairs(data_source, items):
@@ -37,7 +38,7 @@ def cache_to_keypairs(data_source, items):
         valids.append(isinstance(item, dict))
 
         # Get all the key-pairs for the item
-        keypairs = {}
+        keypairs = []
         for key, value in sorted(item.items()):
             # All the right keys
             keys = ['checksum', 'metadata', 'data_type', 'data_label',
@@ -49,14 +50,21 @@ def cache_to_keypairs(data_source, items):
             # Work on metadata
             if key == 'metadata':
                 # Must be a dict
-                if isinstance(value, dict) is False:
+                if isinstance(value, list) is False:
                     valids.append(False)
                     continue
 
-                # Add metadata keypairs
-                for m_key, m_value in sorted(value.items()):
-                    keypairs[str(m_key)[:MAX_KEYPAIR_LENGTH]] = str(m_value)[
-                        :MAX_KEYPAIR_LENGTH]
+                # Add metadata keypairs as a list of tuples
+                for keypair in value:
+                    for m_key, m_value in keypair.items():
+                        if isinstance(m_key, str) is False:
+                            continue
+                        if isinstance(m_value, str) is False:
+                            continue
+                        keypairs.append(
+                            (str(m_key)[:MAX_KEYPAIR_LENGTH], str(
+                                m_value)[:MAX_KEYPAIR_LENGTH])
+                        )
 
             # Work on the data_type
             if key == 'data_type':
@@ -66,15 +74,18 @@ def cache_to_keypairs(data_source, items):
 
         # Append to result
         if False not in valids:
+            # Add the datasource to the original checksum for better uniqueness
+            checksum = data.hashstring(
+                '{}{}'.format(data_source, item['checksum']), sha=512)
             pattoo_db_variable = PattooDBrecord(
-                checksum=item['checksum'],
+                checksum=checksum,
                 data_index=item['data_index'],
                 data_label=item['data_label'],
                 data_source=data_source,
                 data_timestamp=item['data_timestamp'],
                 data_type=item['data_type'],
                 data_value=item['data_value'],
-                metadata=item['metadata']
+                metadata=keypairs
             )
             result.append(pattoo_db_variable)
 

@@ -6,6 +6,7 @@ import unittest
 import os
 import sys
 import time
+import json
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -42,6 +43,7 @@ class TestBasicFunctions(unittest.TestCase):
 
     def test_cache_to_keypairs(self):
         """Testing method / function cache_to_keypairs."""
+        self.maxDiff = None
         cache = [
             "1234",
             [{"metadata": [
@@ -56,28 +58,28 @@ class TestBasicFunctions(unittest.TestCase):
               "data_index": "index_1",
               "data_value": 523.0,
               "data_timestamp": 1574011824387,
-              "checksum": '''\
-b6c093d976251b97d00324bb65b6f3319c4df1f1c90c94c564014165bf6672b4'''},
-             {"metadata": [
-                 {"agent_hostname": "palisadoes"},
-                 {"agent_id": "1234"},
-                 {"agent_program": "program_1"},
-                 {"device": "device_1"},
-                 {"gateway": "palisadoes"},
-                 {"polling_interval": "10"}],
-              "data_label": 30386 * 2,
-              "data_type": 99,
-              "data_index": "index_1",
-              "data_value": 523.0 * 2,
-              "data_timestamp": 1574011824390,
-              "checksum": '''\
-7ed9053508b247fe1f1749594fda40cf8e2292c786e438b935ff11193ae07640'''}]]
+              "checksum": '123'}
+             ]
+            ]
 
         # Test
+        # cache = json.loads(cache_data)
         results = converter.cache_to_keypairs(cache[0], cache[1])
         self.assertTrue(isinstance(results, list))
-        for index, result in enumerate(results):
-            pass
+        for _, result in enumerate(results):
+            self.assertEqual(result.checksum, '''\
+5c531afb2e4106cc78f99ff895ef99d2fa587f7272a91f82244f06caddf89176c299afc0ef4a44\
+7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
+            self.assertEqual(result.data_timestamp, 1574011824387)
+            self.assertEqual(result.data_value, 523.0)
+            self.assertEqual(result.data_index, 'index_1')
+            self.assertEqual(result.data_type, 99)
+            self.assertEqual(result.data_label, 30386)
+            _metadata = cache[1][0]['metadata']
+            self.assertEqual(
+                result.metadata,
+                [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
+                    _dict.items())])
 
     def test_agentdata_to_datapoints(self):
         """Testing method / function agentdata_to_datapoints."""
