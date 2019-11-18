@@ -97,11 +97,11 @@ def51cb07699f90b1613d0f4da13574e415323b2fcb98c1f072218a8ba82a44432da79bdf90ebf\
 
         # Test True
         items = [
-            1, 0, 32, 64, DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT64]
+            99, 101, 32, 64, DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT64]
         for item in items:
             result = data.is_data_type_numeric(item)
             self.assertTrue(result)
-            
+
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

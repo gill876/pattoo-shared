@@ -1,10 +1,71 @@
 """Module for classes that format variables."""
 
+# Standard imports
+from time import time
+
 # pattoo imports
-from pattoo_shared import times
 from pattoo_shared import data
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
+
+
+class DataPointMeta(object):
+    """Metadata related to a DataPoint."""
+
+    def __init__(self, key, value):
+        """Initialize the class.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+
+        Returns:
+            None
+
+        Variables:
+            self.key: Metadata key
+            self.value: Metadata value
+            self.valid: True if valid
+
+        """
+        # Initialize variables
+        self.key = None
+        self.value = None
+
+        # Set variables
+        if isinstance(key, (str, int, float)) is True and key is not True and (
+                key is not False):
+            self.key = str(key)
+        if isinstance(value, (str, int, float)) is True and (
+                value is not True and value is not False):
+            self.value = str(value)
+
+        self.valid = False not in [
+            bool(self.key),
+            self.key is not True,
+            self.key is not False,
+            self.key is not None,
+            bool(self.value),
+            self.value is not True,
+            self.value is not False,
+            self.value is not None,
+            ]
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = ('<{0} key={1}, value={2}>'.format(
+            self.__class__.__name__, repr(self.key), repr(self.value))
+        )
+        return result
 
 
 class DataPoint(object):
@@ -14,7 +75,7 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, value=None, data_label=None,
+    def __init__(self, value, data_label=None,
                  data_index=0, data_type=DATA_INT):
         """Initialize the class.
 
@@ -37,6 +98,7 @@ class DataPoint(object):
             None
 
         Variables:
+            self.data_timestamp: Integer of epoch milliseconds
             self.valid: True if the object has a valid data_type
             self.checksum: Hash of self.data_label, self.data_index and
                 self.data_type to ensure uniqueness when assigned to a device.
@@ -45,8 +107,10 @@ class DataPoint(object):
         # Initialize variables
         self.data_label = data_label
         self.data_index = data_index
-        self.value = value
+        self.data_value = value
         self.data_type = data_type
+        self.data_timestamp = int(time() * 1000)
+        self.metadata = {}
 
         # False validity if value is not of the right type
         self.valid = False not in [
@@ -67,18 +131,16 @@ class DataPoint(object):
                 data.is_numeric(value) is True,
                 isinstance(value, str) is True]:
             if data_type in [DATA_FLOAT, DATA_COUNT64, DATA_COUNT]:
-                self.value = float(value)
+                self.data_value = float(value)
             elif data_type in [DATA_INT]:
-                self.value = int(float(value))
+                self.data_value = int(float(value))
 
         # Convert strings to string
         if data_type in [DATA_STRING]:
-            self.value = str(value)
+            self.data_value = str(value)
 
         # Create checksum
-        seed = '{}{}{}'.format(
-            self.data_label, self.data_type, self.data_index)
-        self.checksum = data.hashstring(seed)
+        self.checksum = self._checksum()
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -91,15 +153,60 @@ class DataPoint(object):
 
         """
         # Create a printable variation of the value
-        printable_value = _strip_non_printable(self.value)
+        printable_value = _strip_non_printable(self.data_value)
         result = ('''\
-<{0} value={1}, data_label={2}, data_index={3}, data_type={4}, valid={5}>\
+<{0} data_value={1}, data_label={2}, data_index={3}, data_type={4}, \
+data_timestamp={6}, valid={5}>\
 '''.format(self.__class__.__name__,
            repr(printable_value), repr(self.data_label),
            repr(self.data_index), repr(self.data_type),
-           repr(self.valid))
+           repr(self.valid), repr(self.data_timestamp))
         )
         return result
+
+    def add(self, items):
+        """Add DataPointMeta to the internal self.metadata list.
+
+        Args:
+            items: A DataPointMeta object list
+
+        Returns:
+            None
+
+        """
+        # Ensure there is a list of objects
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only append approved data types
+        for item in items:
+            if isinstance(item, DataPointMeta) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Process
+                self.metadata[item.key] = item.value
+
+    def _checksum(self):
+        """Calculate a checksum for the DataPoint.
+
+        Args:
+            None
+
+        Returns:
+            checksum: Hash.
+
+        """
+        # Initialize key variables
+        seed = '{}{}{}'.format(
+            self.data_label, self.data_type, self.data_index)
+        checksum = data.hashstring(seed)
+
+        # Generate checksum
+        for key, value in sorted(self.metadata.items()):
+            checksum = data.hashstring('{}{}{}'.format(checksum, key, value))
+        return checksum
 
 
 class DeviceDataPoints(object):
@@ -119,7 +226,7 @@ class DeviceDataPoints(object):
                 intention is to make the combination of device_type and
                 agent_program be the combined key in doing datapoint
                 description lookups.
-                
+
         Returns:
             None
 
@@ -266,7 +373,7 @@ class AgentPolledData(object):
     """
 
     def __init__(self, agent_id, agent_program, agent_hostname,
-                 polling_interval, timestamp=None):
+                 polling_interval):
         """Initialize the class.
 
         Args:
@@ -274,7 +381,6 @@ class AgentPolledData(object):
             agent_program: Name of agent program collecting the data
             agent_hostname: Hostname on which the agent ran
             polling_interval: Polling interval used to collect the data
-            timestamp: Timestamp of data
 
         Returns:
             None
@@ -288,8 +394,8 @@ class AgentPolledData(object):
         self.agent_id = agent_id
         self.agent_program = agent_program
         self.agent_hostname = agent_hostname
-        (self.timestamp, self.polling_interval) = times.normalized_timestamp(
-            polling_interval, timestamp=timestamp)
+        self.agent_timestamp = int(time() * 1000)
+        self.polling_interval = polling_interval
         self.data = []
         self.valid = False
 
@@ -309,7 +415,7 @@ class AgentPolledData(object):
 polling_interval={5}, valid={6}>\
 '''.format(self.__class__.__name__, repr(self.agent_id),
            repr(self.agent_program), repr(self.agent_hostname),
-           repr(self.timestamp), repr(self.polling_interval),
+           repr(self.agent_timestamp), repr(self.polling_interval),
            repr(self.valid)))
         return result
 
@@ -341,8 +447,8 @@ polling_interval={5}, valid={6}>\
                 # Set object as being.valid
                 self.valid = False not in [
                     bool(self.agent_id), bool(self.agent_program),
-                    bool(self.agent_hostname), bool(self.timestamp),
-                    bool(self.polling_interval), bool(self.data)]
+                    bool(self.agent_hostname), bool(self.polling_interval),
+                    bool(self.data)]
 
 
 class AgentAPIVariable(object):
