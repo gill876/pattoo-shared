@@ -35,7 +35,8 @@ def cache_to_keypairs(data_source, items):
         keypairs = []
 
         # Verify dicts are in the list
-        valids.append(isinstance(item, dict))
+        if isinstance(item, dict) is False:
+            continue
 
         # Get all the key-pairs for the item
         keypairs = []
@@ -56,6 +57,8 @@ def cache_to_keypairs(data_source, items):
 
                 # Add metadata keypairs as a list of tuples
                 for keypair in value:
+                    if isinstance(keypair, dict) is False:
+                        continue
                     for m_key, m_value in keypair.items():
                         if isinstance(m_key, str) is False:
                             continue
