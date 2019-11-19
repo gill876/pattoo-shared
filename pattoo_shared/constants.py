@@ -37,23 +37,3 @@ PATTOO_API_AGENT_PREFIX = '{}/agent'.format(PATTOO_API_SITE_PREFIX)
 PATTOO_API_AGENT_EXECUTABLE = 'pattoo-api-agentd'
 PATTOO_API_AGENT_PROXY = '{}-gunicorn'.format(
     PATTOO_API_AGENT_EXECUTABLE)
-
-###############################################################################
-# Constants for standard agents
-###############################################################################
-
-# pattoo-agent-os constants
-PATTOO_AGENT_OS_SPOKED_API_PREFIX = '/pattoo-agent-os'
-PATTOO_AGENT_OS_SPOKED = 'pattoo-agent-os-spoked'
-PATTOO_AGENT_OS_SPOKED_PROXY = '{}-gunicorn'.format(PATTOO_AGENT_OS_SPOKED)
-PATTOO_AGENT_OS_AUTONOMOUSD = 'pattoo-agent-os-autonomousd'
-PATTOO_AGENT_OS_HUBD = 'pattoo-agent-os-hubd'
-
-# pattoo-snmp constants
-PATTOO_AGENT_SNMPD = 'pattoo-agent-snmpd'
-
-# pattoo-modbus-tcp constants
-PATTOO_AGENT_MODBUSTCPD = 'pattoo-agent-modbustcpd'
-
-# pattoo-modbus-tcp constants
-PATTOO_AGENT_BACNETIPD = 'pattoo-agent-bacnetipd'

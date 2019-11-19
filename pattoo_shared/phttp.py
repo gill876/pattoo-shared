@@ -218,11 +218,12 @@ class PostAgent(Post):
 class PassiveAgent(object):
     """Class to handle data from passive Pattoo Agents."""
 
-    def __init__(self, url):
+    def __init__(self, identifier, url):
         """Initialize the class.
 
         Args:
             url: URL to get
+            identifer: Unique identifier to use for posting data
 
         Returns:
             None
@@ -230,6 +231,7 @@ class PassiveAgent(object):
         """
         # Initialize key variables
         self._url = url
+        self._identifier = identifier
 
     def relay(self):
         """Forward data polled from remote pattoo passive agent.
@@ -247,9 +249,8 @@ class PassiveAgent(object):
         # Post data
         if bool(data_dict) is True:
             # Post to remote server
-            identifier = converter.convert(data_dict)
-            server = Post(identifier)
-            success = server.post()
+            server = Post(self._identifier)
+            success = server.post(data=data_dict)
 
             # Purge cache if success is True
             if success is True:
