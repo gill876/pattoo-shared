@@ -36,15 +36,6 @@ from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
 from pattoo_shared.constants import PATTOO_API_AGENT_PROXY
 
-from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED_API_PREFIX
-from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED
-from pattoo_shared.constants import PATTOO_AGENT_OS_SPOKED_PROXY
-from pattoo_shared.constants import PATTOO_AGENT_OS_AUTONOMOUSD
-from pattoo_shared.constants import PATTOO_AGENT_OS_HUBD
-from pattoo_shared.constants import PATTOO_AGENT_SNMPD
-from pattoo_shared.constants import PATTOO_AGENT_MODBUSTCPD
-from pattoo_shared.constants import PATTOO_AGENT_BACNETIPD
-
 
 class TestConstants(unittest.TestCase):
     """Checks all functions and methods."""
@@ -74,25 +65,6 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(
             PATTOO_API_AGENT_PROXY,
             '{}-gunicorn'.format(PATTOO_API_AGENT_EXECUTABLE))
-
-        # Test agent constants
-        self.assertEqual(
-            PATTOO_AGENT_OS_SPOKED_API_PREFIX, '/pattoo-agent-os')
-        self.assertEqual(
-            PATTOO_AGENT_OS_SPOKED, 'pattoo-agent-os-spoked')
-        self.assertEqual(
-            PATTOO_AGENT_OS_SPOKED_PROXY,
-            '{}-gunicorn'.format(PATTOO_AGENT_OS_SPOKED))
-        self.assertEqual(
-            PATTOO_AGENT_OS_AUTONOMOUSD, 'pattoo-agent-os-autonomousd')
-        self.assertEqual(
-            PATTOO_AGENT_OS_HUBD, 'pattoo-agent-os-hubd')
-        self.assertEqual(
-            PATTOO_AGENT_SNMPD, 'pattoo-agent-snmpd')
-        self.assertEqual(
-            PATTOO_AGENT_MODBUSTCPD, 'pattoo-agent-modbustcpd')
-        self.assertEqual(
-            PATTOO_AGENT_BACNETIPD, 'pattoo-agent-bacnetipd')
 
 
 if __name__ == '__main__':
