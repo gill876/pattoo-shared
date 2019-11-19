@@ -29,6 +29,7 @@ from pattoo_shared.constants import DATA_COUNT64
 from pattoo_shared.constants import DATA_COUNT
 from pattoo_shared.constants import DATA_STRING
 from pattoo_shared.constants import DATA_NONE
+from pattoo_shared.constants import MAX_KEYPAIR_LENGTH
 
 from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
@@ -61,6 +62,7 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(DATA_COUNT, 32)
         self.assertEqual(DATA_STRING, 2)
         self.assertEqual(DATA_NONE, None)
+        self.assertEqual(MAX_KEYPAIR_LENGTH, 512)
 
         # Test pattoo API constants
         self.assertEqual(
