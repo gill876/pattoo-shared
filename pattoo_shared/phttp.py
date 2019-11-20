@@ -194,11 +194,11 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
                 json.dump(data, f_handle)
         except Exception as err:
             log_message = '{}'.format(err)
-            log.log2warning(20018, log_message)
+            log.log2warning(1030, log_message)
         except:
             log_message = ("""API Failure: [{}, {}, {}]\
 """.format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
-            log.log2warning(20019, log_message)
+            log.log2warning(1031, log_message)
 
 
 class PostAgent(Post):
