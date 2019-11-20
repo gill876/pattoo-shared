@@ -142,6 +142,10 @@ cdaab2effcf66f570d4e20f95198a0363b706d7847edce2e921b895ec2c9eb9e''')
 
     def test_datapoints_to_dicts(self):
         """Testing method / function datapoints_to_dicts."""
+        # Key-pair keys that must be ignored
+        datapoint_keys = [
+            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+
         # Initialize key variables
         datapoints = []
         now = time.time()
@@ -151,12 +155,21 @@ cdaab2effcf66f570d4e20f95198a0363b706d7847edce2e921b895ec2c9eb9e''')
             metadata = []
             for meta in range(0, 22, 7):
                 metadata.append(DataPointMeta(int(meta), str(meta * 2)))
+
+            # Create the datapoint
             datapoint = DataPoint(
-                value, 'label_{}'.format(value),
+                'label_{}'.format(value), value,
                 data_type=('type_{}'.format(value))
             )
+            # Add metadata
             for meta in metadata:
                 datapoint.add(meta)
+
+            # Add metadata that should be ignored.
+            for key in datapoint_keys:
+                metadata.append(DataPointMeta(key, '_{}_'.format(key)))
+
+            # Add the datapoint to the list
             datapoints.append(datapoint)
 
         # Start testing

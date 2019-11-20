@@ -23,6 +23,8 @@ def cache_to_keypairs(source, items):
     """
     # Initialize key variables
     result = []
+    datapoint_keys = [
+        'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
 
     # Verify we are getting a list
     if isinstance(items, list) is False:
@@ -42,10 +44,8 @@ def cache_to_keypairs(source, items):
         keypairs = []
         for key, value in sorted(item.items()):
             # All the right keys
-            keys = ['checksum', 'metadata', 'data_type', 'key',
-                    'value', 'timestamp']
-            valids.append(key in keys)
-            valids.append(len(item) == len(keys))
+            valids.append(key in datapoint_keys)
+            valids.append(len(item) == len(datapoint_keys))
             valids.append(isinstance(key, str))
 
             # Work on metadata
@@ -60,9 +60,13 @@ def cache_to_keypairs(source, items):
                     if isinstance(keypair, dict) is False:
                         continue
                     for m_key, m_value in keypair.items():
-                        if isinstance(m_key, str) is False:
+                        # We want to make sure that we don't have
+                        # duplicate key-value pairs
+                        if m_key in datapoint_keys:
                             continue
-                        if isinstance(m_value, str) is False:
+                        # Key-Value pairs must be strings
+                        if isinstance(m_key, str) is False or isinstance(
+                                m_value, str) is False:
                             continue
                         keypairs.append(
                             (str(m_key)[:MAX_KEYPAIR_LENGTH], str(
