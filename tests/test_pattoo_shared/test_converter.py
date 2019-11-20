@@ -53,11 +53,10 @@ class TestBasicFunctions(unittest.TestCase):
                 {"device": "device_1"},
                 {"gateway": "palisadoes"},
                 {"polling_interval": "10"}],
-              "data_label": 30386,
+              "key": 30386,
               "data_type": 99,
-              "data_index": "index_1",
-              "data_value": 523.0,
-              "data_timestamp": 1574011824387,
+              "value": 523.0,
+              "timestamp": 1574011824387,
               "checksum": '123'}
              ]
             ]
@@ -70,11 +69,10 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertEqual(result.checksum, '''\
 5c531afb2e4106cc78f99ff895ef99d2fa587f7272a91f82244f06caddf89176c299afc0ef4a44\
 7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
-            self.assertEqual(result.data_timestamp, 1574011824387)
-            self.assertEqual(result.data_value, 523.0)
-            self.assertEqual(result.data_index, 'index_1')
+            self.assertEqual(result.timestamp, 1574011824387)
+            self.assertEqual(result.value, 523.0)
             self.assertEqual(result.data_type, 99)
-            self.assertEqual(result.data_label, 30386)
+            self.assertEqual(result.key, 30386)
             _metadata = cache[1][0]['metadata']
             self.assertEqual(
                 result.metadata,
@@ -101,12 +99,9 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Setup DataPoint
         value = 457
-        data_label = 'gummy_bear'
-        data_index = 999
+        key = 'gummy_bear'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(key, value, data_type=data_type)
 
         # Add data to DeviceDataPoints
         ddv.add(variable)
@@ -131,14 +126,13 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(len(result), 1)
         item = result[0]
         self.assertTrue(isinstance(item, DataPoint))
-        self.assertEqual(item.data_value, value)
+        self.assertEqual(item.value, value)
         self.assertEqual(item.data_type, DATA_INT)
-        self.assertEqual(item.data_index, data_index)
-        self.assertEqual(item.data_label, data_label)
+        self.assertEqual(item.key, key)
         self.assertEqual(
             item.checksum,
             '''\
-adaa977bbc2f3b0cae66f4c3021963a34ef16077e3ad54d2ae3736b3842c85b0''')
+cdaab2effcf66f570d4e20f95198a0363b706d7847edce2e921b895ec2c9eb9e''')
         self.assertTrue(isinstance(item.metadata, dict))
         self.assertEqual(len(item.metadata), len(expected_metadata))
         for key, value in item.metadata.items():
@@ -158,10 +152,8 @@ adaa977bbc2f3b0cae66f4c3021963a34ef16077e3ad54d2ae3736b3842c85b0''')
             for meta in range(0, 22, 7):
                 metadata.append(DataPointMeta(int(meta), str(meta * 2)))
             datapoint = DataPoint(
-                value,
-                data_index=(value * 10),
-                data_type=('type_{}'.format(value)),
-                data_label=('label_{}'.format(value)),
+                value, 'label_{}'.format(value),
+                data_type=('type_{}'.format(value))
             )
             for meta in metadata:
                 datapoint.add(meta)
@@ -171,11 +163,10 @@ adaa977bbc2f3b0cae66f4c3021963a34ef16077e3ad54d2ae3736b3842c85b0''')
         result = converter.datapoints_to_dicts(datapoints)
         self.assertTrue(isinstance(result, list))
         for value, item in enumerate(result):
-            self.assertEqual(item['data_index'], value * 10)
             self.assertEqual(item['data_type'], 'type_{}'.format(value))
-            self.assertEqual(item['data_label'], 'label_{}'.format(value))
-            self.assertTrue(item['data_timestamp'] >= now)
-            self.assertTrue(item['data_timestamp'] <= now + 1000)
+            self.assertEqual(item['key'], 'label_{}'.format(value))
+            self.assertTrue(item['timestamp'] >= now)
+            self.assertTrue(item['timestamp'] <= now + 1000)
             self.assertTrue(isinstance(item['checksum'], str))
             self.assertTrue(isinstance(item['metadata'], list))
             self.assertTrue(len(item['metadata'], 4))
