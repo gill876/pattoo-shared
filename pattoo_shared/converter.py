@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Pattoo Data Converter."""
 
+# Standard imports
+import re
+
 # Pattoo libraries
 from .variables import (
     DataPointMeta, DataPoint, AgentPolledData)
@@ -56,22 +59,10 @@ def cache_to_keypairs(source, items):
                     continue
 
                 # Add metadata keypairs as a list of tuples
-                for keypair in value:
-                    if isinstance(keypair, dict) is False:
+                for keypair_dict in value:
+                    if isinstance(keypair_dict, dict) is False:
                         continue
-                    for m_key, m_value in keypair.items():
-                        # We want to make sure that we don't have
-                        # duplicate key-value pairs
-                        if m_key in datapoint_keys:
-                            continue
-                        # Key-Value pairs must be strings
-                        if isinstance(m_key, str) is False or isinstance(
-                                m_value, str) is False:
-                            continue
-                        keypairs.append(
-                            (str(m_key)[:MAX_KEYPAIR_LENGTH], str(
-                                m_value)[:MAX_KEYPAIR_LENGTH])
-                        )
+                    keypairs.extend(_keypairs(keypair_dict, datapoint_keys))
 
             # Work on the data_type
             if key == 'data_type':
@@ -185,5 +176,42 @@ def datapoints_to_dicts(items):
                 'checksum': datapoint.checksum
             }
             result.append(data_dict)
+
+    return result
+
+
+def _keypairs(_data, exclude_list):
+    """Make key-pairs from metadata dict.
+
+    Args:
+        data: Metadata dict
+
+    Returns:
+        result: List of tuples of key-pair values
+
+    """
+    # Initialize key variables
+    result = []
+
+    # Loop around keys
+    for _key, value in _data.items():
+        # We want to make sure that we don't have
+        # duplicate key-value pairs
+        if _key in exclude_list:
+            continue
+        # Key-Value pairs must be strings
+        if isinstance(_key, str) is False or isinstance(
+                value, str) is False:
+            continue
+
+        # Standardize the keys
+        splits = re.findall(r"[\w']+", _key)
+        key = '_'.join(splits).lower()
+
+        # Update the list
+        result.append(
+            (str(key)[:MAX_KEYPAIR_LENGTH], str(
+                value)[:MAX_KEYPAIR_LENGTH])
+        )
 
     return result
