@@ -99,6 +99,7 @@ class DataPoint(object):
         self.data_type = data_type
         self.timestamp = int(time() * 1000)
         self.metadata = {}
+        self._metakeys = []
 
         # False validity if value is not of the right type
         self.valid = False not in [
@@ -128,7 +129,8 @@ class DataPoint(object):
             self.value = str(value)
 
         # Create checksum
-        self.checksum = self._checksum()
+        self.checksum = data.hashstring(
+            '{}{}'.format(self.key, self.data_type))
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -145,7 +147,7 @@ class DataPoint(object):
         result = ('''\
 <{} key={}, value={}, data_type={}, timestamp={}, valid={}>\
 '''.format(self.__class__.__name__,
-           repr(printable_value), repr(self.value), 
+           repr(printable_value), repr(self.value),
            repr(self.data_type), repr(self.timestamp),
            repr(self.valid))
         )
@@ -161,6 +163,10 @@ class DataPoint(object):
             None
 
         """
+        # Test illegal keys
+        datapoint_keys = [
+            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+
         # Ensure there is a list of objects
         if isinstance(items, list) is False:
             items = [items]
@@ -169,30 +175,15 @@ class DataPoint(object):
         for item in items:
             if isinstance(item, DataPointMeta) is True:
                 # Ignore invalid values
-                if item.valid is False:
+                if item.valid is False or item.key in datapoint_keys:
                     continue
 
                 # Process
-                self.metadata[item.key] = item.value
-
-    def _checksum(self):
-        """Calculate a checksum for the DataPoint.
-
-        Args:
-            None
-
-        Returns:
-            checksum: Hash.
-
-        """
-        # Initialize key variables
-        seed = '{}{}'.format(self.key, self.data_type)
-        checksum = data.hashstring(seed)
-
-        # Generate checksum
-        for key, value in sorted(self.metadata.items()):
-            checksum = data.hashstring('{}{}{}'.format(checksum, key, value))
-        return checksum
+                if item.key not in self._metakeys:
+                    self.metadata[item.key] = item.value
+                    self._metakeys.append(item.key)
+                    self.checksum = data.hashstring(
+                        '{}{}{}'.format(self.checksum, item.key, item.value))
 
 
 class DeviceDataPoints(object):

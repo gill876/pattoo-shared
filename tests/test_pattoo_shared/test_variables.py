@@ -76,11 +76,17 @@ class TestDataPoint(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
+        # Key-pair keys that must be ignored
+        datapoint_keys = [
+            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+
         # Setup DataPoint - Valid
         value = 1093454
         _key_ = 'testing'
+        _metakey = '_{}'.format(_key_)
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
+        variable.add(DataPointMeta(_metakey, _metakey))
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
@@ -88,7 +94,21 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.key, _key_)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-7f99301d9be275b14af5626ffabe22a154415ed2ef7dad37f1707bd25b6afdc6''')
+306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
+        self.assertEqual(variable.valid, True)
+
+        # Add metadata that should be ignored.
+        for key in datapoint_keys:
+            variable.add(DataPointMeta(key, '_{}_'.format(key)))
+        variable.add(DataPointMeta(_metakey, _metakey))
+
+        # Test each variable (unchanged)
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - invalid data_type
@@ -211,7 +231,7 @@ timestamp={}, valid=True>'''.format(variable.timestamp))
 
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-7f99301d9be275b14af5626ffabe22a154415ed2ef7dad37f1707bd25b6afdc6''')
+73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
 
 
 class TestDeviceDataPoints(unittest.TestCase):

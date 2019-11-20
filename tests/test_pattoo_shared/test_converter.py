@@ -6,7 +6,6 @@ import unittest
 import os
 import sys
 import time
-import json
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -132,7 +131,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(
             item.checksum,
             '''\
-cdaab2effcf66f570d4e20f95198a0363b706d7847edce2e921b895ec2c9eb9e''')
+3fbf013f09f6e8455e2279624c0f6a1605a707b295813cb70665dcfcee1d479f''')
         self.assertTrue(isinstance(item.metadata, dict))
         self.assertEqual(len(item.metadata), len(expected_metadata))
         for key, value in item.metadata.items():
