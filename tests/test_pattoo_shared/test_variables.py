@@ -76,151 +76,143 @@ class TestDataPoint(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
+        # Key-pair keys that must be ignored
+        datapoint_keys = [
+            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+
         # Setup DataPoint - Valid
         value = 1093454
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
+        _metakey = '_{}'.format(_key_)
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
+        variable.add(DataPointMeta(_metakey, _metakey))
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, value)
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
+306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
+        self.assertEqual(variable.valid, True)
+
+        # Add metadata that should be ignored.
+        for key in datapoint_keys:
+            variable.add(DataPointMeta(key, '_{}_'.format(key)))
+        variable.add(DataPointMeta(_metakey, _metakey))
+
+        # Test each variable (unchanged)
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - invalid data_type
         value = 1093454
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = 123
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, value)
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(variable.valid, False)
 
         # Setup DataPoint - invalid value for numeric data_type
         value = '_123'
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, value)
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(variable.valid, False)
 
         # Setup DataPoint - valid value for integer data_type but
         # string for value
         value = '1093454'
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, int(value))
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, int(value))
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
+7f99301d9be275b14af5626ffabe22a154415ed2ef7dad37f1707bd25b6afdc6''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for int data_type but
         # string for value
         value = '1093454.3'
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, int(float(value)))
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, int(float(value)))
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
+7f99301d9be275b14af5626ffabe22a154415ed2ef7dad37f1707bd25b6afdc6''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for int data_type but
         # string for value
         value = '1093454.3'
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = DATA_FLOAT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
-        self.assertEqual(variable.data_value, float(value))
-        self.assertEqual(variable.data_label, data_label)
-        self.assertEqual(variable.data_index, data_index)
+        self.assertEqual(variable.value, float(value))
+        self.assertEqual(variable.key, _key_)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-b555c7d50d836597959e58369357a20c8e89b6b14a4a147618afc9aad2a8dc82''')
+ab48bdc902e2ea5476a54680a7ace0971ab90edb3f6ffe00a89b2d1e17b1548d''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for str data_type
         for value in [True, False, None, 0, 1, '1093454.3']:
-            data_label = 'testing'
-            data_index = 98766
+            _key_ = 'testing'
             data_type = DATA_STRING
-            variable = DataPoint(
-                value, data_label=data_label, data_index=data_index,
-                data_type=data_type)
+            variable = DataPoint(_key_, value, data_type=data_type)
 
             # Test each variable
             self.assertEqual(variable.data_type, data_type)
-            self.assertEqual(variable.data_value, str(value))
-            self.assertEqual(variable.data_label, data_label)
-            self.assertEqual(variable.data_index, data_index)
+            self.assertEqual(variable.value, str(value))
+            self.assertEqual(variable.key, _key_)
             self.assertEqual(len(variable.checksum), 64)
             self.assertEqual(variable.checksum, '''\
-7dbd9767177b3c07aab11a299a3619a7f0427adc64e779a15968b7818a618a14''')
+431111472993bf4d9b8b347476b79321fea8a337f3c1cb2fedaa185b54185540''')
             self.assertEqual(variable.valid, True)
 
     def test___repr__(self):
         """Testing function __repr__."""
+        # Need to see all the string output
+        self.maxDiff = None
+
         # Setup DataPoint
         value = 10
-        data_label = 'testing'
-        data_index = 10
+        _key_ = 'testing'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test
         expected = ('''\
-<DataPoint data_value=10, data_label='testing', data_index=10, data_type=99, \
-data_timestamp={}, valid=True>'''.format(variable.data_timestamp))
+<DataPoint key='testing', value=10, data_type=99, \
+timestamp={}, valid=True>'''.format(variable.timestamp))
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
@@ -228,12 +220,9 @@ data_timestamp={}, valid=True>'''.format(variable.data_timestamp))
         """Testing function add."""
         # Setup DataPoint - Valid
         value = 1093454
-        data_label = 'testing'
-        data_index = 98766
+        _key_ = 'testing'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         for key, value in [(1, 2), (3, 4), (5, 6)]:
             metadata = DataPointMeta(key, value)
@@ -242,7 +231,7 @@ data_timestamp={}, valid=True>'''.format(variable.data_timestamp))
 
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
-8a33d392cd65e5a24606ee5fd46abe8840196e0702354e8ad2033ba8259a44f4''')
+73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
 
 
 class TestDeviceDataPoints(unittest.TestCase):
@@ -287,12 +276,9 @@ data=[]''')
 
         # Setup DataPoint
         value = 457
-        data_label = 'gummy_bear'
-        data_index = 999
+        _key_ = 'gummy_bear'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Test add
         ddv.add(None)
@@ -315,9 +301,8 @@ data=[]''')
         # Test the values in the variable
         _variable = ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.data_value, value)
-        self.assertEqual(_variable.data_label, data_label)
-        self.assertEqual(_variable.data_index, data_index)
+        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.key, _key_)
 
 
 class TestAgentPolledData(unittest.TestCase):
@@ -389,12 +374,9 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
 
         # Setup DataPoint
         value = 457
-        data_label = 'gummy_bear'
-        data_index = 999
+        _key_ = 'gummy_bear'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Add data to DeviceDataPoints
         self.assertFalse(ddv.valid)
@@ -438,9 +420,8 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         data = _ddv.data
         _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.data_value, value)
-        self.assertEqual(_variable.data_label, data_label)
-        self.assertEqual(_variable.data_index, data_index)
+        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.key, _key_)
 
 
 class TestDeviceGateway(unittest.TestCase):
@@ -491,12 +472,9 @@ class TestDeviceGateway(unittest.TestCase):
 
         # Setup DataPoint
         value = 457
-        data_label = 'gummy_bear'
-        data_index = 999
+        _key_ = 'gummy_bear'
         data_type = DATA_INT
-        variable = DataPoint(
-            value, data_label=data_label, data_index=data_index,
-            data_type=data_type)
+        variable = DataPoint(_key_, value, data_type=data_type)
 
         # Add data to DeviceDataPoints
         self.assertFalse(ddv.valid)
@@ -524,9 +502,8 @@ class TestDeviceGateway(unittest.TestCase):
         data = _ddv.data
         _variable = _ddv.data[0]
         self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.data_value, value)
-        self.assertEqual(_variable.data_label, data_label)
-        self.assertEqual(_variable.data_index, data_index)
+        self.assertEqual(_variable.value, value)
+        self.assertEqual(_variable.key, _key_)
 
 
 class TestAgentAPIVariable(unittest.TestCase):
