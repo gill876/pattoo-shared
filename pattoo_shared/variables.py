@@ -75,7 +75,7 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, key, value, data_type=DATA_INT):
+    def __init__(self, key, value, data_type=DATA_INT, timestamp=None):
         """Initialize the class.
 
         Args:
@@ -97,7 +97,10 @@ class DataPoint(object):
         self.key = key
         self.value = value
         self.data_type = data_type
-        self.timestamp = int(time() * 1000)
+        if bool(timestamp) is False:
+            self.timestamp = int(time() * 1000)
+        else:
+            self.timestamp = timestamp
         self.metadata = {}
         self._metakeys = []
 
