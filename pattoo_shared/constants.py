@@ -25,7 +25,7 @@ MAX_KEYPAIR_LENGTH = 512
 
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', '''\
-key value checksum source timestamp data_type metadata''')
+timestamp value checksum data_type key source metadata''')
 
 ###############################################################################
 # Constants for pattoo Agent API
