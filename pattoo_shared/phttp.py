@@ -189,8 +189,16 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
         filename = '{}/{}_{}.json'.format(cache_dir, timestamp, identifier)
 
         # Save data
-        with open(filename, 'w') as f_handle:
-            json.dump(data, f_handle)
+        try:
+            with open(filename, 'w') as f_handle:
+                json.dump(data, f_handle)
+        except Exception as err:
+            log_message = '{}'.format(err)
+            log.log2warning(1030, log_message)
+        except:
+            log_message = ("""API Failure: [{}, {}, {}]\
+""".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+            log.log2warning(1031, log_message)
 
 
 class PostAgent(Post):
@@ -218,11 +226,12 @@ class PostAgent(Post):
 class PassiveAgent(object):
     """Class to handle data from passive Pattoo Agents."""
 
-    def __init__(self, url):
+    def __init__(self, identifier, url):
         """Initialize the class.
 
         Args:
             url: URL to get
+            identifer: Unique identifier to use for posting data
 
         Returns:
             None
@@ -230,6 +239,7 @@ class PassiveAgent(object):
         """
         # Initialize key variables
         self._url = url
+        self._identifier = identifier
 
     def relay(self):
         """Forward data polled from remote pattoo passive agent.
@@ -247,9 +257,8 @@ class PassiveAgent(object):
         # Post data
         if bool(data_dict) is True:
             # Post to remote server
-            identifier = converter.convert(data_dict)
-            server = Post(identifier)
-            success = server.post()
+            server = Post(self._identifier)
+            success = server.post(data=data_dict)
 
             # Purge cache if success is True
             if success is True:

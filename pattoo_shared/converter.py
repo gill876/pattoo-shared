@@ -10,12 +10,12 @@ from .constants import (
 from pattoo_shared import data
 
 
-def cache_to_keypairs(data_source, items):
+def cache_to_keypairs(source, items):
     """Convert agent cache data to AgentPolledData object.
 
     Args:
         items: Cache data
-        data_source: Source of the cache data
+        source: Source of the cache data
 
     Returns:
         result: Validated cache data. [] if invalid.
@@ -23,6 +23,8 @@ def cache_to_keypairs(data_source, items):
     """
     # Initialize key variables
     result = []
+    datapoint_keys = [
+        'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
 
     # Verify we are getting a list
     if isinstance(items, list) is False:
@@ -42,10 +44,8 @@ def cache_to_keypairs(data_source, items):
         keypairs = []
         for key, value in sorted(item.items()):
             # All the right keys
-            keys = ['checksum', 'metadata', 'data_type', 'data_label',
-                    'data_index', 'data_value', 'data_timestamp']
-            valids.append(key in keys)
-            valids.append(len(item) == len(keys))
+            valids.append(key in datapoint_keys)
+            valids.append(len(item) == len(datapoint_keys))
             valids.append(isinstance(key, str))
 
             # Work on metadata
@@ -60,9 +60,13 @@ def cache_to_keypairs(data_source, items):
                     if isinstance(keypair, dict) is False:
                         continue
                     for m_key, m_value in keypair.items():
-                        if isinstance(m_key, str) is False:
+                        # We want to make sure that we don't have
+                        # duplicate key-value pairs
+                        if m_key in datapoint_keys:
                             continue
-                        if isinstance(m_value, str) is False:
+                        # Key-Value pairs must be strings
+                        if isinstance(m_key, str) is False or isinstance(
+                                m_value, str) is False:
                             continue
                         keypairs.append(
                             (str(m_key)[:MAX_KEYPAIR_LENGTH], str(
@@ -79,15 +83,14 @@ def cache_to_keypairs(data_source, items):
         if False not in valids:
             # Add the datasource to the original checksum for better uniqueness
             checksum = data.hashstring(
-                '{}{}'.format(data_source, item['checksum']), sha=512)
+                '{}{}'.format(source, item['checksum']), sha=512)
             pattoo_db_variable = PattooDBrecord(
                 checksum=checksum,
-                data_index=item['data_index'],
-                data_label=item['data_label'],
-                data_source=data_source,
-                data_timestamp=item['data_timestamp'],
+                key=item['key'],
+                source=source,
+                timestamp=item['timestamp'],
                 data_type=item['data_type'],
-                data_value=item['data_value'],
+                value=item['value'],
                 metadata=keypairs
             )
             result.append(pattoo_db_variable)
@@ -175,11 +178,10 @@ def datapoints_to_dicts(items):
                 'metadata': [
                     {str(key): str(value)} for key, value in sorted(
                         datapoint.metadata.items())],
-                'data_label': datapoint.data_label,
+                'key': datapoint.key,
                 'data_type': datapoint.data_type,
-                'data_index': datapoint.data_index,
-                'data_value': datapoint.data_value,
-                'data_timestamp': datapoint.data_timestamp,
+                'value': datapoint.value,
+                'timestamp': datapoint.timestamp,
                 'checksum': datapoint.checksum
             }
             result.append(data_dict)

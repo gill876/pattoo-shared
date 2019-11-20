@@ -75,42 +75,31 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, value, data_label=None,
-                 data_index=0, data_type=DATA_INT):
+    def __init__(self, key, value, data_type=DATA_INT):
         """Initialize the class.
 
         Args:
-            value: Value of data for a given data_index and data_label
-            data_label:
-                A label that describes the type of data being polled.
-                This value must be unique to the agent polling data. (eg. SNMP
-                ifDescr OID '1.3.6.1.2.1.2.2.1.2', Linux 'load_average').
-                Different agents can use the same data_labels.
-            data_index:
-                Unique index value of data point. The combination of data_index
-                and data_label must be unique for any polled device. (eg. SNMP
-                IfIndex value, Linux '5' for the 5 minute load average). If
-                there is only one instance of the data being tracked by
-                data_label, then the data_index should be 0.
+            key: Key related to data value
+            value: Data value
             data_type: This MUST be one of the types listed in constants.py
 
         Returns:
             None
 
         Variables:
-            self.data_timestamp: Integer of epoch milliseconds
+            self.timestamp: Integer of epoch milliseconds
             self.valid: True if the object has a valid data_type
-            self.checksum: Hash of self.data_label, self.data_index and
-                self.data_type to ensure uniqueness when assigned to a device.
+            self.checksum: Hash of self.key, self.data_type and metadata to
+                ensure uniqueness when assigned to a device.
 
         """
         # Initialize variables
-        self.data_label = data_label
-        self.data_index = data_index
-        self.data_value = value
+        self.key = key
+        self.value = value
         self.data_type = data_type
-        self.data_timestamp = int(time() * 1000)
+        self.timestamp = int(time() * 1000)
         self.metadata = {}
+        self._metakeys = []
 
         # False validity if value is not of the right type
         self.valid = False not in [
@@ -131,16 +120,17 @@ class DataPoint(object):
                 data.is_numeric(value) is True,
                 isinstance(value, str) is True]:
             if data_type in [DATA_FLOAT, DATA_COUNT64, DATA_COUNT]:
-                self.data_value = float(value)
+                self.value = float(value)
             elif data_type in [DATA_INT]:
-                self.data_value = int(float(value))
+                self.value = int(float(value))
 
         # Convert strings to string
         if data_type in [DATA_STRING]:
-            self.data_value = str(value)
+            self.value = str(value)
 
         # Create checksum
-        self.checksum = self._checksum()
+        self.checksum = data.hashstring(
+            '{}{}'.format(self.key, self.data_type))
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -153,14 +143,13 @@ class DataPoint(object):
 
         """
         # Create a printable variation of the value
-        printable_value = _strip_non_printable(self.data_value)
+        printable_value = _strip_non_printable(self.key)
         result = ('''\
-<{0} data_value={1}, data_label={2}, data_index={3}, data_type={4}, \
-data_timestamp={6}, valid={5}>\
+<{} key={}, value={}, data_type={}, timestamp={}, valid={}>\
 '''.format(self.__class__.__name__,
-           repr(printable_value), repr(self.data_label),
-           repr(self.data_index), repr(self.data_type),
-           repr(self.valid), repr(self.data_timestamp))
+           repr(printable_value), repr(self.value),
+           repr(self.data_type), repr(self.timestamp),
+           repr(self.valid))
         )
         return result
 
@@ -174,6 +163,10 @@ data_timestamp={6}, valid={5}>\
             None
 
         """
+        # Test illegal keys
+        datapoint_keys = [
+            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+
         # Ensure there is a list of objects
         if isinstance(items, list) is False:
             items = [items]
@@ -182,31 +175,15 @@ data_timestamp={6}, valid={5}>\
         for item in items:
             if isinstance(item, DataPointMeta) is True:
                 # Ignore invalid values
-                if item.valid is False:
+                if item.valid is False or item.key in datapoint_keys:
                     continue
 
                 # Process
-                self.metadata[item.key] = item.value
-
-    def _checksum(self):
-        """Calculate a checksum for the DataPoint.
-
-        Args:
-            None
-
-        Returns:
-            checksum: Hash.
-
-        """
-        # Initialize key variables
-        seed = '{}{}{}'.format(
-            self.data_label, self.data_type, self.data_index)
-        checksum = data.hashstring(seed)
-
-        # Generate checksum
-        for key, value in sorted(self.metadata.items()):
-            checksum = data.hashstring('{}{}{}'.format(checksum, key, value))
-        return checksum
+                if item.key not in self._metakeys:
+                    self.metadata[item.key] = item.value
+                    self._metakeys.append(item.key)
+                    self.checksum = data.hashstring(
+                        '{}{}{}'.format(self.checksum, item.key, item.value))
 
 
 class DeviceDataPoints(object):
