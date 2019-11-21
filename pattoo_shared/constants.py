@@ -23,9 +23,15 @@ DATA_NONE = None
 
 MAX_KEYPAIR_LENGTH = 512
 
+RESERVED_KEYS = (
+    'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp', 'source',
+    'polling_interval')
+
 PattooDBrecord = collections.namedtuple(
-    'PattooDBrecord', '''\
-timestamp value checksum data_type key source metadata''')
+    'PattooDBrecord', ' '.join(RESERVED_KEYS))
+
+CACHE_KEYS = ('source', 'datapoints', 'polling_interval')
+
 
 ###############################################################################
 # Constants for pattoo Agent API

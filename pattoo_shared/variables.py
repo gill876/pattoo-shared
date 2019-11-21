@@ -189,6 +189,27 @@ class DataPoint(object):
                         '{}{}{}'.format(self.checksum, item.key, item.value))
 
 
+class PostingDataPoints(object):
+    """Object defining DataPoint objects to post to the pattoo server."""
+
+    def __init__(self, source, polling_interval, datapoints):
+        """Initialize the class.
+
+        Args:
+            source: Unique source ID string
+            polling_interval: Periodic interval over which the data was polled.
+            datapoints: List of DataPoint objects
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self.source = source
+        self.polling_interval = polling_interval
+        self.datapoints = datapoints
+
+
 class DeviceDataPoints(object):
     """Object defining a list of DataPoint objects.
 

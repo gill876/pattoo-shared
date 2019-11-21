@@ -43,26 +43,29 @@ class TestBasicFunctions(unittest.TestCase):
     def test_cache_to_keypairs(self):
         """Testing method / function cache_to_keypairs."""
         self.maxDiff = None
-        cache = [
-            "1234",
-            [{"metadata": [
-                {"agent_hostname": "palisadoes"},
-                {"agent_id": "1234"},
-                {"agent_program": "program_1"},
-                {"device": "device_1"},
-                {"gateway": "palisadoes"},
-                {"polling_interval": "10"}],
-              "key": 30386,
-              "data_type": 99,
-              "value": 523.0,
-              "timestamp": 1574011824387,
-              "checksum": '123'}
-             ]
+
+        cache = {
+            'source': "1234",
+            'polling_interval': 30,
+            'datapoints': [
+                {"metadata": [
+                    {"agent_hostname": "palisadoes"},
+                    {"agent_id": "1234"},
+                    {"agent_program": "program_1"},
+                    {"device": "device_1"},
+                    {"gateway": "palisadoes"},
+                    {"polling_interval": "10"}],
+                 "key": 30386,
+                 "data_type": 99,
+                 "value": 523.0,
+                 "timestamp": 1574011824387,
+                 "checksum": '123'}
             ]
+        }
 
         # Test
         # cache = json.loads(cache_data)
-        results = converter.cache_to_keypairs(cache[0], cache[1])
+        results = converter.cache_to_keypairs(cache)
         self.assertTrue(isinstance(results, list))
         for _, result in enumerate(results):
             self.assertEqual(result.checksum, '''\
@@ -70,6 +73,7 @@ class TestBasicFunctions(unittest.TestCase):
 7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
             self.assertEqual(result.timestamp, 1574011824387)
             self.assertEqual(result.value, 523.0)
+            self.assertEqual(result.polling_interval, 30)
             self.assertEqual(result.data_type, 99)
             self.assertEqual(result.key, 30386)
             _metadata = cache[1][0]['metadata']
@@ -187,6 +191,14 @@ class TestBasicFunctions(unittest.TestCase):
                 for m_key, m_value in metadata.items():
                     self.assertEqual(2 * int(m_key), int(m_value))
                     self.assertEqual(int(m_key) % 7, 0)
+
+    def test_agentdata_to_post(self):
+        """Testing method / function agentdata_to_post."""
+        pass
+
+    def test_datapoints_to_post(self):
+        """Testing method / function datapoints_to_post."""
+        pass
 
 
 if __name__ == '__main__':

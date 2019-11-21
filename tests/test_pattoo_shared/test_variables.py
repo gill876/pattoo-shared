@@ -31,6 +31,17 @@ from pattoo_shared.variables import (
 from tests.libraries.configuration import UnittestConfig
 
 
+class TestPostingDataPoints(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        pass
+
+
 class TestDataPointMeta(unittest.TestCase):
     """Checks all functions and methods."""
 
