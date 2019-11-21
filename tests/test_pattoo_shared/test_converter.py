@@ -6,6 +6,7 @@ import unittest
 import os
 import sys
 import time
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -29,7 +30,7 @@ from pattoo_shared.variables import (
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    PattooDBrecord)
+    PattooDBrecord, DATAPOINT_KEYS)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -143,10 +144,6 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
 
     def test_datapoints_to_dicts(self):
         """Testing method / function datapoints_to_dicts."""
-        # Key-pair keys that must be ignored
-        datapoint_keys = [
-            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
-
         # Initialize key variables
         datapoints = []
         now = time.time()
@@ -167,7 +164,7 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
                 datapoint.add(meta)
 
             # Add metadata that should be ignored.
-            for key in datapoint_keys:
+            for key in DATAPOINT_KEYS:
                 metadata.append(DataPointMeta(key, '_{}_'.format(key)))
 
             # Add the datapoint to the list
@@ -192,7 +189,63 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
 
     def test_agentdata_to_post(self):
         """Testing method / function agentdata_to_post."""
-        pass
+        # Setup AgentPolledData
+        agent_id = 'koala_bear'
+        agent_program = 'panda_bear'
+        agent_hostname = 'localhost'
+        polling_interval = 30
+        apd = AgentPolledData(
+            agent_id, agent_program, agent_hostname, polling_interval)
+
+        # Initialize DeviceGateway
+        gateway = 'grizzly_bear'
+        dgw = DeviceGateway(gateway)
+
+        # Initialize DeviceDataPoints
+        device = 'teddy_bear'
+        ddv = DeviceDataPoints(device)
+
+        # Setup DataPoint
+        value = 457
+        key = 'gummy_bear'
+        data_type = DATA_INT
+        variable = DataPoint(key, value, data_type=data_type)
+
+        # Add data to DeviceDataPoints
+        ddv.add(variable)
+
+        # Add data to DeviceGateway
+        dgw.add(ddv)
+
+        # Test DeviceGateway to AgentPolledData
+        apd.add(dgw)
+        result = converter.agentdata_to_post(apd)
+        self.assertEqual(result.source, agent_id)
+        self.assertEqual(result.polling_interval, polling_interval)
+        self.assertTrue(isinstance(result.datapoints, list))
+
+        # We have a dict to evaluate
+        datapoint = result.datapoints[0]
+        self.assertTrue(isinstance(datapoint, dict))
+        self.assertTrue(
+            datapoint['checksum'],
+            'a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3')
+        self.assertTrue(datapoint['data_type'], DATA_INT)
+        self.assertTrue(datapoint['key'], key)
+        self.assertTrue(datapoint['value'], value)
+
+        expected_metadata = {
+            'agent_id': agent_id,
+            'agent_program': agent_program,
+            'agent_hostname': agent_hostname,
+            'gateway': gateway,
+            'device': device
+        }
+        for item in datapoint['metadata']:
+            for key, value in item.items():
+                self.assertTrue(isinstance(value, str))
+                self.assertTrue(isinstance(key, str))
+                self.assertEqual(value, str(expected_metadata[key]))
 
     def test_datapoints_to_post(self):
         """Testing method / function datapoints_to_post."""

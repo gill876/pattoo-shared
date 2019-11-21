@@ -209,6 +209,18 @@ class PostingDataPoints(object):
         self.polling_interval = polling_interval
         self.datapoints = datapoints
 
+        # Validation tests
+        self.valid = False not in [
+            isinstance(self.source, str),
+            isinstance(self.polling_interval, int),
+            isinstance(self.datapoints, list),
+            self.polling_interval is not False,
+            self.polling_interval is not True,
+        ]
+        if self.valid is True:
+            self.valid = False not in [
+                isinstance(_, DataPoint) for _ in self.datapoints]
+
 
 class DeviceDataPoints(object):
     """Object defining a list of DataPoint objects.
