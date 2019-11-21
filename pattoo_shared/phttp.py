@@ -101,14 +101,14 @@ HTTP {} error for identifier "{}" posted to server {}\
 
         # Log message
         if success is True:
-            log_message = (
-                'Data for identifier "{}" posted to server {}'
-                ''.format(self._meta.source, self._url))
+            log_message = ('''\
+Data for identifier "{}" posted to server {}\
+'''.format(self._meta.source, self._url))
             log.log2debug(1027, log_message)
         else:
-            log_message = (
-                'Data for identifier "{}" failed to post to server {}'
-                ''.format(self._meta.source, self._url))
+            log_message = ('''\
+Data for identifier "{}" failed to post to server {}\
+'''.format(self._meta.source, self._url))
             log.log2warning(1028, log_message)
 
         # Return
