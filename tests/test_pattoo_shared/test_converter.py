@@ -24,10 +24,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import converter
-from pattoo_shared import data as lib_data
 from pattoo_shared.variables import (
     DataPointMeta, DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
-from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     PattooDBrecord, DATAPOINT_KEYS)
@@ -249,11 +247,36 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
 
     def test_datapoints_to_post(self):
         """Testing method / function datapoints_to_post."""
-        pass
+        # Initialize key variables
+        datapoints = [DataPoint('key', 'value')]
+        source = '1234'
+        polling_interval = 10
+        result = converter.datapoints_to_post(
+            source, polling_interval, datapoints)
+
+        # Test
+        self.assertEqual(result.polling_interval, polling_interval)
+        self.assertEqual(result.source, source)
+        self.assertEqual(result.datapoints, datapoints)
+        self.assertEqual(result.datapoints[0].key, 'key')
+        self.assertEqual(result.datapoints[0].value, 'value')
 
     def test_posting_data_points(self):
         """Testing method / function posting_data_points."""
-        pass
+        # Initialize key variables
+        datapoints = [DataPoint('key', 'value')]
+        source = '1234'
+        polling_interval = 10
+        pdp = converter.datapoints_to_post(
+            source, polling_interval, datapoints)
+        result = converter.posting_data_points(pdp)
+
+        # Test
+        self.assertEqual(result['polling_interval'], polling_interval)
+        self.assertEqual(result['source'], source)
+        self.assertEqual(result['datapoints'], datapoints)
+        self.assertEqual(result['datapoints'][0].key, 'key')
+        self.assertEqual(result['datapoints'][0].value, 'value')
 
 
 if __name__ == '__main__':
