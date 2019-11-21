@@ -53,8 +53,7 @@ class TestBasicFunctions(unittest.TestCase):
                     {"agent_id": "1234"},
                     {"agent_program": "program_1"},
                     {"device": "device_1"},
-                    {"gateway": "palisadoes"},
-                    {"polling_interval": "10"}],
+                    {"gateway": "palisadoes"}],
                  "key": 30386,
                  "data_type": 99,
                  "value": 523.0,
@@ -73,10 +72,10 @@ class TestBasicFunctions(unittest.TestCase):
 7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
             self.assertEqual(result.timestamp, 1574011824387)
             self.assertEqual(result.value, 523.0)
-            self.assertEqual(result.polling_interval, 30)
+            self.assertEqual(result.polling_interval, 30000)
             self.assertEqual(result.data_type, 99)
             self.assertEqual(result.key, 30386)
-            _metadata = cache[1][0]['metadata']
+            _metadata = cache['datapoints'][0]['metadata']
             self.assertEqual(
                 result.metadata,
                 [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
@@ -120,7 +119,6 @@ class TestBasicFunctions(unittest.TestCase):
             'agent_id': agent_id,
             'agent_program': agent_program,
             'agent_hostname': agent_hostname,
-            'polling_interval': polling_interval,
             'gateway': gateway,
             'device': device
         }
@@ -135,7 +133,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(
             item.checksum,
             '''\
-3fbf013f09f6e8455e2279624c0f6a1605a707b295813cb70665dcfcee1d479f''')
+a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         self.assertTrue(isinstance(item.metadata, dict))
         self.assertEqual(len(item.metadata), len(expected_metadata))
         for key, value in item.metadata.items():
@@ -198,6 +196,10 @@ class TestBasicFunctions(unittest.TestCase):
 
     def test_datapoints_to_post(self):
         """Testing method / function datapoints_to_post."""
+        pass
+
+    def test_posting_data_points(self):
+        """Testing method / function posting_data_points."""
         pass
 
 
