@@ -6,14 +6,16 @@ import re
 
 # Pattoo libraries
 from .variables import (
-    DataPointMeta, DataPoint, AgentPolledData)
+    DataPointMeta, DataPoint, AgentPolledData, PostingDataPoints)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    MAX_KEYPAIR_LENGTH, PattooDBrecord)
+    MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, DATAPOINT_KEYS,
+    CACHE_KEYS)
 from pattoo_shared import data
+from pattoo_shared import log
 
 
-def cache_to_keypairs(source, items):
+def cache_to_keypairs(_data):
     """Convert agent cache data to AgentPolledData object.
 
     Args:
@@ -26,11 +28,28 @@ def cache_to_keypairs(source, items):
     """
     # Initialize key variables
     result = []
-    datapoint_keys = [
-        'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
+    _log_message = 'Invalid cache data.'
+
+    # Basic validation
+    if isinstance(_data, dict) is False:
+        log.log2warning(1032, _log_message)
+        return []
+    if len(_data) != len(CACHE_KEYS):
+        log.log2warning(1033, _log_message)
+        return []
+    for key in _data.keys():
+        if key not in CACHE_KEYS:
+            log.log2warning(1034, _log_message)
+            return []
+
+    # Intialize variables needed later
+    polling_interval = _data['polling_interval'] * 1000
+    items = _data['datapoints']
+    source = _data['source']
 
     # Verify we are getting a list
     if isinstance(items, list) is False:
+        log.log2warning(1035, _log_message)
         return []
 
     # Verify contents of lists
@@ -47,8 +66,8 @@ def cache_to_keypairs(source, items):
         keypairs = []
         for key, value in sorted(item.items()):
             # All the right keys
-            valids.append(key in datapoint_keys)
-            valids.append(len(item) == len(datapoint_keys))
+            valids.append(key in DATAPOINT_KEYS)
+            valids.append(len(item) == len(DATAPOINT_KEYS))
             valids.append(isinstance(key, str))
 
             # Work on metadata
@@ -62,7 +81,7 @@ def cache_to_keypairs(source, items):
                 for keypair_dict in value:
                     if isinstance(keypair_dict, dict) is False:
                         continue
-                    keypairs.extend(_keypairs(keypair_dict, datapoint_keys))
+                    keypairs.extend(_keypairs(keypair_dict, RESERVED_KEYS))
 
             # Work on the data_type
             if key == 'data_type':
@@ -79,6 +98,7 @@ def cache_to_keypairs(source, items):
                 checksum=checksum,
                 key=item['key'],
                 source=source,
+                polling_interval=polling_interval,
                 timestamp=item['timestamp'],
                 data_type=item['data_type'],
                 value=item['value'],
@@ -127,7 +147,6 @@ def agentdata_to_datapoints(agentdata):
                         'agent_id': agentdata.agent_id,
                         'agent_program': agentdata.agent_program,
                         'agent_hostname': agentdata.agent_hostname,
-                        'polling_interval': agentdata.polling_interval,
                         'gateway': gwd.device,
                         'device': ddv.device,
                         'device_type': ddv.device_type
@@ -177,6 +196,57 @@ def datapoints_to_dicts(items):
             }
             result.append(data_dict)
 
+    return result
+
+
+def agentdata_to_post(agentdata):
+    """Create data to post to the pattoo API.
+
+    Args:
+        agentdata: AgentPolledData object
+
+    Returns:
+        result: Dict of data to post
+
+    """
+    source = agentdata.agent_id
+    polling_interval = agentdata.polling_interval
+    _data = agentdata_to_datapoints(agentdata)
+    _datapoints = datapoints_to_dicts(_data)
+    result = datapoints_to_post(source, polling_interval, _datapoints)
+    return result
+
+
+def datapoints_to_post(source, polling_interval, datapoints):
+    """Create data to post to the pattoo API.
+
+    Args:
+        source: Unique source ID string
+        polling_interval: Interval over which the data is periodically polled
+        datapoints: List of DataPoint objects
+
+    Returns:
+        result: Dict of data to post
+
+    """
+    result = PostingDataPoints(source, polling_interval, datapoints)
+    return result
+
+
+def posting_data_points(_data):
+    """Create data to post to the pattoo API.
+
+    Args:
+        _data: PostingDataPoints object
+
+    Returns:
+        result: Dict of data to post
+
+    """
+    result = {
+        'source': _data.source,
+        'polling_interval': _data.polling_interval,
+        'datapoints': _data.datapoints}
     return result
 
 

@@ -15,17 +15,17 @@ import requests
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared import converter
+from .variables import PostingDataPoints, DataPoint
 
 
 class Post(object):
     """Class to prepare data for posting to remote pattoo server."""
 
-    def __init__(self, identifier, identifier_data=None):
+    def __init__(self, metadata):
         """Initialize the class.
 
         Args:
-            identifier: Unique identifer for the source of the data.
-            identifier_data: Data from the data source to post
+            metadata: PostingDataPoints object
 
         Returns:
             None
@@ -35,16 +35,17 @@ class Post(object):
         config = Config()
 
         # Test validity
-        if isinstance(identifier, str) is False:
+        if isinstance(metadata, PostingDataPoints) is False:
             log_message = ('''\
-Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
+Data identifier isn\'t a PostingDataPoints object it\'s a {}. [{}]\
+'''.format(type(metadata), str(metadata)))
             log.log2die(1018, log_message)
 
         # Get posting URL
-        self._identifier = identifier
-        self._url = config.api_server_url(identifier)
-        self._cache_dir = config.agent_cache_directory(identifier)
-        self._identifier_data = identifier_data
+        self._meta = metadata
+        self._meta.source = metadata.source
+        self._url = config.api_server_url(self._meta.source)
+        self._cache_dir = config.agent_cache_directory(self._meta.source)
 
     def post(self, save=True, data=None):
         """Post data to central server.
@@ -67,10 +68,10 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
         if bool(data) is True:
             valid_data = data
         else:
-            valid_data = converter.datapoints_to_dicts(self._identifier_data)
+            valid_data = converter.posting_data_points(self._meta)
 
         # Fail if nothing to post
-        if isinstance(valid_data, list) is False or bool(valid_data) is False:
+        if isinstance(valid_data, dict) is False or bool(valid_data) is False:
             return success
 
         # Post data save to cache if this fails
@@ -91,23 +92,23 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
             if result.status_code == 200:
                 success = True
             else:
-                log_message = (
-                    'HTTP {} error for identifier "{}" posted to server {}'
-                    ''.format(result.status_code, self._identifier, self._url))
+                log_message = ('''\
+HTTP {} error for identifier "{}" posted to server {}\
+'''.format(result.status_code, self._meta.source, self._url))
                 log.log2debug(1017, log_message)
                 # Save data to cache, remote webserver isn't working properly
                 self._save(valid_data)
 
         # Log message
         if success is True:
-            log_message = (
-                'Data for identifier "{}" posted to server {}'
-                ''.format(self._identifier, self._url))
+            log_message = ('''\
+Data for identifier "{}" posted to server {}\
+'''.format(self._meta.source, self._url))
             log.log2debug(1027, log_message)
         else:
-            log_message = (
-                'Data for identifier "{}" failed to post to server {}'
-                ''.format(self._identifier, self._url))
+            log_message = ('''\
+Data for identifier "{}" failed to post to server {}\
+'''.format(self._meta.source, self._url))
             log.log2warning(1028, log_message)
 
         # Return
@@ -124,7 +125,7 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
 
         """
         # Initialize key variables
-        identifier = self._identifier
+        identifier = self._meta.source
 
         # Add files in cache directory to list only if they match the
         # cache suffix
@@ -148,10 +149,9 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
                     data = json.load(f_handle)
                 except:
                     # Log removal
-                    log_message = (
-                        'Error reading previously cached agent data file {} '
-                        'for identifier {}. May be corrupted.'
-                        ''.format(filepath, self._identifier))
+                    log_message = ('''\
+Error reading previously cached agent data file {} for identifier {}. May be \
+corrupted.'''.format(filepath, self._meta.source))
                     log.log2die(1064, log_message)
 
             # Post file
@@ -162,10 +162,9 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
                 os.remove(filepath)
 
                 # Log removal
-                log_message = (
-                    'Purging cache file {} after successfully '
-                    'contacting server {}'
-                    ''.format(filepath, self._url))
+                log_message = ('''
+Purging cache file {} after successfully contacting server {}\
+'''.format(filepath, self._url))
                 log.log2info(1007, log_message)
 
     def _save(self, data):
@@ -182,7 +181,7 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
         """
         # Initialize key variables
         cache_dir = self._cache_dir
-        identifier = self._identifier
+        identifier = self._meta.source
         timestamp = int(time() * 1000)
 
         # Create a unique very long filename to reduce risk of
@@ -196,8 +195,9 @@ Data identifier isn\'t a string. Identifier: {}'''.format(identifier))
             log_message = '{}'.format(err)
             log.log2warning(1030, log_message)
         except:
-            log_message = ("""API Failure: [{}, {}, {}]\
-""".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+            log_message = ('''\
+API Failure: [{}, {}, {}]\
+'''.format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
             log.log2warning(1031, log_message)
 
 
@@ -216,11 +216,10 @@ class PostAgent(Post):
 
         """
         # Get extracted data
-        data = converter.agentdata_to_datapoints(agentdata)
+        _data = converter.agentdata_to_post(agentdata)
 
         # Initialize key variables
-        Post.__init__(
-            self, agentdata.agent_id, identifier_data=data)
+        Post.__init__(self, _data)
 
 
 class PassiveAgent(object):
@@ -239,7 +238,7 @@ class PassiveAgent(object):
         """
         # Initialize key variables
         self._url = url
-        self._identifier = identifier
+        self._xidentifier = identifier
 
     def relay(self):
         """Forward data polled from remote pattoo passive agent.
@@ -254,10 +253,17 @@ class PassiveAgent(object):
         # Get data
         data_dict = self.get()
 
+        # Create a fake PollingDataPoints object to facilitate posting relay
+        datapoints = [DataPoint('', '')]
+        source = self._xidentifier
+        polling_interval = 0
+        _instance = converter.datapoints_to_post(
+            source, polling_interval, datapoints)
+
         # Post data
         if bool(data_dict) is True:
             # Post to remote server
-            server = Post(self._identifier)
+            server = Post(_instance)
             success = server.post(data=data_dict)
 
             # Purge cache if success is True

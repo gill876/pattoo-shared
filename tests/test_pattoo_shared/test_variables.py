@@ -25,10 +25,59 @@ directory. Please fix.''')
 from pattoo_shared import variables
 from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
 from pattoo_shared.variables import (
-    DataPoint, DataPointMeta, DeviceDataPoints, DeviceGateway,
+    DataPoint, DataPointMeta, PostingDataPoints,
+    DeviceDataPoints, DeviceGateway,
     PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
+
+
+class TestPostingDataPoints(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup PostingDataPoints - Valid
+        source = '1234'
+        polling_interval = 10
+        datapoints = [DataPoint('key', 10)]
+        result = PostingDataPoints(source, polling_interval, datapoints)
+        self.assertEqual(result.source, source)
+        self.assertEqual(result.datapoints, datapoints)
+        self.assertEqual(result.polling_interval, polling_interval)
+        self.assertTrue(result.valid)
+
+        # Setup PostingDataPoints - Invalid
+        for source in [1, True, None, False, {1: 2}, [1, 2]]:
+            polling_interval = 10
+            datapoints = [DataPoint('key', 10)]
+            result = PostingDataPoints(source, polling_interval, datapoints)
+            self.assertEqual(result.source, source)
+            self.assertEqual(result.datapoints, datapoints)
+            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertFalse(result.valid)
+
+        for polling_interval in ['1', True, None, False, {1: 2}, [1, 2]]:
+            source = '1234'
+            datapoints = [DataPoint('key', 10)]
+            result = PostingDataPoints(source, polling_interval, datapoints)
+            self.assertEqual(result.source, source)
+            self.assertEqual(result.datapoints, datapoints)
+            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertFalse(result.valid)
+
+        for datapoints in [1, True, None, False, {1: 2}, [1, 2]]:
+            source = '1234'
+            polling_interval = 10
+            result = PostingDataPoints(source, polling_interval, datapoints)
+            self.assertEqual(result.source, source)
+            self.assertEqual(result.datapoints, datapoints)
+            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertFalse(result.valid)
 
 
 class TestDataPointMeta(unittest.TestCase):
