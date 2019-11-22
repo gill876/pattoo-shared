@@ -155,12 +155,13 @@ corrupted.'''.format(filepath, self._meta.source))
                     log.log2warning(1064, log_message)
 
                     # Delete file
-                    os.remove(filepath)
+                    if os.path.isfile(filepath) is True:
+                        os.remove(filepath)
 
-                    log_message = ('''\
+                        log_message = ('''\
 Deleting corrupted cache file {} for identifier {}.\
 '''.format(filepath, self._meta.source))
-                    log.log2warning(1036, log_message)
+                        log.log2warning(1036, log_message)
 
                     # Go to the next file.
                     continue
