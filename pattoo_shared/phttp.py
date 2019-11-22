@@ -152,7 +152,18 @@ Data for identifier "{}" failed to post to server {}\
                     log_message = ('''\
 Error reading previously cached agent data file {} for identifier {}. May be \
 corrupted.'''.format(filepath, self._meta.source))
-                    log.log2die(1064, log_message)
+                    log.log2warning(1064, log_message)
+
+                    # Delete file
+                    os.remove(filepath)
+
+                    log_message = ('''\
+Deleting corrupted cache file {} for identifier {}.\
+'''.format(filepath, self._meta.source))
+                    log.log2warning(1064, log_message)
+
+                    # Go to the next file.
+                    continue
 
             # Post file
             success = self.post(save=False, data=data)
