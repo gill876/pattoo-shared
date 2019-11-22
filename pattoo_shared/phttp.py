@@ -192,6 +192,7 @@ Purging cache file {} after successfully contacting server {}\
 
         """
         # Initialize key variables
+        success = False
         cache_dir = self._cache_dir
         identifier = self._meta.source
         timestamp = int(time() * 1000)
@@ -203,6 +204,7 @@ Purging cache file {} after successfully contacting server {}\
         try:
             with open(filename, 'w') as f_handle:
                 json.dump(data, f_handle)
+            success = True
         except Exception as err:
             log_message = '{}'.format(err)
             log.log2warning(1030, log_message)
@@ -211,6 +213,16 @@ Purging cache file {} after successfully contacting server {}\
 API Failure: [{}, {}, {}]\
 '''.format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
             log.log2warning(1031, log_message)
+
+        # Delete file if there is a failure.
+        # Helps to protect against full file systems.
+        if os.path.isfile(filename) is True and success is False:
+            os.remove(filename)
+            log_message = ('''\
+Deleting corrupted cache file {} for identifier {}.\
+'''.format(filename, self._meta.source))
+            log.log2warning(1037, log_message)
+
 
 
 class PostAgent(Post):
