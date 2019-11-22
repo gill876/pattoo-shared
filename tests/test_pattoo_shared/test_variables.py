@@ -23,7 +23,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import variables
-from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
+from pattoo_shared.constants import (
+    DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS)
 from pattoo_shared.variables import (
     DataPoint, DataPointMeta, PostingDataPoints,
     DeviceDataPoints, DeviceGateway,
@@ -125,10 +126,6 @@ class TestDataPoint(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Key-pair keys that must be ignored
-        datapoint_keys = [
-            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
-
         # Setup DataPoint - Valid
         value = 1093454
         _key_ = 'testing'
@@ -147,7 +144,7 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.valid, True)
 
         # Add metadata that should be ignored.
-        for key in datapoint_keys:
+        for key in DATAPOINT_KEYS:
             variable.add(DataPointMeta(key, '_{}_'.format(key)))
         variable.add(DataPointMeta(_metakey, _metakey))
 

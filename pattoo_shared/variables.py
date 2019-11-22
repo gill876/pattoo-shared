@@ -6,7 +6,8 @@ from time import time
 # pattoo imports
 from pattoo_shared import data
 from .constants import (
-    DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE)
+    DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
+    DATAPOINT_KEYS)
 
 
 class DataPointMeta(object):
@@ -166,10 +167,6 @@ class DataPoint(object):
             None
 
         """
-        # Test illegal keys
-        datapoint_keys = [
-            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
-
         # Ensure there is a list of objects
         if isinstance(items, list) is False:
             items = [items]
@@ -178,7 +175,7 @@ class DataPoint(object):
         for item in items:
             if isinstance(item, DataPointMeta) is True:
                 # Ignore invalid values
-                if item.valid is False or item.key in datapoint_keys:
+                if item.valid is False or item.key in DATAPOINT_KEYS:
                     continue
 
                 # Process
