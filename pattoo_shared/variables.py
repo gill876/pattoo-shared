@@ -722,8 +722,6 @@ def _key_value_valid(key, value, metadata=False):
         key = None
         value = None
 
-    print('xxxx ', key, value)
-
     # Return
     result = (key, value, valid)
     return result
