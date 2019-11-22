@@ -160,7 +160,7 @@ corrupted.'''.format(filepath, self._meta.source))
                     log_message = ('''\
 Deleting corrupted cache file {} for identifier {}.\
 '''.format(filepath, self._meta.source))
-                    log.log2warning(1064, log_message)
+                    log.log2warning(1036, log_message)
 
                     # Go to the next file.
                     continue
