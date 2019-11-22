@@ -30,27 +30,8 @@ class DataPointMeta(object):
 
         """
         # Initialize variables
-        self.key = None
-        self.value = None
-
-        # Set variables
-        if isinstance(key, (str, int, float)) is True and key is not True and (
-                key is not False):
-            self.key = str(key)
-        if isinstance(value, (str, int, float)) is True and (
-                value is not True and value is not False):
-            self.value = str(value)
-
-        self.valid = False not in [
-            bool(self.key),
-            self.key is not True,
-            self.key is not False,
-            self.key is not None,
-            bool(self.value),
-            self.value is not True,
-            self.value is not False,
-            self.value is not None,
-            ]
+        (self.key, self.value, self.valid) = _key_value_valid(
+            key, value, metadata=True)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -76,7 +57,7 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, key, value, data_type=DATA_INT, timestamp=None):
+    def __init__(self, key, value, data_type=DATA_INT):
         """Initialize the class.
 
         Args:
@@ -95,27 +76,39 @@ class DataPoint(object):
 
         """
         # Initialize variables
-        self.key = key
-        self.value = value
+        (self.key, self.value, self.valid) = _key_value_valid(
+            key, value, metadata=False)
         self.data_type = data_type
-        if bool(timestamp) is False:
-            self.timestamp = int(time() * 1000)
-        else:
-            self.timestamp = timestamp
+        self.timestamp = int(time() * 1000)
         self.metadata = {}
         self._metakeys = []
 
         # False validity if value is not of the right type
         self.valid = False not in [
-            data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT,
-                          DATA_STRING, DATA_NONE],
+            data_type in [
+                DATA_INT,
+                DATA_FLOAT,
+                DATA_COUNT64,
+                DATA_COUNT,
+                DATA_STRING,
+                DATA_NONE
+            ],
             data_type is not False,
             data_type is not True,
-            data_type is not None
+            data_type is not None,
+            self.valid is True
         ]
+
+        # Validity check: Make sure numeric data_types have numeric values
         if False not in [
-                data_type in [DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT],
-                self.valid is True, data.is_numeric(value) is False]:
+                data_type in [
+                    DATA_INT,
+                    DATA_FLOAT,
+                    DATA_COUNT64,
+                    DATA_COUNT
+                ],
+                self.valid is True,
+                data.is_numeric(value) is False]:
             self.valid = False
 
         # Convert floatable strings to float, and integers to ints
@@ -685,4 +678,52 @@ def _device_type(device_type):
             result = None
     else:
         result = None
+    return result
+
+
+def _key_value_valid(key, value, metadata=False):
+    """Create a standardized version of key, value.
+
+    Args:
+        key: Key
+        value: Value
+
+    Returns:
+        result: Tuple of (key, value, valid)
+
+    """
+    # Set variables
+    valid = False not in [
+        isinstance(key, (str, int, float)) is True,
+        key is not True,
+        key is not False,
+        key is not None,
+        isinstance(value, (str, int, float)) is True,
+        value is not True,
+        value is not False,
+        value is not None,
+        ]
+
+    # Assign key, value
+    if valid is True:
+        key = str(key).strip()
+
+        # Reevaluate valid
+        valid = False not in [
+            valid,
+            key.lower().startswith('pattoo') is False,
+            key != '']
+
+    # Assign values
+    if valid is True:
+        if bool(metadata) is True:
+            value = str(value).strip()
+    else:
+        key = None
+        value = None
+
+    print('xxxx ', key, value)
+
+    # Return
+    result = (key, value, valid)
     return result
