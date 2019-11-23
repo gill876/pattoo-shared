@@ -23,7 +23,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import variables
-from pattoo_shared.constants import DATA_INT, DATA_STRING, DATA_FLOAT
+from pattoo_shared.constants import (
+    DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS)
 from pattoo_shared.variables import (
     DataPoint, DataPointMeta, PostingDataPoints,
     DeviceDataPoints, DeviceGateway,
@@ -125,10 +126,6 @@ class TestDataPoint(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Key-pair keys that must be ignored
-        datapoint_keys = [
-            'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp']
-
         # Setup DataPoint - Valid
         value = 1093454
         _key_ = 'testing'
@@ -147,7 +144,7 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.valid, True)
 
         # Add metadata that should be ignored.
-        for key in datapoint_keys:
+        for key in DATAPOINT_KEYS:
             variable.add(DataPointMeta(key, '_{}_'.format(key)))
         variable.add(DataPointMeta(_metakey, _metakey))
 
@@ -233,7 +230,7 @@ ab48bdc902e2ea5476a54680a7ace0971ab90edb3f6ffe00a89b2d1e17b1548d''')
         self.assertEqual(variable.valid, True)
 
         # Setup DataPoint - valid value for str data_type
-        for value in [True, False, None, 0, 1, '1093454.3']:
+        for value in [0, 1, '1093454.3']:
             _key_ = 'testing'
             data_type = DATA_STRING
             variable = DataPoint(_key_, value, data_type=data_type)
@@ -246,6 +243,21 @@ ab48bdc902e2ea5476a54680a7ace0971ab90edb3f6ffe00a89b2d1e17b1548d''')
             self.assertEqual(variable.checksum, '''\
 431111472993bf4d9b8b347476b79321fea8a337f3c1cb2fedaa185b54185540''')
             self.assertEqual(variable.valid, True)
+
+        # Setup DataPoint - invalid value for str data_type
+        for value in [True, False, None]:
+            _key_ = 'testing'
+            data_type = DATA_STRING
+            variable = DataPoint(_key_, value, data_type=data_type)
+
+            # Test each variable
+            self.assertEqual(variable.data_type, data_type)
+            self.assertEqual(variable.valid, False)
+            self.assertEqual(variable.value, str(value))
+            self.assertIsNone(variable.key)
+            self.assertEqual(len(variable.checksum), 64)
+            self.assertEqual(variable.checksum, '''\
+a783370f88d8c54b5f5e6641af69d86dae5d4d62621d55cf7e63f6c66644c214''')
 
     def test___repr__(self):
         """Testing function __repr__."""
@@ -702,6 +714,56 @@ class TestBasicFunctions(unittest.TestCase):
     def test__strip_non_printable(self):
         """Testing function _strip_non_printable."""
         pass
+
+    def test__key_value_valid(self):
+        """Testing function _key_value_valid."""
+        # Test with valid values
+        for _key, _value in [
+                (1, 2), (0, 4), (5, 0), ('1', 2), (3, '4'), (0, 0), ('0', 1),
+                (1, '0'), ('0', '0')]:
+            (key, value, valid) = variables._key_value_valid(_key, _value)
+            self.assertEqual(key, str(_key))
+            self.assertEqual(value, _value)
+            self.assertTrue(valid)
+
+        # Test with invalid values
+        for _key, _value in [
+                (None, 2), (False, 4), ({5: 1}, 6),
+                ('test', True), ('test', False), ('test', None),
+                (True, 'test'), (False, 'test'), (None, 'test'),
+                ('1', True), ('1', False), ('1', None),
+                (True, '1'), (False, '1'), (None, '1'),
+                (1, True), (1, False), (1, None),
+                (True, 1), (False, 1), (None, 1)]:
+            (key, value, valid) = variables._key_value_valid(_key, _value)
+            self.assertIsNone(key)
+            self.assertIsNone(value)
+            self.assertFalse(valid)
+
+        # Test with valid values
+        for _key, _value in [
+                (1, 2), (0, 4), (5, 0), ('1', 2), (3, '4'), (0, 0), ('0', 1),
+                (1, '0'), ('0', '0')]:
+            (key, value, valid) = variables._key_value_valid(
+                _key, _value, metadata=True)
+            self.assertEqual(key, str(_key))
+            self.assertEqual(value, str(_value))
+            self.assertTrue(valid)
+
+        # Test with invalid values
+        for _key, _value in [
+                (None, 2), (False, 4), ({5: 1}, 6),
+                ('test', True), ('test', False), ('test', None),
+                (True, 'test'), (False, 'test'), (None, 'test'),
+                ('1', True), ('1', False), ('1', None),
+                (True, '1'), (False, '1'), (None, '1'),
+                (1, True), (1, False), (1, None),
+                (True, 1), (False, 1), (None, 1)]:
+            (key, value, valid) = variables._key_value_valid(
+                _key, _value, metadata=True)
+            self.assertIsNone(key)
+            self.assertIsNone(value)
+            self.assertFalse(valid)
 
 
 if __name__ == '__main__':
