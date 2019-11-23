@@ -317,12 +317,11 @@ class TestDeviceDataPoints(unittest.TestCase):
         """Testing function __repr__."""
         # Setup DeviceDataPoints
         device = 'localhost'
-        ddv = DeviceDataPoints(device, device_type=456)
+        ddv = DeviceDataPoints(device)
 
         # Test
         expected = ('''\
-<DeviceDataPoints device='localhost', device_type=456, valid=False, \
-data=[]''')
+<DeviceDataPoints device='localhost', valid=False, data=[]''')
         result = ddv.__repr__()
         self.assertEqual(result, expected)
 
@@ -658,13 +657,12 @@ class TestDevicePollingTargets(unittest.TestCase):
         """Testing function __repr__."""
         # Setup variable
         device = 'localhost'
-        item = DevicePollingTargets(device, device_type=678)
+        item = DevicePollingTargets(device)
         result = item.__repr__()
 
         # Test
         expected = ('''\
-<DevicePollingTargets device='localhost', device_type=678, valid=False, \
-data=[]>''')
+<DevicePollingTargets device='localhost', valid=False, data=[]>''')
         result = item.__repr__()
         self.assertEqual(result, expected)
 

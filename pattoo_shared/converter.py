@@ -148,8 +148,7 @@ def agentdata_to_datapoints(agentdata):
                         'agent_program': agentdata.agent_program,
                         'agent_hostname': agentdata.agent_hostname,
                         'gateway': gwd.device,
-                        'device': ddv.device,
-                        'device_type': ddv.device_type
+                        'device': ddv.device
                     }
                     for key, value in metadata.items():
                         _dv.add(DataPointMeta(key, value))
