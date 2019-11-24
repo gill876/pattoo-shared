@@ -25,8 +25,9 @@ MAX_KEYPAIR_LENGTH = 512
 
 # Groupings of reserved keys
 DATAPOINT_KEYS = (
-    'checksum', 'metadata', 'data_type', 'key', 'value', 'timestamp')
-NON_DATAPOINT_KEYS = ['source', 'polling_interval']
+    'pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type', 'pattoo_key',
+    'pattoo_value', 'pattoo_timestamp')
+NON_DATAPOINT_KEYS = ['pattoo_source', 'pattoo_polling_interval']
 
 # Create reserved keys
 _ = list(DATAPOINT_KEYS)
@@ -36,7 +37,7 @@ RESERVED_KEYS = tuple(_)
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', ' '.join(RESERVED_KEYS))
 
-CACHE_KEYS = ('source', 'datapoints', 'polling_interval')
+CACHE_KEYS = ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval')
 
 
 ###############################################################################

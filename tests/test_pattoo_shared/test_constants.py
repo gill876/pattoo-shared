@@ -30,6 +30,11 @@ from pattoo_shared.constants import DATA_COUNT
 from pattoo_shared.constants import DATA_STRING
 from pattoo_shared.constants import DATA_NONE
 from pattoo_shared.constants import MAX_KEYPAIR_LENGTH
+from pattoo_shared.constants import DATAPOINT_KEYS
+from pattoo_shared.constants import NON_DATAPOINT_KEYS
+from pattoo_shared.constants import RESERVED_KEYS
+from pattoo_shared.constants import CACHE_KEYS
+
 
 from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
@@ -54,6 +59,20 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(DATA_STRING, 2)
         self.assertEqual(DATA_NONE, None)
         self.assertEqual(MAX_KEYPAIR_LENGTH, 512)
+        self.assertEqual(
+            DATAPOINT_KEYS,
+            ('pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type',
+             'pattoo_key', 'pattoo_value', 'pattoo_timestamp'))
+        self.assertEqual(
+            NON_DATAPOINT_KEYS, ['pattoo_source', 'pattoo_polling_interval'])
+        self.assertEqual(
+            RESERVED_KEYS,
+            ('pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type',
+             'pattoo_key', 'pattoo_value', 'pattoo_timestamp',
+             'pattoo_source', 'pattoo_polling_interval'))
+        self.assertEqual(
+            CACHE_KEYS,
+            ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval'))
 
         # Test pattoo API constants
         self.assertEqual(

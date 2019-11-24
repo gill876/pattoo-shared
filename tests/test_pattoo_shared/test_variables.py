@@ -47,9 +47,9 @@ class TestPostingDataPoints(unittest.TestCase):
         polling_interval = 10
         datapoints = [DataPoint('key', 10)]
         result = PostingDataPoints(source, polling_interval, datapoints)
-        self.assertEqual(result.source, source)
-        self.assertEqual(result.datapoints, datapoints)
-        self.assertEqual(result.polling_interval, polling_interval)
+        self.assertEqual(result.pattoo_source, source)
+        self.assertEqual(result.pattoo_datapoints, datapoints)
+        self.assertEqual(result.pattoo_polling_interval, polling_interval)
         self.assertTrue(result.valid)
 
         # Setup PostingDataPoints - Invalid
@@ -57,27 +57,27 @@ class TestPostingDataPoints(unittest.TestCase):
             polling_interval = 10
             datapoints = [DataPoint('key', 10)]
             result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.source, source)
-            self.assertEqual(result.datapoints, datapoints)
-            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertEqual(result.pattoo_source, source)
+            self.assertEqual(result.pattoo_datapoints, datapoints)
+            self.assertEqual(result.pattoo_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
         for polling_interval in ['1', True, None, False, {1: 2}, [1, 2]]:
             source = '1234'
             datapoints = [DataPoint('key', 10)]
             result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.source, source)
-            self.assertEqual(result.datapoints, datapoints)
-            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertEqual(result.pattoo_source, source)
+            self.assertEqual(result.pattoo_datapoints, datapoints)
+            self.assertEqual(result.pattoo_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
         for datapoints in [1, True, None, False, {1: 2}, [1, 2]]:
             source = '1234'
             polling_interval = 10
             result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.source, source)
-            self.assertEqual(result.datapoints, datapoints)
-            self.assertEqual(result.polling_interval, polling_interval)
+            self.assertEqual(result.pattoo_source, source)
+            self.assertEqual(result.pattoo_datapoints, datapoints)
+            self.assertEqual(result.pattoo_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
 

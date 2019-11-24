@@ -28,7 +28,7 @@ from pattoo_shared.variables import (
     DataPointMeta, DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    PattooDBrecord, DATAPOINT_KEYS)
+    DATAPOINT_KEYS)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -44,20 +44,20 @@ class TestBasicFunctions(unittest.TestCase):
         self.maxDiff = None
 
         cache = {
-            'source': "1234",
-            'polling_interval': 30,
-            'datapoints': [
-                {"metadata": [
-                    {"agent_hostname": "palisadoes"},
-                    {"agent_id": "1234"},
-                    {"agent_program": "program_1"},
-                    {"device": "device_1"},
-                    {"gateway": "palisadoes"}],
-                 "key": 30386,
-                 "data_type": 99,
-                 "value": 523.0,
-                 "timestamp": 1574011824387,
-                 "checksum": '123'}
+            'pattoo_source': '1234',
+            'pattoo_polling_interval': 30,
+            'pattoo_datapoints': [
+                {'pattoo_metadata': [
+                    {'agent_hostname': 'palisadoes'},
+                    {'agent_id': '1234'},
+                    {'agent_program': 'program_1'},
+                    {'device': 'device_1'},
+                    {'gateway': 'palisadoes'}],
+                 'pattoo_key': 30386,
+                 'pattoo_data_type': 99,
+                 'pattoo_value': 523.0,
+                 'pattoo_timestamp': 1574011824387,
+                 'pattoo_checksum': '123'}
             ]
         }
 
@@ -66,17 +66,17 @@ class TestBasicFunctions(unittest.TestCase):
         results = converter.cache_to_keypairs(cache)
         self.assertTrue(isinstance(results, list))
         for _, result in enumerate(results):
-            self.assertEqual(result.checksum, '''\
+            self.assertEqual(result.pattoo_checksum, '''\
 5c531afb2e4106cc78f99ff895ef99d2fa587f7272a91f82244f06caddf89176c299afc0ef4a44\
 7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
-            self.assertEqual(result.timestamp, 1574011824387)
-            self.assertEqual(result.value, 523.0)
-            self.assertEqual(result.polling_interval, 30000)
-            self.assertEqual(result.data_type, 99)
-            self.assertEqual(result.key, 30386)
-            _metadata = cache['datapoints'][0]['metadata']
+            self.assertEqual(result.pattoo_timestamp, 1574011824387)
+            self.assertEqual(result.pattoo_value, 523.0)
+            self.assertEqual(result.pattoo_polling_interval, 30000)
+            self.assertEqual(result.pattoo_data_type, 99)
+            self.assertEqual(result.pattoo_key, 30386)
+            _metadata = cache['pattoo_datapoints'][0]['pattoo_metadata']
             self.assertEqual(
-                result.metadata,
+                result.pattoo_metadata,
                 [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
                     _dict.items())])
 
@@ -172,14 +172,14 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         result = converter.datapoints_to_dicts(datapoints)
         self.assertTrue(isinstance(result, list))
         for value, item in enumerate(result):
-            self.assertEqual(item['data_type'], 'type_{}'.format(value))
-            self.assertEqual(item['key'], 'label_{}'.format(value))
-            self.assertTrue(item['timestamp'] >= now)
-            self.assertTrue(item['timestamp'] <= now + 1000)
-            self.assertTrue(isinstance(item['checksum'], str))
-            self.assertTrue(isinstance(item['metadata'], list))
-            self.assertTrue(len(item['metadata'], 4))
-            for meta, metadata in enumerate(item['metadata']):
+            self.assertEqual(item['pattoo_data_type'], 'type_{}'.format(value))
+            self.assertEqual(item['pattoo_key'], 'label_{}'.format(value))
+            self.assertTrue(item['pattoo_timestamp'] >= now)
+            self.assertTrue(item['pattoo_timestamp'] <= now + 1000)
+            self.assertTrue(isinstance(item['pattoo_checksum'], str))
+            self.assertTrue(isinstance(item['pattoo_metadata'], list))
+            self.assertTrue(len(item['pattoo_metadata'], 4))
+            for meta, metadata in enumerate(item['pattoo_metadata']):
                 self.assertTrue(metadata, dict)
                 for m_key, m_value in metadata.items():
                     self.assertEqual(2 * int(m_key), int(m_value))
@@ -218,19 +218,19 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         # Test DeviceGateway to AgentPolledData
         apd.add(dgw)
         result = converter.agentdata_to_post(apd)
-        self.assertEqual(result.source, agent_id)
-        self.assertEqual(result.polling_interval, polling_interval)
-        self.assertTrue(isinstance(result.datapoints, list))
+        self.assertEqual(result.pattoo_source, agent_id)
+        self.assertEqual(result.pattoo_polling_interval, polling_interval)
+        self.assertTrue(isinstance(result.pattoo_datapoints, list))
 
         # We have a dict to evaluate
-        datapoint = result.datapoints[0]
+        datapoint = result.pattoo_datapoints[0]
         self.assertTrue(isinstance(datapoint, dict))
         self.assertTrue(
-            datapoint['checksum'],
+            datapoint['pattoo_checksum'],
             'a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3')
-        self.assertTrue(datapoint['data_type'], DATA_INT)
-        self.assertTrue(datapoint['key'], key)
-        self.assertTrue(datapoint['value'], value)
+        self.assertTrue(datapoint['pattoo_data_type'], DATA_INT)
+        self.assertTrue(datapoint['pattoo_key'], key)
+        self.assertTrue(datapoint['pattoo_value'], value)
 
         expected_metadata = {
             'agent_id': agent_id,
@@ -239,7 +239,7 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
             'gateway': gateway,
             'device': device
         }
-        for item in datapoint['metadata']:
+        for item in datapoint['pattoo_metadata']:
             for key, value in item.items():
                 self.assertTrue(isinstance(value, str))
                 self.assertTrue(isinstance(key, str))
@@ -248,23 +248,27 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
     def test_datapoints_to_post(self):
         """Testing method / function datapoints_to_post."""
         # Initialize key variables
-        datapoints = [DataPoint('key', 'value')]
+        key = '_key'
+        value = '_value'
+        datapoints = [DataPoint(key, value)]
         source = '1234'
         polling_interval = 10
         result = converter.datapoints_to_post(
             source, polling_interval, datapoints)
 
         # Test
-        self.assertEqual(result.polling_interval, polling_interval)
-        self.assertEqual(result.source, source)
-        self.assertEqual(result.datapoints, datapoints)
-        self.assertEqual(result.datapoints[0].key, 'key')
-        self.assertEqual(result.datapoints[0].value, 'value')
+        self.assertEqual(result.pattoo_polling_interval, polling_interval)
+        self.assertEqual(result.pattoo_source, source)
+        self.assertEqual(result.pattoo_datapoints, datapoints)
+        self.assertEqual(result.pattoo_datapoints[0].key, key)
+        self.assertEqual(result.pattoo_datapoints[0].value, value)
 
     def test_posting_data_points(self):
         """Testing method / function posting_data_points."""
         # Initialize key variables
-        datapoints = [DataPoint('key', 'value')]
+        key = '_key'
+        value = '_value'
+        datapoints = [DataPoint(key, value)]
         source = '1234'
         polling_interval = 10
         pdp = converter.datapoints_to_post(
@@ -272,11 +276,11 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         result = converter.posting_data_points(pdp)
 
         # Test
-        self.assertEqual(result['polling_interval'], polling_interval)
-        self.assertEqual(result['source'], source)
-        self.assertEqual(result['datapoints'], datapoints)
-        self.assertEqual(result['datapoints'][0].key, 'key')
-        self.assertEqual(result['datapoints'][0].value, 'value')
+        self.assertEqual(result['pattoo_polling_interval'], polling_interval)
+        self.assertEqual(result['pattoo_source'], source)
+        self.assertEqual(result['pattoo_datapoints'], datapoints)
+        self.assertEqual(result['pattoo_datapoints'][0].key, key)
+        self.assertEqual(result['pattoo_datapoints'][0].value, value)
 
 
 if __name__ == '__main__':

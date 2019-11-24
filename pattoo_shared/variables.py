@@ -195,21 +195,21 @@ class PostingDataPoints(object):
 
         """
         # Initialize key variables
-        self.source = source
-        self.polling_interval = polling_interval
-        self.datapoints = datapoints
+        self.pattoo_source = source
+        self.pattoo_polling_interval = polling_interval
+        self.pattoo_datapoints = datapoints
 
         # Validation tests
         self.valid = False not in [
-            isinstance(self.source, str),
-            isinstance(self.polling_interval, int),
-            isinstance(self.datapoints, list),
-            self.polling_interval is not False,
-            self.polling_interval is not True,
+            isinstance(self.pattoo_source, str),
+            isinstance(self.pattoo_polling_interval, int),
+            isinstance(self.pattoo_datapoints, list),
+            self.pattoo_polling_interval is not False,
+            self.pattoo_polling_interval is not True,
         ]
         if self.valid is True:
             self.valid = False not in [
-                isinstance(_, DataPoint) for _ in self.datapoints]
+                isinstance(_, DataPoint) for _ in self.pattoo_datapoints]
 
 
 class DeviceDataPoints(object):
