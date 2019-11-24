@@ -143,7 +143,7 @@ def agentdata_to_datapoints(agentdata):
                     'agent_hostname': agentdata.agent_hostname,
                     'device': ddv.device
                 }
-                for key, value in metadata.items():
+                for key, value in sorted(metadata.items()):
                     _dv.add(DataPointMeta(key, value))
                 rows.append(_dv)
 
@@ -201,6 +201,7 @@ def agentdata_to_post(agentdata):
         result: Dict of data to post
 
     """
+    # Initialize key Variables
     source = agentdata.agent_id
     polling_interval = agentdata.polling_interval
     _data = agentdata_to_datapoints(agentdata)

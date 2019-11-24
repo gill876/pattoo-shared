@@ -24,7 +24,8 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import variables
-from pattoo_shared import agent
+from pattoo_shared import files
+from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
     DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS)
 from pattoo_shared.variables import (
@@ -374,18 +375,20 @@ class TestAgentPolledData(unittest.TestCase):
     # General object setup
     #########################################################################
 
+    config = Config()
+
     def test___init__(self):
         """Testing function __init__."""
         # Setup AgentPolledData variable
         agent_program = 'brown_bear'
         agent_hostname = socket.getfqdn()
-        agent_id = agent.get_agent_id(agent_program, agent_hostname)
-        polling_interval = 30
-        apd = AgentPolledData(agent_program, polling_interval)
+        apd = AgentPolledData(agent_program, self.config)
+        agent_id = files.get_agent_id(
+            agent_program, agent_hostname, self.config)
 
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
-        self.assertEqual(apd.polling_interval, 30)
+        self.assertEqual(apd.polling_interval, self.config.polling_interval())
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
         self.assertEqual(apd.agent_hostname, agent_hostname)
@@ -395,25 +398,22 @@ class TestAgentPolledData(unittest.TestCase):
         """Testing function __repr__."""
         # Setup AgentPolledData
         agent_program = 'brown_bear'
-        polling_interval = 30
-        apd = AgentPolledData(agent_program, polling_interval)
+        apd = AgentPolledData(agent_program, self.config)
 
         # Test
         expected = ('''\
 <AgentPolledData agent_id='{}' agent_program='brown_bear', \
-agent_hostname='{}', timestamp={} polling_interval=30, valid=False>\
-'''.format(apd.agent_id, apd.agent_hostname, apd.agent_timestamp, 3))
+agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
+'''.format(apd.agent_id, apd.agent_hostname, apd.agent_timestamp,
+           self.config.polling_interval()))
         result = apd.__repr__()
-        print('\n', result)
-        print(expected, '\n')
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        polling_interval = 30
-        apd = AgentPolledData(agent_program, polling_interval)
+        apd = AgentPolledData(agent_program, self.config)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'

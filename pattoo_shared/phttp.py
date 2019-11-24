@@ -43,7 +43,7 @@ Data identifier isn\'t a PostingDataPoints object it\'s a {}. [{}]\
 
         # Get posting URL
         self._meta = metadata
-        self._meta.source = metadata.source
+        self._meta.source = metadata.pattoo_source
         self._url = config.api_server_url(self._meta.source)
         self._cache_dir = config.agent_cache_directory(self._meta.source)
 

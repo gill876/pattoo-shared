@@ -24,6 +24,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import converter
+from pattoo_shared.configuration import Config
 from pattoo_shared.variables import (
     DataPointMeta, DataPoint, DeviceDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
@@ -38,6 +39,8 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
     # General object setup
     #########################################################################
+
+    config = Config()
 
     def test_cache_to_keypairs(self):
         """Testing method / function cache_to_keypairs."""
@@ -84,8 +87,7 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function agentdata_to_datapoints."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        polling_interval = 30
-        apd = AgentPolledData(agent_program, polling_interval)
+        apd = AgentPolledData(agent_program, self.config)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'
@@ -118,10 +120,6 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(item.value, value)
         self.assertEqual(item.data_type, DATA_INT)
         self.assertEqual(item.key, key)
-        self.assertEqual(
-            item.checksum,
-            '''\
-9c0327541e6ca219a3e5851d8e55b048920582a4d91e6fcb9735ba10a266314e''')
         self.assertTrue(isinstance(item.metadata, dict))
         self.assertEqual(len(item.metadata), len(expected_metadata))
         for key, value in item.metadata.items():
@@ -178,8 +176,8 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function agentdata_to_post."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        polling_interval = 30
-        apd = AgentPolledData(agent_program, polling_interval)
+        polling_interval = self.config.polling_interval()
+        apd = AgentPolledData(agent_program, self.config)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'
@@ -230,7 +228,7 @@ class TestBasicFunctions(unittest.TestCase):
         value = '_value'
         datapoints = [DataPoint(key, value)]
         source = '1234'
-        polling_interval = 10
+        polling_interval = self.config.polling_interval()
         result = converter.datapoints_to_post(
             source, polling_interval, datapoints)
 
@@ -248,7 +246,7 @@ class TestBasicFunctions(unittest.TestCase):
         value = '_value'
         datapoints = [DataPoint(key, value)]
         source = '1234'
-        polling_interval = 10
+        polling_interval = self.config.polling_interval()
         pdp = converter.datapoints_to_post(
             source, polling_interval, datapoints)
         result = converter.posting_data_points(pdp)

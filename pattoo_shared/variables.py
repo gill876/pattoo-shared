@@ -6,7 +6,7 @@ import socket
 
 # pattoo imports
 from pattoo_shared import data
-#from pattoo_shared import agent
+from pattoo_shared import files
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS)
@@ -294,12 +294,12 @@ class AgentPolledData(object):
 
     """
 
-    def __init__(self, agent_program, polling_interval):
+    def __init__(self, agent_program, config):
         """Initialize the class.
 
         Args:
             agent_program: Name of agent program collecting the data
-            polling_interval: Polling interval used to collect the data
+            config: Config object
 
         Returns:
             None
@@ -313,9 +313,9 @@ class AgentPolledData(object):
         self.agent_program = agent_program
         self.agent_hostname = socket.getfqdn()
         self.agent_timestamp = int(time() * 1000)
-        #self.agent_id = agent.get_agent_id(agent_program, self.agent_hostname)
-        self.agent_id = '123'
-        self.polling_interval = polling_interval
+        self.agent_id = files.get_agent_id(
+            agent_program, self.agent_hostname, config)
+        self.polling_interval = config.polling_interval()
         self.data = []
         self.valid = False
 

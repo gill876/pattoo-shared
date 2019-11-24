@@ -24,6 +24,7 @@ from gunicorn.app.base import BaseApplication
 
 # Pattoo libraries
 from pattoo_shared import daemon
+from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared import data
 from pattoo_shared.configuration import Config
@@ -44,15 +45,16 @@ class Agent(object):
 
         """
         # Initialize key variables (Parent)
+        config = Config()
         self.parent = parent
-        self.pidfile_parent = daemon.pid_file(parent)
-        self.lockfile_parent = daemon.lock_file(parent)
+        self.pidfile_parent = files.pid_file(parent, config)
+        self.lockfile_parent = files.lock_file(parent, config)
 
         # Initialize key variables (Child)
         if bool(child) is None:
             self._pidfile_child = None
         else:
-            self._pidfile_child = daemon.pid_file(child)
+            self._pidfile_child = files.pid_file(child, config)
 
     def name(self):
         """Return agent name.
@@ -398,49 +400,3 @@ def _ip_binding(aav):
 
     # Return result
     return result
-
-
-def get_agent_id(agent_name, agent_hostname):
-    """Create a permanent UID for the agent_name.
-
-    Args:
-        agent_name: Agent name
-
-    Returns:
-        agent_id: UID for agent
-
-    """
-    # Initialize key variables
-    filename = daemon.agent_id_file(agent_name, agent_hostname)
-
-    # Read environment file with UID if it exists
-    if os.path.isfile(filename):
-        with open(filename) as f_handle:
-            agent_id = f_handle.readline()
-    else:
-        # Create a UID and save
-        agent_id = _generate_agent_id()
-        with open(filename, 'w+') as env:
-            env.write(str(agent_id))
-
-    # Return
-    return agent_id
-
-
-def _generate_agent_id():
-    """Generate a UID.
-
-    Args:
-        None
-
-    Returns:
-        agent_id: the UID
-
-    """
-    # Create a UID and save
-    prehash = '{}{}{}{}{}'.format(
-        random(), random(), random(), random(), time.time())
-    agent_id = data.hashstring(prehash)
-
-    # Return
-    return agent_id
