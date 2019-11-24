@@ -2,9 +2,11 @@
 
 # Standard imports
 from time import time
+import socket
 
 # pattoo imports
 from pattoo_shared import data
+#from pattoo_shared import agent
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS)
@@ -284,81 +286,6 @@ class DeviceDataPoints(object):
                 self.valid = False not in [bool(self.data), bool(self.device)]
 
 
-class DeviceGateway(object):
-    """Object defining a list of DeviceDataPoints objects.
-
-    Stores DeviceDataPoints polled from a specific ip_device.
-
-    """
-
-    def __init__(self, device):
-        """Initialize the class.
-
-        Args:
-            device: Device polled to get the DeviceDataPoints objects
-
-        Returns:
-            None
-
-        Variables:
-            self.data: List of DeviceDataPoints retrieved from the device
-            self.valid: True if the object has assigned DeviceDataPoints
-
-        """
-        # Initialize key variables
-        self.data = []
-        self.device = device
-        self.valid = False
-
-    def __repr__(self):
-        """Return a representation of the attributes of the class.
-
-        Args:
-            None
-
-        Returns:
-            result: String representation.
-
-        """
-        # Create a printable variation of the value
-        result = (
-            '<{0} device={1}, valid={2}, data={3}>'
-            ''.format(
-                self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
-            )
-        )
-        return result
-
-    def add(self, items):
-        """Add DeviceDataPoints to the internal self.data list.
-
-        Args:
-            items: A DeviceDataPoints object list
-
-        Returns:
-            None
-
-        """
-        # Ensure there is a list of objects
-        if isinstance(items, list) is False:
-            items = [items]
-
-        # Only append approved data types
-        for item in items:
-            if isinstance(item, DeviceDataPoints) is True:
-                # Ignore invalid values
-                if item.valid is False:
-                    continue
-
-                # Process
-                self.data.append(item)
-
-                # Set object as being valid
-                self.valid = False not in [
-                    bool(self.data), bool(self.device)]
-
-
 class AgentPolledData(object):
     """Object defining data received from / sent by Agent.
 
@@ -367,14 +294,11 @@ class AgentPolledData(object):
 
     """
 
-    def __init__(self, agent_id, agent_program, agent_hostname,
-                 polling_interval):
+    def __init__(self, agent_program, polling_interval):
         """Initialize the class.
 
         Args:
-            agent_id: Agent ID
             agent_program: Name of agent program collecting the data
-            agent_hostname: Hostname on which the agent ran
             polling_interval: Polling interval used to collect the data
 
         Returns:
@@ -386,10 +310,11 @@ class AgentPolledData(object):
 
         """
         # Initialize key variables
-        self.agent_id = agent_id
         self.agent_program = agent_program
-        self.agent_hostname = agent_hostname
+        self.agent_hostname = socket.getfqdn()
         self.agent_timestamp = int(time() * 1000)
+        #self.agent_id = agent.get_agent_id(agent_program, self.agent_hostname)
+        self.agent_id = '123'
         self.polling_interval = polling_interval
         self.data = []
         self.valid = False
@@ -431,7 +356,7 @@ polling_interval={5}, valid={6}>\
         # Only append approved data types
         for item in items:
             # Only append approved data types
-            if isinstance(item, DeviceGateway) is True:
+            if isinstance(item, DeviceDataPoints) is True:
                 # Ignore invalid values
                 if item.valid is False:
                     continue

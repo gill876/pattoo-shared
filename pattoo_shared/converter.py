@@ -129,30 +129,23 @@ def agentdata_to_datapoints(agentdata):
         if bool(agentdata.valid) is False:
             return []
 
-        # Cycle through the data
-        for gwd in agentdata.data:
+        for ddv in agentdata.data:
             # Ignore bad data
-            if gwd.valid is False:
+            if ddv.valid is False:
                 continue
 
-            for ddv in gwd.data:
-                # Ignore bad data
-                if ddv.valid is False:
-                    continue
-
-                # Get data
-                for _dv in ddv.data:
-                    # Assign values to DataPoints
-                    metadata = {
-                        'agent_id': agentdata.agent_id,
-                        'agent_program': agentdata.agent_program,
-                        'agent_hostname': agentdata.agent_hostname,
-                        'gateway': gwd.device,
-                        'device': ddv.device
-                    }
-                    for key, value in metadata.items():
-                        _dv.add(DataPointMeta(key, value))
-                    rows.append(_dv)
+            # Get data
+            for _dv in ddv.data:
+                # Assign values to DataPoints
+                metadata = {
+                    'agent_id': agentdata.agent_id,
+                    'agent_program': agentdata.agent_program,
+                    'agent_hostname': agentdata.agent_hostname,
+                    'device': ddv.device
+                }
+                for key, value in metadata.items():
+                    _dv.add(DataPointMeta(key, value))
+                rows.append(_dv)
 
     # Return
     return rows

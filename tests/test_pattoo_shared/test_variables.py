@@ -5,6 +5,7 @@
 import unittest
 import os
 import sys
+import socket
 
 
 # Try to create a working PYTHONPATH
@@ -23,11 +24,12 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import variables
+from pattoo_shared import agent
 from pattoo_shared.constants import (
     DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS)
 from pattoo_shared.variables import (
     DataPoint, DataPointMeta, PostingDataPoints,
-    DeviceDataPoints, DeviceGateway,
+    DeviceDataPoints,
     PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
@@ -375,12 +377,11 @@ class TestAgentPolledData(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Setup AgentPolledData variable
-        agent_id = 'polar_bear'
         agent_program = 'brown_bear'
-        agent_hostname = 'localhost'
+        agent_hostname = socket.getfqdn()
+        agent_id = agent.get_agent_id(agent_program, agent_hostname)
         polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval)
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
@@ -393,37 +394,26 @@ class TestAgentPolledData(unittest.TestCase):
     def test___repr__(self):
         """Testing function __repr__."""
         # Setup AgentPolledData
-        agent_id = 'polar_bear'
         agent_program = 'brown_bear'
-        agent_hostname = 'localhost'
         polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval)
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Test
         expected = ('''\
-<AgentPolledData agent_id='polar_bear' agent_program='brown_bear', \
-agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
-'''.format(apd.agent_timestamp, 3))
+<AgentPolledData agent_id='{}' agent_program='brown_bear', \
+agent_hostname='{}', timestamp={} polling_interval=30, valid=False>\
+'''.format(apd.agent_id, apd.agent_hostname, apd.agent_timestamp, 3))
         result = apd.__repr__()
+        print('\n', result)
+        print(expected, '\n')
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
         # Setup AgentPolledData
-        agent_id = 'koala_bear'
         agent_program = 'panda_bear'
-        agent_hostname = 'localhost'
         polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval)
-
-        # Initialize DeviceGateway
-        gateway = 'grizzly_bear'
-        dgw = DeviceGateway(gateway)
-        self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.valid)
-        self.assertEqual(dgw.data, [])
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'
@@ -442,11 +432,6 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         self.assertFalse(ddv.valid)
         ddv.add(variable)
         self.assertTrue(ddv.valid)
-
-        # Add data to DeviceGateway
-        self.assertFalse(dgw.valid)
-        dgw.add(ddv)
-        self.assertTrue(dgw.valid)
 
         # Test add
         self.assertFalse(apd.valid)
@@ -454,7 +439,7 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         self.assertFalse(apd.valid)
         apd.add(variable)
         self.assertFalse(apd.valid)
-        apd.add(dgw)
+        apd.add(ddv)
         self.assertTrue(apd.valid)
 
         # Test contents
@@ -462,96 +447,6 @@ agent_hostname='localhost', timestamp={} polling_interval=30, valid=False>\
         self.assertTrue(isinstance(data, list))
         self.assertEqual(len(data), 1)
 
-        _dgw = data[0]
-        self.assertTrue(isinstance(_dgw, DeviceGateway))
-        self.assertEqual(_dgw.device, gateway)
-        self.assertTrue(_dgw.valid)
-        self.assertTrue(isinstance(_dgw.data, list))
-        self.assertTrue(len(_dgw.data), 1)
-
-        data = _dgw.data
-        _ddv = data[0]
-        self.assertTrue(isinstance(_ddv, DeviceDataPoints))
-        self.assertEqual(_ddv.device, device)
-        self.assertTrue(_ddv.valid)
-        self.assertTrue(isinstance(_ddv.data, list))
-        self.assertTrue(len(_ddv.data), 1)
-
-        data = _ddv.data
-        _variable = _ddv.data[0]
-        self.assertEqual(_variable.data_type, data_type)
-        self.assertEqual(_variable.value, value)
-        self.assertEqual(_variable.key, _key_)
-
-
-class TestDeviceGateway(unittest.TestCase):
-    """Checks all functions and methods."""
-
-    #########################################################################
-    # General object setup
-    #########################################################################
-
-    def test___init__(self):
-        """Testing function __init__."""
-        # Setup DeviceGateway variable
-        gateway = 'polar_bear'
-        dgw = DeviceGateway(gateway)
-
-        # Test
-        self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.valid)
-        self.assertEqual(dgw.data, [])
-
-    def test___repr__(self):
-        """Testing function __repr__."""
-        # Setup DeviceGateway variable
-        gateway = 'polar_bear'
-        dgw = DeviceGateway(gateway)
-
-        # Test
-        expected = ('''\
-<DeviceGateway device='polar_bear', valid=False, data=[]>''')
-        result = dgw.__repr__()
-        self.assertEqual(result, expected)
-
-    def test_add(self):
-        """Testing function append."""
-        # Initialize DeviceGateway
-        gateway = 'grizzly_bear'
-        dgw = DeviceGateway(gateway)
-        self.assertEqual(dgw.device, gateway)
-        self.assertFalse(dgw.valid)
-        self.assertEqual(dgw.data, [])
-
-        # Initialize DeviceDataPoints
-        device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
-        self.assertEqual(ddv.device, device)
-        self.assertFalse(ddv.valid)
-        self.assertEqual(ddv.data, [])
-
-        # Setup DataPoint
-        value = 457
-        _key_ = 'gummy_bear'
-        data_type = DATA_INT
-        variable = DataPoint(_key_, value, data_type=data_type)
-
-        # Add data to DeviceDataPoints
-        self.assertFalse(ddv.valid)
-        ddv.add(variable)
-        self.assertTrue(ddv.valid)
-
-        # Test add
-        self.assertFalse(dgw.valid)
-        dgw.add(None)
-        self.assertFalse(dgw.valid)
-        dgw.add(variable)
-        self.assertFalse(dgw.valid)
-        dgw.add(ddv)
-        self.assertTrue(dgw.valid)
-
-        # Test contents
-        data = dgw.data
         _ddv = data[0]
         self.assertTrue(isinstance(_ddv, DeviceDataPoints))
         self.assertEqual(_ddv.device, device)

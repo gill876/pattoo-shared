@@ -25,7 +25,7 @@ directory. Please fix.''')
 # Pattoo imports
 from pattoo_shared import converter
 from pattoo_shared.variables import (
-    DataPointMeta, DataPoint, DeviceDataPoints, DeviceGateway, AgentPolledData)
+    DataPointMeta, DataPoint, DeviceDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS)
@@ -83,16 +83,9 @@ class TestBasicFunctions(unittest.TestCase):
     def test_agentdata_to_datapoints(self):
         """Testing method / function agentdata_to_datapoints."""
         # Setup AgentPolledData
-        agent_id = 'koala_bear'
         agent_program = 'panda_bear'
-        agent_hostname = 'localhost'
         polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval)
-
-        # Initialize DeviceGateway
-        gateway = 'grizzly_bear'
-        dgw = DeviceGateway(gateway)
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'
@@ -107,18 +100,14 @@ class TestBasicFunctions(unittest.TestCase):
         # Add data to DeviceDataPoints
         ddv.add(variable)
 
-        # Add data to DeviceGateway
-        dgw.add(ddv)
-
         # Test DeviceGateway to AgentPolledData
-        apd.add(dgw)
+        apd.add(ddv)
 
         # Test contents
         expected_metadata = {
-            'agent_id': agent_id,
+            'agent_id': apd.agent_id,
             'agent_program': agent_program,
-            'agent_hostname': agent_hostname,
-            'gateway': gateway,
+            'agent_hostname': apd.agent_hostname,
             'device': device
         }
         result = converter.agentdata_to_datapoints(apd)
@@ -132,7 +121,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(
             item.checksum,
             '''\
-a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
+9c0327541e6ca219a3e5851d8e55b048920582a4d91e6fcb9735ba10a266314e''')
         self.assertTrue(isinstance(item.metadata, dict))
         self.assertEqual(len(item.metadata), len(expected_metadata))
         for key, value in item.metadata.items():
@@ -188,16 +177,9 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
     def test_agentdata_to_post(self):
         """Testing method / function agentdata_to_post."""
         # Setup AgentPolledData
-        agent_id = 'koala_bear'
         agent_program = 'panda_bear'
-        agent_hostname = 'localhost'
         polling_interval = 30
-        apd = AgentPolledData(
-            agent_id, agent_program, agent_hostname, polling_interval)
-
-        # Initialize DeviceGateway
-        gateway = 'grizzly_bear'
-        dgw = DeviceGateway(gateway)
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize DeviceDataPoints
         device = 'teddy_bear'
@@ -212,13 +194,10 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         # Add data to DeviceDataPoints
         ddv.add(variable)
 
-        # Add data to DeviceGateway
-        dgw.add(ddv)
-
         # Test DeviceGateway to AgentPolledData
-        apd.add(dgw)
+        apd.add(ddv)
         result = converter.agentdata_to_post(apd)
-        self.assertEqual(result.pattoo_source, agent_id)
+        self.assertEqual(result.pattoo_source, apd.agent_id)
         self.assertEqual(result.pattoo_polling_interval, polling_interval)
         self.assertTrue(isinstance(result.pattoo_datapoints, list))
 
@@ -233,10 +212,9 @@ a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3''')
         self.assertTrue(datapoint['pattoo_value'], value)
 
         expected_metadata = {
-            'agent_id': agent_id,
-            'agent_program': agent_program,
-            'agent_hostname': agent_hostname,
-            'gateway': gateway,
+            'agent_id': apd.agent_id,
+            'agent_program': apd.agent_program,
+            'agent_hostname': apd.agent_hostname,
             'device': device
         }
         for item in datapoint['pattoo_metadata']:
