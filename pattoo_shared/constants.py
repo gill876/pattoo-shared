@@ -37,7 +37,9 @@ RESERVED_KEYS = tuple(_)
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', ' '.join(RESERVED_KEYS))
 
-CACHE_KEYS = ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval')
+CACHE_KEYS = (
+    'pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval',
+    'pattoo_source_timestamp')
 
 
 ###############################################################################
