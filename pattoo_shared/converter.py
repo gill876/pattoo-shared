@@ -237,7 +237,7 @@ def posting_data_points(_data):
 
     """
     result = {
-        'pattoo_timestamp': _data.pattoo_timestamp,
+        'pattoo_source_timestamp': _data.pattoo_timestamp,
         'pattoo_source': _data.pattoo_source,
         'pattoo_polling_interval': _data.pattoo_polling_interval,
         'pattoo_datapoints': _data.pattoo_datapoints}
