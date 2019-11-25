@@ -2,9 +2,11 @@
 
 # Standard imports
 from time import time
+import socket
 
 # pattoo imports
 from pattoo_shared import data
+from pattoo_shared import files
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS)
@@ -195,21 +197,22 @@ class PostingDataPoints(object):
 
         """
         # Initialize key variables
-        self.source = source
-        self.polling_interval = polling_interval
-        self.datapoints = datapoints
+        self.pattoo_source = source
+        self.pattoo_polling_interval = polling_interval
+        self.pattoo_datapoints = datapoints
+        self.pattoo_timestamp = int(time() * 1000)
 
         # Validation tests
         self.valid = False not in [
-            isinstance(self.source, str),
-            isinstance(self.polling_interval, int),
-            isinstance(self.datapoints, list),
-            self.polling_interval is not False,
-            self.polling_interval is not True,
+            isinstance(self.pattoo_source, str),
+            isinstance(self.pattoo_polling_interval, int),
+            isinstance(self.pattoo_datapoints, list),
+            self.pattoo_polling_interval is not False,
+            self.pattoo_polling_interval is not True,
         ]
         if self.valid is True:
             self.valid = False not in [
-                isinstance(_, DataPoint) for _ in self.datapoints]
+                isinstance(_, DataPoint) for _ in self.pattoo_datapoints]
 
 
 class DeviceDataPoints(object):
@@ -219,16 +222,11 @@ class DeviceDataPoints(object):
 
     """
 
-    def __init__(self, device, device_type=None):
+    def __init__(self, device):
         """Initialize the class.
 
         Args:
             device: Device polled to get the DataPoint objects
-            device_type: Integer value identifying the type of device.
-                Device_types are specific to the agent_program name. The
-                intention is to make the combination of device_type and
-                agent_program be the combined key in doing datapoint
-                description lookups.
 
         Returns:
             None
@@ -242,9 +240,7 @@ class DeviceDataPoints(object):
         self.data = []
         self.device = device
         self.valid = False
-        self.device_type = None
         self._checksums = []
-        self.device_type = _device_type(device_type)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -258,11 +254,10 @@ class DeviceDataPoints(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, device_type={4}, valid={2}, data={3}'
+            '<{0} device={1}, valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data),
-                repr(self.device_type)
+                repr(self.device), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -292,81 +287,6 @@ class DeviceDataPoints(object):
                 self.valid = False not in [bool(self.data), bool(self.device)]
 
 
-class DeviceGateway(object):
-    """Object defining a list of DeviceDataPoints objects.
-
-    Stores DeviceDataPoints polled from a specific ip_device.
-
-    """
-
-    def __init__(self, device):
-        """Initialize the class.
-
-        Args:
-            device: Device polled to get the DeviceDataPoints objects
-
-        Returns:
-            None
-
-        Variables:
-            self.data: List of DeviceDataPoints retrieved from the device
-            self.valid: True if the object has assigned DeviceDataPoints
-
-        """
-        # Initialize key variables
-        self.data = []
-        self.device = device
-        self.valid = False
-
-    def __repr__(self):
-        """Return a representation of the attributes of the class.
-
-        Args:
-            None
-
-        Returns:
-            result: String representation.
-
-        """
-        # Create a printable variation of the value
-        result = (
-            '<{0} device={1}, valid={2}, data={3}>'
-            ''.format(
-                self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
-            )
-        )
-        return result
-
-    def add(self, items):
-        """Add DeviceDataPoints to the internal self.data list.
-
-        Args:
-            items: A DeviceDataPoints object list
-
-        Returns:
-            None
-
-        """
-        # Ensure there is a list of objects
-        if isinstance(items, list) is False:
-            items = [items]
-
-        # Only append approved data types
-        for item in items:
-            if isinstance(item, DeviceDataPoints) is True:
-                # Ignore invalid values
-                if item.valid is False:
-                    continue
-
-                # Process
-                self.data.append(item)
-
-                # Set object as being valid
-                self.valid = False not in [
-                    bool(self.data), bool(self.device)]
-
-
 class AgentPolledData(object):
     """Object defining data received from / sent by Agent.
 
@@ -375,15 +295,12 @@ class AgentPolledData(object):
 
     """
 
-    def __init__(self, agent_id, agent_program, agent_hostname,
-                 polling_interval):
+    def __init__(self, agent_program, config):
         """Initialize the class.
 
         Args:
-            agent_id: Agent ID
             agent_program: Name of agent program collecting the data
-            agent_hostname: Hostname on which the agent ran
-            polling_interval: Polling interval used to collect the data
+            config: Config object
 
         Returns:
             None
@@ -394,11 +311,12 @@ class AgentPolledData(object):
 
         """
         # Initialize key variables
-        self.agent_id = agent_id
         self.agent_program = agent_program
-        self.agent_hostname = agent_hostname
+        self.agent_hostname = socket.getfqdn()
         self.agent_timestamp = int(time() * 1000)
-        self.polling_interval = polling_interval
+        self.agent_id = files.get_agent_id(
+            agent_program, self.agent_hostname, config)
+        self.polling_interval = config.polling_interval()
         self.data = []
         self.valid = False
 
@@ -439,7 +357,7 @@ polling_interval={5}, valid={6}>\
         # Only append approved data types
         for item in items:
             # Only append approved data types
-            if isinstance(item, DeviceGateway) is True:
+            if isinstance(item, DeviceDataPoints) is True:
                 # Ignore invalid values
                 if item.valid is False:
                     continue
@@ -544,16 +462,11 @@ class DevicePollingTargets(object):
 
     """
 
-    def __init__(self, device, device_type=None):
+    def __init__(self, device):
         """Initialize the class.
 
         Args:
             device: Device polled to get the PollingTarget objects
-            device_type: Integer value identifying the type of device.
-                Device_types are specific to the agent_program name. The
-                intention is to make the combination of device_type and
-                agent_program be the combined key in doing datapoint
-                description lookups.
 
         Returns:
             None
@@ -561,7 +474,6 @@ class DevicePollingTargets(object):
         Variables:
             self.data: List of PollingTargets retrieved from the device
             self.device: Name of device from which the data was received
-            self.device_type: Type of device
             self.valid: True if the object is populated with PollingTargets
 
         """
@@ -570,7 +482,6 @@ class DevicePollingTargets(object):
         self.device = device
         self.valid = False
         self._checksums = []
-        self.device_type = _device_type(device_type)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -584,11 +495,10 @@ class DevicePollingTargets(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, device_type={4}, valid={2}, data={3}>'
+            '<{0} device={1}, valid={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data),
-                repr(self.device_type)
+                repr(self.device), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -655,32 +565,6 @@ def _strip_non_printable(value):
     return printable_value
 
 
-def _device_type(device_type):
-    """Create a standardized device type.
-
-    Args:
-        device_type: Type of device
-
-    Returns:
-        result: Standardized device_type
-
-    """
-    # Initialize key variables
-    valid = True
-
-    # Set the device_type
-    if device_type is None or device_type is True or device_type is False:
-        valid = False
-    if valid is True:
-        try:
-            result = abs(int(device_type))
-        except:
-            result = None
-    else:
-        result = None
-    return result
-
-
 def _key_value_valid(key, value, metadata=False):
     """Create a standardized version of key, value.
 
@@ -711,7 +595,6 @@ def _key_value_valid(key, value, metadata=False):
         # Reevaluate valid
         valid = False not in [
             valid,
-            key.lower().startswith('pattoo') is False,
             key != '']
 
     # Assign values

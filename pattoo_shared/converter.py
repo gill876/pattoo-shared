@@ -43,9 +43,9 @@ def cache_to_keypairs(_data):
             return []
 
     # Intialize variables needed later
-    polling_interval = _data['polling_interval'] * 1000
-    items = _data['datapoints']
-    source = _data['source']
+    polling_interval = _data['pattoo_polling_interval'] * 1000
+    items = _data['pattoo_datapoints']
+    source = _data['pattoo_source']
 
     # Verify we are getting a list
     if isinstance(items, list) is False:
@@ -71,7 +71,7 @@ def cache_to_keypairs(_data):
             valids.append(isinstance(key, str))
 
             # Work on metadata
-            if key == 'metadata':
+            if key == 'pattoo_metadata':
                 # Must be a dict
                 if isinstance(value, list) is False:
                     valids.append(False)
@@ -84,7 +84,7 @@ def cache_to_keypairs(_data):
                     keypairs.extend(_keypairs(keypair_dict, RESERVED_KEYS))
 
             # Work on the data_type
-            if key == 'data_type':
+            if key == 'pattoo_data_type':
                 valids.append(value in [
                     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
                     DATA_STRING, DATA_NONE])
@@ -93,16 +93,16 @@ def cache_to_keypairs(_data):
         if False not in valids:
             # Add the datasource to the original checksum for better uniqueness
             checksum = data.hashstring(
-                '{}{}'.format(source, item['checksum']), sha=512)
+                '{}{}'.format(source, item['pattoo_checksum']), sha=512)
             pattoo_db_variable = PattooDBrecord(
-                checksum=checksum,
-                key=item['key'],
-                source=source,
-                polling_interval=polling_interval,
-                timestamp=item['timestamp'],
-                data_type=item['data_type'],
-                value=item['value'],
-                metadata=keypairs
+                pattoo_checksum=checksum,
+                pattoo_key=item['pattoo_key'],
+                pattoo_source=source,
+                pattoo_polling_interval=polling_interval,
+                pattoo_timestamp=item['pattoo_timestamp'],
+                pattoo_data_type=item['pattoo_data_type'],
+                pattoo_value=item['pattoo_value'],
+                pattoo_metadata=keypairs
             )
             result.append(pattoo_db_variable)
 
@@ -129,31 +129,23 @@ def agentdata_to_datapoints(agentdata):
         if bool(agentdata.valid) is False:
             return []
 
-        # Cycle through the data
-        for gwd in agentdata.data:
+        for ddv in agentdata.data:
             # Ignore bad data
-            if gwd.valid is False:
+            if ddv.valid is False:
                 continue
 
-            for ddv in gwd.data:
-                # Ignore bad data
-                if ddv.valid is False:
-                    continue
-
-                # Get data
-                for _dv in ddv.data:
-                    # Assign values to DataPoints
-                    metadata = {
-                        'agent_id': agentdata.agent_id,
-                        'agent_program': agentdata.agent_program,
-                        'agent_hostname': agentdata.agent_hostname,
-                        'gateway': gwd.device,
-                        'device': ddv.device,
-                        'device_type': ddv.device_type
-                    }
-                    for key, value in metadata.items():
-                        _dv.add(DataPointMeta(key, value))
-                    rows.append(_dv)
+            # Get data
+            for _dv in ddv.data:
+                # Assign values to DataPoints
+                metadata = {
+                    'pattoo_agent_id': agentdata.agent_id,
+                    'pattoo_agent_program': agentdata.agent_program,
+                    'pattoo_agent_hostname': agentdata.agent_hostname,
+                    'pattoo_agent_polled_device': ddv.device
+                }
+                for key, value in sorted(metadata.items()):
+                    _dv.add(DataPointMeta(key, value))
+                rows.append(_dv)
 
     # Return
     return rows
@@ -185,14 +177,14 @@ def datapoints_to_dicts(items):
         # Only convert valid data
         if datapoint.valid is True:
             data_dict = {
-                'metadata': [
+                'pattoo_metadata': [
                     {str(key): str(value)} for key, value in sorted(
                         datapoint.metadata.items())],
-                'key': datapoint.key,
-                'data_type': datapoint.data_type,
-                'value': datapoint.value,
-                'timestamp': datapoint.timestamp,
-                'checksum': datapoint.checksum
+                'pattoo_key': datapoint.key,
+                'pattoo_data_type': datapoint.data_type,
+                'pattoo_value': datapoint.value,
+                'pattoo_timestamp': datapoint.timestamp,
+                'pattoo_checksum': datapoint.checksum
             }
             result.append(data_dict)
 
@@ -209,6 +201,7 @@ def agentdata_to_post(agentdata):
         result: Dict of data to post
 
     """
+    # Initialize key Variables
     source = agentdata.agent_id
     polling_interval = agentdata.polling_interval
     _data = agentdata_to_datapoints(agentdata)
@@ -244,9 +237,10 @@ def posting_data_points(_data):
 
     """
     result = {
-        'source': _data.source,
-        'polling_interval': _data.polling_interval,
-        'datapoints': _data.datapoints}
+        'pattoo_source_timestamp': _data.pattoo_timestamp,
+        'pattoo_source': _data.pattoo_source,
+        'pattoo_polling_interval': _data.pattoo_polling_interval,
+        'pattoo_datapoints': _data.pattoo_datapoints}
     return result
 
 

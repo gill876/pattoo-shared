@@ -24,7 +24,7 @@ directory. Please fix.''')
     sys.exit(2)
 
 # Pattoo imports
-from pattoo_shared import agent, daemon
+from pattoo_shared import agent, files
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
 from tests.libraries.configuration import UnittestConfig
@@ -37,6 +37,8 @@ class TestAgent(unittest.TestCase):
     # General object setup
     #########################################################################
 
+    config = Config()
+
     def test___init__(self):
         """Testing method / function __init__."""
         # Initialize key variables
@@ -46,21 +48,21 @@ class TestAgent(unittest.TestCase):
         # Test - No Child
         tester = agent.Agent(parent)
         self.assertEqual(tester.parent, parent)
-        expected = daemon.pid_file(parent)
+        expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
-        expected = daemon.lock_file(parent)
+        expected = files.lock_file(parent, self.config)
         self.assertEqual(tester.lockfile_parent, expected)
-        expected = daemon.pid_file(None)
+        expected = files.pid_file(None, self.config)
         self.assertEqual(tester._pidfile_child, expected)
 
         # Test - With Child
         tester = agent.Agent(parent, child=child)
         self.assertEqual(tester.parent, parent)
-        expected = daemon.pid_file(parent)
+        expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
-        expected = daemon.lock_file(parent)
+        expected = files.lock_file(parent, self.config)
         self.assertEqual(tester.lockfile_parent, expected)
-        expected = daemon.pid_file(child)
+        expected = files.pid_file(child, self.config)
         self.assertEqual(tester._pidfile_child, expected)
 
     def test_name(self):
@@ -191,19 +193,6 @@ class TestBasicFunctions(unittest.TestCase):
         result = agent._ip_binding(agent_api_variable)
         expected = '[1::1]:91011'
         self.assertEqual(result, expected)
-
-    def test_get_agent_id(self):
-        """Testing method / function get_agent_id."""
-        # Test. Agent_id shouldn't change
-        agent_name = random()
-        agent_hostname = random()
-        expected = agent.get_agent_id(agent_name, agent_hostname)
-        result = agent.get_agent_id(agent_name, agent_hostname)
-        self.assertEqual(result, expected)
-
-    def test__generate_agent_id(self):
-        """Testing method / function _generate_agent_id."""
-        pass
 
 
 if __name__ == '__main__':

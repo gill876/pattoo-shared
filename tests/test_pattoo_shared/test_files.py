@@ -10,6 +10,7 @@ import json
 from math import pi
 from random import randint
 import shutil
+from random import random
 
 # PIP imports
 import yaml
@@ -30,6 +31,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import files
+from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -39,6 +41,10 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
     # General object setup
     #########################################################################
+
+    prefix = 'unittest'
+    agent_hostname = 'pattoo_host'
+    config = Config()
 
     def test_read_yaml_files(self):
         """Testing method / function read_yaml_files."""
@@ -238,6 +244,133 @@ class TestBasicFunctions(unittest.TestCase):
         files.mkdir(directory)
         self.assertTrue(os.path.isdir(directory))
         shutil.rmtree(directory)
+
+    def test_pid_file(self):
+        """Testing function pid_file."""
+        # Test
+        filename = files._File(self.config)
+        expected = filename.pid(self.prefix)
+        result = files.pid_file(self.prefix, self.config)
+        self.assertEqual(result, expected)
+
+    def test_lock_file(self):
+        """Testing function lock_file."""
+        # Test
+        filename = files._File(self.config)
+        expected = filename.lock(self.prefix)
+        result = files.lock_file(self.prefix, self.config)
+        self.assertEqual(result, expected)
+
+    def test_agent_id_file(self):
+        """Testing function agent_id_file."""
+        # Test
+        filename = files._File(self.config)
+        expected = filename.agent_id(self.prefix, self.agent_hostname)
+        result = files.agent_id_file(
+            self.prefix, self.agent_hostname, self.config)
+        self.assertEqual(result, expected)
+
+    def test_get_agent_id(self):
+        """Testing method / function get_agent_id."""
+        # Test. Agent_id shouldn't change
+        agent_name = random()
+        agent_hostname = random()
+        expected = files.get_agent_id(agent_name, agent_hostname, self.config)
+        result = files.get_agent_id(agent_name, agent_hostname, self.config)
+        self.assertEqual(result, expected)
+
+        # Delete the file, make sure a new ID is generated
+        filename = files.agent_id_file(agent_name, agent_hostname, self.config)
+        os.remove(filename)
+        _expected = files.get_agent_id(agent_name, agent_hostname, self.config)
+        _result = files.get_agent_id(agent_name, agent_hostname, self.config)
+        self.assertEqual(_result, _expected)
+        self.assertNotEqual(expected, _expected)
+
+    def test__generate_agent_id(self):
+        """Testing method / function _generate_agent_id."""
+        pass
+
+class Test_Directory(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    config = Config()
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Test
+        directory = files._Directory(self.config)
+        config = Config()
+        expected = config.daemon_directory()
+        result = directory._root
+        self.assertEqual(result, expected)
+
+    def test_pid(self):
+        """Testing function pid."""
+        # Test
+        directory = files._Directory(self.config)
+        config = Config()
+        expected = '{}/pid'.format(config.daemon_directory())
+        result = directory.pid()
+        self.assertEqual(result, expected)
+
+    def test_lock(self):
+        """Testing function lock."""
+        # Test
+        directory = files._Directory(self.config)
+        config = Config()
+        expected = '{}/lock'.format(config.daemon_directory())
+        result = directory.lock()
+        self.assertEqual(result, expected)
+
+    def test_agent_id(self):
+        """Testing function agent_id."""
+        # Test
+        directory = files._Directory(self.config)
+        config = Config()
+        expected = '{}/agent_id'.format(config.daemon_directory())
+        result = directory.agent_id()
+        self.assertEqual(result, expected)
+
+
+class Test_File(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    prefix = 'unittest'
+    agent_hostname = 'pattoo_host'
+    config = Config()
+
+    def test___init__(self):
+        """Testing function __init__."""
+        pass
+
+    def test_pid(self):
+        """Testing function pid."""
+        # Test
+        filename = files._File(self.config)
+        result = filename.pid(self.prefix)
+        self.assertTrue(os.path.isdir(os.path.dirname(result)))
+
+    def test_lock(self):
+        """Testing function lock."""
+        # Test
+        filename = files._File(self.config)
+        result = filename.lock(self.prefix)
+        self.assertTrue(os.path.isdir(os.path.dirname(result)))
+
+    def test_agent_id(self):
+        """Testing function agent_id."""
+        filename = files._File(self.config)
+        result = filename.agent_id(self.prefix, self.agent_hostname)
+        self.assertTrue(os.path.isdir(os.path.dirname(result)))
 
 
 if __name__ == '__main__':

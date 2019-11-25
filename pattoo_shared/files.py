@@ -5,9 +5,133 @@ import os
 import time
 import json
 import yaml
+from random import random
 
 # Pattoo libraries
-from pattoo_shared import log
+from pattoo_shared import log, data
+
+
+class _Directory(object):
+    """A class for creating the names of hidden directories."""
+
+    def __init__(self, config):
+        """Initialize the class.
+
+        Args:
+            config: Config object
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self._root = config.daemon_directory()
+
+    def pid(self):
+        """Define the hidden pid directory.
+
+        Args:
+            None
+
+        Returns:
+            value: pid directory
+
+        """
+        # Return
+        value = '{}/pid'.format(self._root)
+        return value
+
+    def lock(self):
+        """Define the hidden lock directory.
+
+        Args:
+            None
+
+        Returns:
+            value: lock directory
+
+        """
+        # Return
+        value = '{}/lock'.format(self._root)
+        return value
+
+    def agent_id(self):
+        """Define the hidden agent_id directory.
+
+        Args:
+            None
+
+        Returns:
+            value: agent_id directory
+
+        """
+        # Return
+        value = '{}/agent_id'.format(self._root)
+        return value
+
+
+class _File(object):
+    """A class for creating the names of hidden files."""
+
+    def __init__(self, config):
+        """Initialize the class.
+
+        Args:
+            config: Config object
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self._directory = _Directory(config)
+
+    def pid(self, prefix):
+        """Define the hidden pid directory.
+
+        Args:
+            prefix: Prefix of file
+
+        Returns:
+            value: pid directory
+
+        """
+        # Return
+        mkdir(self._directory.pid())
+        value = '{}/{}.pid'.format(self._directory.pid(), prefix)
+        return value
+
+    def lock(self, prefix):
+        """Define the hidden lock directory.
+
+        Args:
+            prefix: Prefix of file
+
+        Returns:
+            value: lock directory
+
+        """
+        # Return
+        mkdir(self._directory.lock())
+        value = '{}/{}.lock'.format(self._directory.lock(), prefix)
+        return value
+
+    def agent_id(self, agent_name, agent_hostname):
+        """Define the hidden agent_id directory.
+
+        Args:
+            agent_name: Agent name
+            agent_hostname: Agent hostname
+
+        Returns:
+            value: agent_id directory
+
+        """
+        # Return
+        mkdir(self._directory.agent_id())
+        value = '{}/{}.{}.agent_id'.format(
+            self._directory.agent_id(), agent_hostname, agent_name)
+        return value
 
 
 def read_yaml_files(config_directory):
@@ -251,3 +375,103 @@ def mkdir(directory):
             '{} is not a directory.'
             ''.format(directory))
         log.log2die(1043, log_message)
+
+
+def pid_file(agent_name, config):
+    """Get the pidfile for an agent.
+
+    Args:
+        agent_name: Agent name
+        config: Config object
+
+    Returns:
+        result: Name of pid file
+
+    """
+    # Return
+    f_obj = _File(config)
+    result = f_obj.pid(agent_name)
+    return result
+
+
+def lock_file(agent_name, config):
+    """Get the lockfile for an agent.
+
+    Args:
+        agent_name: Agent name
+        config: Config object
+
+    Returns:
+        result: Name of lock file
+
+    """
+    # Return
+    f_obj = _File(config)
+    result = f_obj.lock(agent_name)
+    return result
+
+
+def agent_id_file(agent_name, agent_hostname, config):
+    """Get the agent_idfile for an agent.
+
+    Args:
+        agent_name: Agent name
+        agent_hostname: Agent hostname
+        config: Config object
+
+
+    Returns:
+        result: Name of agent_id file
+
+    """
+    # Return
+    f_obj = _File(config)
+    result = f_obj.agent_id(agent_name, agent_hostname)
+    return result
+
+
+def get_agent_id(agent_name, agent_hostname, config):
+    """Create a permanent UID for the agent_name.
+
+    Args:
+        agent_name: Agent name
+        agent_hostname: Agent hostname
+
+    Returns:
+        agent_id: UID for agent
+
+    """
+    # Initialize key variables
+    filename = agent_id_file(agent_name, agent_hostname, config)
+
+    # Read environment file with UID if it exists
+    if os.path.isfile(filename):
+        with open(filename) as f_handle:
+            agent_id = f_handle.readline()
+    else:
+        # Create a UID and save
+        agent_id = _generate_agent_id()
+        with open(filename, 'w+') as env:
+            env.write(str(agent_id))
+
+    # Return
+    return agent_id
+
+
+def _generate_agent_id():
+    """Generate a UID.
+
+    Args:
+        None
+
+    Returns:
+        agent_id: the UID
+
+    """
+    # Create a UID and save
+    prehash = '{}{}{}{}{}'.format(
+        random(), random(), random(), random(), time.time())
+    agent_id = data.hashstring(prehash)
+
+    # Return
+    return agent_id
