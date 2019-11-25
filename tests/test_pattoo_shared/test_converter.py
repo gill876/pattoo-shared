@@ -51,10 +51,10 @@ class TestBasicFunctions(unittest.TestCase):
             'pattoo_polling_interval': 30,
             'pattoo_datapoints': [
                 {'pattoo_metadata': [
-                    {'agent_hostname': 'palisadoes'},
-                    {'agent_id': '1234'},
-                    {'agent_program': 'program_1'},
-                    {'device': 'device_1'},
+                    {'pattoo_agent_hostname': 'palisadoes'},
+                    {'pattoo_agent_id': '1234'},
+                    {'pattoo_agent_program': 'program_1'},
+                    {'pattoo_device': 'device_1'},
                     {'gateway': 'palisadoes'}],
                  'pattoo_key': 30386,
                  'pattoo_data_type': 99,
@@ -107,10 +107,10 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Test contents
         expected_metadata = {
-            'agent_id': apd.agent_id,
-            'agent_program': agent_program,
-            'agent_hostname': apd.agent_hostname,
-            'device': device
+            'pattoo_agent_id': apd.agent_id,
+            'pattoo_agent_program': agent_program,
+            'pattoo_agent_hostname': apd.agent_hostname,
+            'pattoo_agent_polled_device': device
         }
         result = converter.agentdata_to_datapoints(apd)
 
@@ -210,10 +210,10 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(datapoint['pattoo_value'], value)
 
         expected_metadata = {
-            'agent_id': apd.agent_id,
-            'agent_program': apd.agent_program,
-            'agent_hostname': apd.agent_hostname,
-            'device': device
+            'pattoo_agent_id': apd.agent_id,
+            'pattoo_agent_program': apd.agent_program,
+            'pattoo_agent_hostname': apd.agent_hostname,
+            'pattoo_agent_polled_device': device
         }
         for item in datapoint['pattoo_metadata']:
             for key, value in item.items():

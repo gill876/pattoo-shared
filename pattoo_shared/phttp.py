@@ -51,7 +51,16 @@ class Post(object):
 
         """
         # Initialize key variables
-        success = post(self._url, self._data, self._identifier)
+        success = False
+
+        # Post data
+        if bool(self._data) is True:
+            success = post(self._url, self._data, self._identifier)
+        else:
+            log_message = ('''\
+Blank data. No data to post from identifier {}.'''.format(self._identifier))
+            log.log2warning(1018, log_message)
+
         return success
 
     def purge(self):
@@ -75,7 +84,7 @@ class PostAgent(Post):
         """Initialize the class.
 
         Args:
-            identifier: Unique identifer for the source of the data.
+            identifier: Unique identifier for the source of the data.
             identifier_data: Data from the data source to post
 
         Returns:
@@ -84,22 +93,29 @@ class PostAgent(Post):
         """
         # Get extracted data
         _data = converter.agentdata_to_post(agentdata)
-        identifer = agentdata.agent_id
+        identifier = agentdata.agent_id
         data = converter.posting_data_points(_data)
 
+        # Log message that ties the identifier to an agent_program
+        _log(agentdata.agent_program, identifier)
+
+        # Don't post if agent data is invalid
+        if agentdata.valid is False:
+            data = None
+
         # Initialize key variables
-        Post.__init__(self, identifer, data)
+        Post.__init__(self, identifier, data)
 
 
 class PassiveAgent(object):
     """Class to handle data from passive Pattoo Agents."""
 
-    def __init__(self, identifier, url):
+    def __init__(self, agent_program, identifier, url):
         """Initialize the class.
 
         Args:
             url: URL to get
-            identifer: Unique identifier to use for posting data
+            identifier: Unique identifier to use for posting data
 
         Returns:
             None
@@ -108,6 +124,7 @@ class PassiveAgent(object):
         # Initialize key variables
         self._url = url
         self._identifier = identifier
+        self._agent_program = agent_program
 
     def relay(self):
         """Forward data polled from remote pattoo passive agent.
@@ -125,6 +142,9 @@ class PassiveAgent(object):
 
         # Post data
         if bool(data) is True:
+            # Log message that ties the identifier to an agent_program
+            _log(self._agent_program, identifier)
+
             # Post to remote server
             server = Post(identifier, data)
             success = server.post()
@@ -343,3 +363,20 @@ API Failure: [{}, {}, {}]\
 Deleting corrupted cache file {} for identifier {}.\
 '''.format(filename, identifier))
         log.log2warning(1037, log_message)
+
+
+def _log(agent_program, identifier):
+    """Create a standardized log message for posting.
+
+    Args:
+        agent_program: Agent program name
+        identifier: Identifier
+
+    Returns:
+        None
+
+    """
+    # Log message that ties the identifier to an agent_program
+    log_message = ('''\
+Agent program {} posting data as {}'''.format(agent_program, identifier))
+    log.log2debug(1038, log_message)

@@ -200,6 +200,7 @@ class PostingDataPoints(object):
         self.pattoo_source = source
         self.pattoo_polling_interval = polling_interval
         self.pattoo_datapoints = datapoints
+        self.pattoo_timestamp = int(time() * 1000)
 
         # Validation tests
         self.valid = False not in [
@@ -594,7 +595,6 @@ def _key_value_valid(key, value, metadata=False):
         # Reevaluate valid
         valid = False not in [
             valid,
-            key.lower().startswith('pattoo') is False,
             key != '']
 
     # Assign values

@@ -138,10 +138,10 @@ def agentdata_to_datapoints(agentdata):
             for _dv in ddv.data:
                 # Assign values to DataPoints
                 metadata = {
-                    'agent_id': agentdata.agent_id,
-                    'agent_program': agentdata.agent_program,
-                    'agent_hostname': agentdata.agent_hostname,
-                    'device': ddv.device
+                    'pattoo_agent_id': agentdata.agent_id,
+                    'pattoo_agent_program': agentdata.agent_program,
+                    'pattoo_agent_hostname': agentdata.agent_hostname,
+                    'pattoo_agent_polled_device': ddv.device
                 }
                 for key, value in sorted(metadata.items()):
                     _dv.add(DataPointMeta(key, value))
@@ -237,6 +237,7 @@ def posting_data_points(_data):
 
     """
     result = {
+        'pattoo_timestamp': _data.pattoo_timestamp,
         'pattoo_source': _data.pattoo_source,
         'pattoo_polling_interval': _data.pattoo_polling_interval,
         'pattoo_datapoints': _data.pattoo_datapoints}
