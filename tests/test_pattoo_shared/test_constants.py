@@ -72,7 +72,8 @@ class TestConstants(unittest.TestCase):
              'pattoo_source', 'pattoo_polling_interval'))
         self.assertEqual(
             CACHE_KEYS,
-            ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval'))
+            ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval',
+             'pattoo_source_timestamp'))
 
         # Test pattoo API constants
         self.assertEqual(
