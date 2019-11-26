@@ -5,7 +5,7 @@
 import unittest
 import os
 import sys
-
+from time import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -23,6 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import phttp
+from pattoo_shared import data
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
@@ -64,6 +65,41 @@ class TestPassiveAgent(unittest.TestCase):
 
     def test_get(self):
         """Testing method / function get."""
+        pass
+
+
+class TestBasicFunctions(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test_post(self):
+        """Testing method / function post."""
+        pass
+
+    def test_purge(self):
+        """Testing method / function purge."""
+        pass
+
+    def test__save_data(self):
+        """Testing method / function _save_data."""
+        # Initialize key variables
+        identifier = data.hashstring(str(time()))
+
+        # Test valid
+        _data = {'Test': 'data'}
+        success = phttp._save_data(_data, identifier)
+        self.assertTrue(success)
+
+        # Test invalid
+        _data = ''
+        success = phttp._save_data(_data, identifier)
+        self.assertTrue(success)
+
+    def test__log(self):
+        """Testing method / function _log."""
         pass
 
 

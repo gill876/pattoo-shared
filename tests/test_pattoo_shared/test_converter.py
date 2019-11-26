@@ -26,7 +26,7 @@ directory. Please fix.''')
 from pattoo_shared import converter
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import (
-    DataPointMeta, DataPoint, DeviceDataPoints, AgentPolledData)
+    DataPointMetadata, DataPoint, DeviceDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS)
@@ -137,7 +137,7 @@ class TestBasicFunctions(unittest.TestCase):
         for value in range(0, 5):
             metadata = []
             for meta in range(0, 22, 7):
-                metadata.append(DataPointMeta(int(meta), str(meta * 2)))
+                metadata.append(DataPointMetadata(int(meta), str(meta * 2)))
 
             # Create the datapoint
             datapoint = DataPoint(
@@ -150,7 +150,7 @@ class TestBasicFunctions(unittest.TestCase):
 
             # Add metadata that should be ignored.
             for key in DATAPOINT_KEYS:
-                metadata.append(DataPointMeta(key, '_{}_'.format(key)))
+                metadata.append(DataPointMetadata(key, '_{}_'.format(key)))
 
             # Add the datapoint to the list
             datapoints.append(datapoint)

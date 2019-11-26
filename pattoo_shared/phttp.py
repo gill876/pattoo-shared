@@ -219,7 +219,7 @@ def post(url, data, identifier, save=True):
     except:
         if save is True:
             # Save data to cache
-            save_data(data, identifier)
+            _save_data(data, identifier)
         else:
             # Proceed normally if there is a failure.
             # This will be logged later
@@ -235,7 +235,7 @@ HTTP {} error for identifier "{}" posted to server {}\
 '''.format(result.status_code, identifier, url))
             log.log2debug(1017, log_message)
             # Save data to cache, remote webserver isn't working properly
-            save_data(data, identifier)
+            _save_data(data, identifier)
 
     # Log message
     if success is True:
@@ -321,7 +321,7 @@ Purging cache file {} after successfully contacting server {}\
             log.log2info(1007, log_message)
 
 
-def save_data(data, identifier):
+def _save_data(data, identifier):
     """Save data to cache file.
 
     Args:
@@ -363,6 +363,9 @@ API Failure: [{}, {}, {}]\
 Deleting corrupted cache file {} for identifier {}.\
 '''.format(filename, identifier))
         log.log2warning(1037, log_message)
+
+    # Return
+    return success
 
 
 def _log(agent_program, identifier):

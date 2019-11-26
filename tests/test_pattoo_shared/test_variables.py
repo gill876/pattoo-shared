@@ -27,9 +27,9 @@ from pattoo_shared import variables
 from pattoo_shared import files
 from pattoo_shared.configuration import Config
 from pattoo_shared.constants import (
-    DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS)
+    DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 from pattoo_shared.variables import (
-    DataPoint, DataPointMeta, PostingDataPoints,
+    DataPoint, DataPointMetadata, ConverterMetadata, PostingDataPoints,
     DeviceDataPoints,
     PollingTarget, DevicePollingTargets,
     AgentPolledData, AgentAPIVariable)
@@ -84,7 +84,7 @@ class TestPostingDataPoints(unittest.TestCase):
             self.assertFalse(result.valid)
 
 
-class TestDataPointMeta(unittest.TestCase):
+class TestDataPointMetadata(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -97,25 +97,63 @@ class TestDataPointMeta(unittest.TestCase):
         for key, value in [
                 (1, 2), ('1', 2), (1, '2'), ('1', '2'),
                 (1.1, 2.1), ('1.1', 2.1), (1.1, '2.1'), ('1.1', '2.1')]:
-            result = DataPointMeta(key, value)
+            result = DataPointMetadata(key, value)
             self.assertEqual(result.key, str(key))
             self.assertEqual(result.value, str(value))
             self.assertTrue(result.valid)
 
-        # Setup DataPoint - Valid
+        # Setup DataPoint - Invalid
         for key, value in [
+                ('pattoo', 1), ('123pattoo123', 1),
                 (None, 2), ('1', None), (True, '2'), ('1', True),
                 ({}, 2.1), ('1.1', {2: 1}), (False, '2.1'), ('1.1', False)]:
-            result = DataPointMeta(key, value)
+            result = DataPointMetadata(key, value)
             self.assertFalse(result.valid)
 
     def test___repr__(self):
         """Testing function __repr__."""
-        # Setup DataPointMeta
-        variable = DataPointMeta(5, 6)
+        # Setup DataPointMetadata
+        variable = DataPointMetadata(5, 6)
 
         # Test
-        expected = ('''<DataPointMeta key='5', value='6'>''')
+        expected = ('''<DataPointMetadata key='5', value='6'>''')
+        result = variable.__repr__()
+        self.assertEqual(result, expected)
+
+
+class TestConverterMetadata(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup DataPoint - Valid
+        value = 1
+        for key in AGENT_METADATA_KEYS:
+            result = ConverterMetadata(key, value)
+            self.assertEqual(result.key, str(key))
+            self.assertEqual(result.value, str(value))
+            self.assertTrue(result.valid)
+
+        # Setup DataPoint - Invalid
+        for key, value in [
+                ('pattoo', 1), ('123pattoo123', 1),
+                (None, 2), ('1', None), (True, '2'), ('1', True),
+                ({}, 2.1), ('1.1', {2: 1}), (False, '2.1'), ('1.1', False)]:
+            result = ConverterMetadata(key, value)
+            self.assertFalse(result.valid)
+
+    def test___repr__(self):
+        """Testing function __repr__."""
+        # Setup ConverterMetadata
+        key = AGENT_METADATA_KEYS[0]
+        variable = ConverterMetadata(key, 6)
+
+        # Test
+        expected = ('''<ConverterMetadata key='{}', value='6'>'''.format(key))
         result = variable.__repr__()
         self.assertEqual(result, expected)
 
@@ -135,7 +173,7 @@ class TestDataPoint(unittest.TestCase):
         _metakey = '_{}'.format(_key_)
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
-        variable.add(DataPointMeta(_metakey, _metakey))
+        variable.add(DataPointMetadata(_metakey, _metakey))
 
         # Test each variable
         self.assertEqual(variable.data_type, data_type)
@@ -148,8 +186,8 @@ class TestDataPoint(unittest.TestCase):
 
         # Add metadata that should be ignored.
         for key in DATAPOINT_KEYS:
-            variable.add(DataPointMeta(key, '_{}_'.format(key)))
-        variable.add(DataPointMeta(_metakey, _metakey))
+            variable.add(DataPointMetadata(key, '_{}_'.format(key)))
+        variable.add(DataPointMetadata(_metakey, _metakey))
 
         # Test each variable (unchanged)
         self.assertEqual(variable.data_type, data_type)
@@ -289,7 +327,7 @@ timestamp={}, valid=True>'''.format(variable.timestamp))
         variable = DataPoint(_key_, value, data_type=data_type)
 
         for key, value in [(1, 2), (3, 4), (5, 6)]:
-            metadata = DataPointMeta(key, value)
+            metadata = DataPointMetadata(key, value)
             variable.add(metadata)
             self.assertEqual(variable.metadata[str(key)], str(value))
 

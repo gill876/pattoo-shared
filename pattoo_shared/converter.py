@@ -6,7 +6,8 @@ import re
 
 # Pattoo libraries
 from .variables import (
-    DataPointMeta, DataPoint, AgentPolledData, PostingDataPoints)
+    ConverterMetadata, DataPoint, AgentPolledData,
+    PostingDataPoints)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, DATAPOINT_KEYS,
@@ -144,7 +145,7 @@ def agentdata_to_datapoints(agentdata):
                     'pattoo_agent_polled_device': ddv.device
                 }
                 for key, value in sorted(metadata.items()):
-                    _dv.add(DataPointMeta(key, value))
+                    _dv.add(ConverterMetadata(key, value))
                 rows.append(_dv)
 
     # Return
