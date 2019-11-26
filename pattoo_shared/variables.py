@@ -9,11 +9,46 @@ from pattoo_shared import data
 from pattoo_shared import files
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    DATAPOINT_KEYS)
+    DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 
 
-class DataPointMeta(object):
+class Metadata(object):
     """Metadata related to a DataPoint."""
+
+    def __init__(self, key, value):
+        """Initialize the class.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+
+        Returns:
+            None
+
+        """
+        # Initialize variables
+        self.key = key
+        self.value = value
+
+    def __repr__(self):
+        """Return a representation of the attributes of the class.
+
+        Args:
+            None
+
+        Returns:
+            result: String representation.
+
+        """
+        # Create a printable variation of the value
+        result = ('<{0} key={1}, value={2}>'.format(
+            self.__class__.__name__, repr(self.key), repr(self.value))
+        )
+        return result
+
+
+class ConverterMetadata(Metadata):
+    """Metadata related to a Converter DataPoint."""
 
     def __init__(self, key, value):
         """Initialize the class.
@@ -31,25 +66,45 @@ class DataPointMeta(object):
             self.valid: True if valid
 
         """
+        # Inherit object
+        Metadata.__init__(self, key, value)
+
+        # Initialize variables
+        (self.key, self.value, self.valid) = _key_value_valid(
+            key, value, metadata=True, override=True)
+
+        # Reset valid
+        self.valid = False not in [
+            key in AGENT_METADATA_KEYS,
+            self.valid
+        ]
+
+
+class DataPointMetadata(Metadata):
+    """Metadata related to a Regular DataPoint."""
+
+    def __init__(self, key, value):
+        """Initialize the class.
+
+        Args:
+            key: Metadata key
+            value: Metadata value
+
+        Returns:
+            None
+
+        Variables:
+            self.key: Metadata key
+            self.value: Metadata value
+            self.valid: True if valid
+
+        """
+        # Inherit object
+        Metadata.__init__(self, key, value)
+
         # Initialize variables
         (self.key, self.value, self.valid) = _key_value_valid(
             key, value, metadata=True)
-
-    def __repr__(self):
-        """Return a representation of the attributes of the class.
-
-        Args:
-            None
-
-        Returns:
-            result: String representation.
-
-        """
-        # Create a printable variation of the value
-        result = ('<{0} key={1}, value={2}>'.format(
-            self.__class__.__name__, repr(self.key), repr(self.value))
-        )
-        return result
 
 
 class DataPoint(object):
@@ -153,10 +208,10 @@ class DataPoint(object):
         return result
 
     def add(self, items):
-        """Add DataPointMeta to the internal self.metadata list.
+        """Add DataPointMetadata to the internal self.metadata list.
 
         Args:
-            items: A DataPointMeta object list
+            items: A DataPointMetadata object list
 
         Returns:
             None
@@ -168,7 +223,7 @@ class DataPoint(object):
 
         # Only append approved data types
         for item in items:
-            if isinstance(item, DataPointMeta) is True:
+            if isinstance(item, Metadata) is True:
                 # Ignore invalid values
                 if item.valid is False or item.key in DATAPOINT_KEYS:
                     continue
@@ -565,12 +620,16 @@ def _strip_non_printable(value):
     return printable_value
 
 
-def _key_value_valid(key, value, metadata=False):
+def _key_value_valid(key, value, metadata=False, override=False):
     """Create a standardized version of key, value.
 
     Args:
         key: Key
         value: Value
+        metadata: If True, convert value to string and strip. Used for
+            metadata key-value pairs.
+        override: Allow the 'pattoo' string in the key. Used when posting
+            DataPoint objects to the pattoo server.
 
     Returns:
         result: Tuple of (key, value, valid)
@@ -596,6 +655,12 @@ def _key_value_valid(key, value, metadata=False):
         valid = False not in [
             valid,
             key != '']
+
+        # 'pattoo' normally cannot be in the key.
+        if override is False:
+            valid = False not in [
+                valid,
+                'pattoo' not in key.lower()]
 
     # Assign values
     if valid is True:

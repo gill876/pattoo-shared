@@ -37,10 +37,16 @@ RESERVED_KEYS = tuple(_)
 PattooDBrecord = collections.namedtuple(
     'PattooDBrecord', ' '.join(RESERVED_KEYS))
 
+# Keys of posted cached data. Based on keys in
+# pattoo_shared.constants.PostingDataPoints
 CACHE_KEYS = (
     'pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval',
     'pattoo_source_timestamp')
 
+# Metadata keys added to datapoints by agents
+AGENT_METADATA_KEYS = (
+    'pattoo_agent_id', 'pattoo_agent_polled_device', 'pattoo_agent_program',
+    'pattoo_agent_hostname')
 
 ###############################################################################
 # Constants for pattoo Agent API
