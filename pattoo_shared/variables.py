@@ -3,6 +3,7 @@
 # Standard imports
 from time import time
 import socket
+import re
 
 # pattoo imports
 from pattoo_shared import data
@@ -587,6 +588,37 @@ class DevicePollingTargets(object):
                 self.valid = False not in [bool(self.data), bool(self.device)]
 
 
+class AgentKey(object):
+    """Object to format keys used in creating DataPoint objects."""
+
+    def __init__(self, prefix):
+        """Initialize the class.
+
+        Args:
+            prefix: Prefix to use for key
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self._prefix = _strip_pattoo(prefix)
+
+    def key(self, _key):
+        """Create key to be used by DataPoint.
+
+        Args:
+            _key: Key to be formatted.
+
+        Returns:
+            result: Formatted key
+
+        """
+        # Return
+        result = '{}_{}'.format(self._prefix, _strip_pattoo(_key))
+        return result
+
+
 def _strip_non_printable(value):
     """Strip non printable characters.
 
@@ -649,7 +681,7 @@ def _key_value_valid(key, value, metadata=False, override=False):
 
     # Assign key, value
     if valid is True:
-        key = str(key).strip()
+        key = str(key).lower().strip()
 
         # Reevaluate valid
         valid = False not in [
@@ -672,4 +704,26 @@ def _key_value_valid(key, value, metadata=False, override=False):
 
     # Return
     result = (key, value, valid)
+    return result
+
+
+def _strip_pattoo(key):
+    """Remove the string 'pattoo' from key.
+
+    1) Remove the string 'pattoo' from key
+    2) Replace dashes ('-') with underscores ('_')
+    3) Remove leading underscores
+    4) Strip leading and trailing white space
+    5) Make the key lowercase
+
+    Args:
+        key: Key to process
+
+    Returns:
+        result: Key without string.
+
+    """
+    # Return
+    result = str(key).lower().strip().replace('pattoo', '').replace('-', '_')
+    result = re.sub(r'^(_)+(.*?)$', '\\2', result)
     return result
