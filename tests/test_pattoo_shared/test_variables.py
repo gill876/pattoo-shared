@@ -32,7 +32,7 @@ from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, ConverterMetadata, PostingDataPoints,
     DeviceDataPoints,
     PollingTarget, DevicePollingTargets,
-    AgentPolledData, AgentAPIVariable)
+    AgentKey, AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -633,6 +633,28 @@ class TestDevicePollingTargets(unittest.TestCase):
             item = dpt.data[0]
             self.assertEqual(item.address, address)
             self.assertEqual(item.multiplier, multiplier)
+
+
+class TestAgentKey(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Setup
+
+    def test_key(self):
+        """Testing function __init__."""
+        # Test
+        for key in [
+                'pattoo-key', 'PATTOO-key', 'pattoo_key', 'PATTOO-KEY',
+                '-key', '_key', '-------key', '________key']:
+            prefix = AgentKey(key)
+            new_key = prefix.key('test')
+            self.assertEqual(new_key, 'key_test')
 
 
 class TestBasicFunctions(unittest.TestCase):
