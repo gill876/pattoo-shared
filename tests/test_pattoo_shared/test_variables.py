@@ -426,7 +426,8 @@ class TestAgentPolledData(unittest.TestCase):
 
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
-        self.assertEqual(apd.polling_interval, self.config.polling_interval())
+        self.assertEqual(
+            apd.polling_interval, self.config.polling_interval() * 1000)
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
         self.assertEqual(apd.agent_hostname, agent_hostname)
@@ -443,7 +444,7 @@ class TestAgentPolledData(unittest.TestCase):
 <AgentPolledData agent_id='{}' agent_program='brown_bear', \
 agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
 '''.format(apd.agent_id, apd.agent_hostname, apd.agent_timestamp,
-           self.config.polling_interval()))
+           self.config.polling_interval() * 1000))
         result = apd.__repr__()
         self.assertEqual(result, expected)
 

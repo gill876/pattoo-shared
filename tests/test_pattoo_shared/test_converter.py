@@ -6,7 +6,6 @@ import unittest
 import os
 import sys
 import time
-from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -65,7 +64,6 @@ class TestBasicFunctions(unittest.TestCase):
         }
 
         # Test
-        # cache = json.loads(cache_data)
         results = converter.cache_to_keypairs(cache)
         self.assertTrue(isinstance(results, list))
         for _, result in enumerate(results):
@@ -82,6 +80,41 @@ class TestBasicFunctions(unittest.TestCase):
                 result.pattoo_metadata,
                 [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
                     _dict.items())])
+
+        # Test for all types of data types
+        for data_type in [DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT]:
+            cache = {
+                'pattoo_source': '1234',
+                'pattoo_polling_interval': 30,
+                'pattoo_datapoints': [
+                    {'pattoo_metadata': [
+                        {'pattoo_agent_hostname': 'palisadoes'},
+                        {'pattoo_agent_id': '1234'},
+                        {'pattoo_agent_program': 'program_1'},
+                        {'pattoo_device': 'device_1'},
+                        {'gateway': 'palisadoes'}],
+                     'pattoo_key': 30386,
+                     'pattoo_data_type': data_type,
+                     'pattoo_value': 523.0,
+                     'pattoo_timestamp': 1574011824387,
+                     'pattoo_checksum': '123'}
+                ]
+            }
+
+            # Test
+            results = converter.cache_to_keypairs(cache)
+            self.assertTrue(isinstance(results, list))
+            for _, result in enumerate(results):
+                self.assertEqual(result.pattoo_timestamp, 1574011824387)
+                self.assertEqual(result.pattoo_value, 523.0)
+                self.assertEqual(result.pattoo_polling_interval, 30000)
+                self.assertEqual(result.pattoo_data_type, data_type)
+                self.assertEqual(result.pattoo_key, 30386)
+                _metadata = cache['pattoo_datapoints'][0]['pattoo_metadata']
+                self.assertEqual(
+                    result.pattoo_metadata,
+                    [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
+                        _dict.items())])
 
     def test_agentdata_to_datapoints(self):
         """Testing method / function agentdata_to_datapoints."""
@@ -196,7 +229,8 @@ class TestBasicFunctions(unittest.TestCase):
         apd.add(ddv)
         result = converter.agentdata_to_post(apd)
         self.assertEqual(result.pattoo_source, apd.agent_id)
-        self.assertEqual(result.pattoo_polling_interval, polling_interval)
+        self.assertEqual(
+            result.pattoo_polling_interval, polling_interval * 1000)
         self.assertTrue(isinstance(result.pattoo_datapoints, list))
 
         # We have a dict to evaluate

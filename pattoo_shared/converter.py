@@ -44,7 +44,7 @@ def cache_to_keypairs(_data):
             return []
 
     # Intialize variables needed later
-    polling_interval = _data['pattoo_polling_interval'] * 1000
+    polling_interval = _data['pattoo_polling_interval']
     items = _data['pattoo_datapoints']
     source = _data['pattoo_source']
 
