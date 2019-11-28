@@ -372,7 +372,7 @@ class AgentPolledData(object):
         self.agent_timestamp = int(time() * 1000)
         self.agent_id = files.get_agent_id(
             agent_program, self.agent_hostname, config)
-        self.polling_interval = config.polling_interval()
+        self.polling_interval = config.polling_interval() * 1000
         self.data = []
         self.valid = False
 
