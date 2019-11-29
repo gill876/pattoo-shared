@@ -93,8 +93,9 @@ def cache_to_keypairs(_data):
         # Append to result
         if False not in valids:
             # Add the datasource to the original checksum for better uniqueness
-            checksum = data.hashstring(
-                '{}{}'.format(source, item['pattoo_checksum']), sha=512)
+            """checksum = data.hashstring(
+                '{}{}'.format(source, item['pattoo_checksum']), sha=512)"""
+            checksum = _checksum(source, item)
             pattoo_db_variable = PattooDBrecord(
                 pattoo_checksum=checksum,
                 pattoo_key=item['pattoo_key'],
@@ -279,4 +280,39 @@ def _keypairs(_data, exclude_list):
                 value)[:MAX_KEYPAIR_LENGTH])
         )
 
+    return result
+
+
+def _checksum(identifier, record):
+    """Create a unique checksum for a DataPoint based on agent and device.
+
+    Args:
+        identifier: Agent ID that reported the datapoints
+        record: PattooDBrecord converted to a Dict
+
+    Returns:
+        result: Checksum
+
+    """
+    # Initialize key variables
+    device = None
+    agent_id = None
+    d_key = 'pattoo_agent_polled_device'
+    a_key = 'pattoo_agent_id'
+
+    # Get the device and agent_id that created the datapoints
+    metadata = record['pattoo_metadata']
+    for item in metadata:
+        device = item.get(d_key, None)
+        if bool(device) is True:
+            break
+    for item in metadata:
+        agent_id = item.get(a_key, None)
+        if bool(agent_id) is True:
+            break
+
+    # Create checksum value
+    result = data.hashstring('''{}{}{}{}\
+'''.format(
+        identifier, agent_id, device, record['pattoo_checksum']), sha=512)
     return result
