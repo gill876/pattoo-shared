@@ -366,3 +366,26 @@ def _message(code, message, error=True):
 
     # Return
     return output
+
+
+def env():
+    """Check enviroment variables before running scripts.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    """
+    # Make sure the PATTOO_CONFIGDIR environment variable is set
+    if 'PATTOO_CONFIGDIR' not in os.environ:
+        log_message = (
+            'The PATTOO_CONFIGDIR environment variable not set.')
+        log2die_safe(1039, log_message)
+
+    # Make sure the PATTOO_CONFIGDIR environment variable is set to unittest
+    if 'unittest' in os.environ['PATTOO_CONFIGDIR'].lower():
+        log_message = (
+            'The PATTOO_CONFIGDIR is not set to a unittest directory')
+        log2die_safe(1040, log_message)
