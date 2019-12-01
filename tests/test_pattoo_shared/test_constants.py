@@ -36,6 +36,7 @@ from pattoo_shared.constants import RESERVED_KEYS
 from pattoo_shared.constants import CACHE_KEYS
 
 
+from pattoo_shared.constants import PATTOO_WEB_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
@@ -74,6 +75,10 @@ class TestConstants(unittest.TestCase):
             CACHE_KEYS,
             ('pattoo_source', 'pattoo_datapoints', 'pattoo_polling_interval',
              'pattoo_source_timestamp'))
+
+        # Test pattoo API constants
+        self.assertEqual(
+            PATTOO_WEB_SITE_PREFIX, '/pattoo/web')
 
         # Test pattoo API constants
         self.assertEqual(

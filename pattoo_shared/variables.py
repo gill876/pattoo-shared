@@ -431,7 +431,7 @@ polling_interval={5}, valid={6}>\
 class AgentAPIVariable(object):
     """Variable representation for data required by the AgentAPI."""
 
-    def __init__(self, ip_bind_port=6000, listen_address='0.0.0.0'):
+    def __init__(self, ip_bind_port=20201, listen_address='0.0.0.0'):
         """Initialize the class.
 
         Args:
