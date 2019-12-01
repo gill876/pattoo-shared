@@ -93,8 +93,6 @@ def cache_to_keypairs(_data):
         # Append to result
         if False not in valids:
             # Add the datasource to the original checksum for better uniqueness
-            """checksum = data.hashstring(
-                '{}{}'.format(source, item['pattoo_checksum']), sha=512)"""
             checksum = _checksum(source, item)
             pattoo_db_variable = PattooDBrecord(
                 pattoo_checksum=checksum,
