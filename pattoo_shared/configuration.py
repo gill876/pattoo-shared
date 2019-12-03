@@ -74,10 +74,10 @@ class Config(object):
         intermediate = search(key, sub_key, self._configuration, die=False)
 
         # Default to 300
-        if intermediate is None:
+        if bool(intermediate) is False:
             result = 300
         else:
-            result = int(intermediate)
+            result = abs(int(intermediate))
         return result
 
     def api_ip_address(self):
