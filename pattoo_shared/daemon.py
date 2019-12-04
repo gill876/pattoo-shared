@@ -106,7 +106,12 @@ class Daemon(object):
         """
         # Delete file
         if os.path.exists(self.pidfile) is True:
-            os.remove(self.pidfile)
+            try:
+                os.remove(self.pidfile)
+            except:
+                log_message = (
+                    'PID file {} already deleted'.format(self.pidfile))
+                log.log2warning(1041, log_message)
 
     def dellock(self):
         """Delete the lock file.

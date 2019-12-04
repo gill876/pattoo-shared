@@ -12,12 +12,11 @@ Description:
 # Standard libraries
 import textwrap
 import sys
-import time
 import argparse
 import ipaddress
 import multiprocessing
 import os
-from random import random
+from pprint import pprint
 
 # PIP3 libraries
 from gunicorn.app.base import BaseApplication
@@ -26,7 +25,6 @@ from gunicorn.app.base import BaseApplication
 from pattoo_shared import daemon
 from pattoo_shared import files
 from pattoo_shared import log
-from pattoo_shared import data
 from pattoo_shared.configuration import Config
 
 
@@ -358,6 +356,11 @@ class _StandaloneApplication(BaseApplication):
         # Assign configuration parameters
         for key, value in config.items():
             self.cfg.set(key.lower(), value)
+
+        # Print configuration dictionary settings
+        print('Pattoo Gunicorn configuration')
+        for name, value in self.cfg.settings.items():
+            print('{} = {}'.format(name, value.get()))
 
     def load(self):
         """Run the Flask application throught the Gunicorn WSGI."""
