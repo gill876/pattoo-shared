@@ -137,9 +137,11 @@ class DataPoint(object):
         (self.key, self.value, self.valid) = _key_value_valid(
             key, value, metadata=False)
         self.data_type = data_type
-        self.timestamp = int(time() * 1000)
         self.metadata = {}
         self._metakeys = []
+
+        # Round timestamp to the nearest millisecond.
+        self.timestamp = int(round(time(), 3) * 1000)
 
         # False validity if value is not of the right type
         self.valid = False not in [
