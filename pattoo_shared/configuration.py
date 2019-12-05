@@ -122,26 +122,6 @@ class Config(object):
             result = int(intermediate)
         return result
 
-    def api_uses_https(self):
-        """Get api_uses_https.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Initialize key variables
-        key = PATTOO_API_AGENT_EXECUTABLE
-        sub_key = 'api_uses_https'
-
-        # Get result
-        result = search(key, sub_key, self._configuration, die=False)
-        if result is None:
-            result = False
-        return result
-
     def api_uri(self):
         """Get api_uri.
 
@@ -166,16 +146,10 @@ class Config(object):
             result: URL.
 
         """
-        # Construct URL for server
-        if self.api_uses_https() is True:
-            prefix = 'https://'
-        else:
-            prefix = 'http://'
-
         # Return
         result = (
-            '{}{}:{}{}/{}'.format(
-                prefix, self.api_ip_address(),
+            'http://{}:{}{}/{}'.format(
+                self.api_ip_address(),
                 self.api_ip_bind_port(), self.api_uri(), agent_id))
         return result
 

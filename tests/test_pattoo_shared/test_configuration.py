@@ -76,15 +76,6 @@ class TestConfig(unittest.TestCase):
         result = self.config.api_ip_bind_port()
         self.assertEqual(result, expected)
 
-    def test_api_uses_https(self):
-        """Testing function api_uses_https."""
-        # Initialize key values
-        expected = False
-
-        # Test
-        result = self.config.api_uses_https()
-        self.assertEqual(result, expected)
-
     def test_api_uri(self):
         """Testing function api_uri."""
         # Initialize key values
