@@ -39,8 +39,6 @@ from pattoo_shared.constants import CACHE_KEYS
 from pattoo_shared.constants import PATTOO_WEB_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_SITE_PREFIX
 from pattoo_shared.constants import PATTOO_API_AGENT_PREFIX
-from pattoo_shared.constants import PATTOO_API_AGENT_EXECUTABLE
-from pattoo_shared.constants import PATTOO_API_AGENT_PROXY
 
 
 class TestConstants(unittest.TestCase):
@@ -85,11 +83,6 @@ class TestConstants(unittest.TestCase):
             PATTOO_API_SITE_PREFIX, '/pattoo/api/v1')
         self.assertEqual(
             PATTOO_API_AGENT_PREFIX, '{}/agent'.format(PATTOO_API_SITE_PREFIX))
-        self.assertEqual(
-            PATTOO_API_AGENT_EXECUTABLE, 'pattoo-api-agentd')
-        self.assertEqual(
-            PATTOO_API_AGENT_PROXY,
-            '{}-gunicorn'.format(PATTOO_API_AGENT_EXECUTABLE))
 
 
 if __name__ == '__main__':

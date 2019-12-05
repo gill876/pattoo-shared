@@ -312,13 +312,14 @@ Deleting corrupted cache file {} for identifier {}.\
 
         # Delete file if successful
         if success is True:
-            os.remove(filepath)
+            if os.path.exists(filepath) is True:
+                os.remove(filepath)
 
-            # Log removal
-            log_message = ('''
-Purging cache file {} after successfully contacting server {}\
-'''.format(filepath, url))
-            log.log2info(1007, log_message)
+                # Log removal
+                log_message = ('''
+    Purging cache file {} after successfully contacting server {}\
+    '''.format(filepath, url))
+                log.log2info(1007, log_message)
 
 
 def _save_data(data, identifier):

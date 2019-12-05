@@ -8,7 +8,7 @@ import os
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared.constants import (
-    PATTOO_API_AGENT_PREFIX, PATTOO_API_AGENT_EXECUTABLE)
+    PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
 from pattoo_shared.variables import PollingTarget
 
 
@@ -38,26 +38,6 @@ class Config(object):
         config_directory = os.path.expanduser(_config_directory)
         self._configuration = files.read_yaml_files(config_directory)
 
-    def api_listen_address(self):
-        """Get api_listen_address.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        key = PATTOO_API_AGENT_EXECUTABLE
-        sub_key = 'api_listen_address'
-        result = search(key, sub_key, self._configuration, die=False)
-
-        # Default to 0.0.0.0
-        if result is None:
-            result = '0.0.0.0'
-        return result
-
     def polling_interval(self):
         """Get interval.
 
@@ -69,7 +49,7 @@ class Config(object):
 
         """
         # Get result
-        key = 'main'
+        key = 'polling'
         sub_key = 'polling_interval'
         intermediate = search(key, sub_key, self._configuration, die=False)
 
@@ -91,8 +71,8 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = PATTOO_API_AGENT_EXECUTABLE
-        sub_key = 'api_ip_address'
+        key = 'polling'
+        sub_key = 'ip_address'
 
         # Get result
         result = search(key, sub_key, self._configuration, die=False)
@@ -111,8 +91,8 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = PATTOO_API_AGENT_EXECUTABLE
-        sub_key = 'api_ip_bind_port'
+        key = 'polling'
+        sub_key = 'ip_bind_port'
 
         # Get result
         intermediate = search(key, sub_key, self._configuration, die=False)
@@ -151,6 +131,69 @@ class Config(object):
             'http://{}:{}{}/{}'.format(
                 self.api_ip_address(),
                 self.api_ip_bind_port(), self.api_uri(), agent_id))
+        return result
+
+    def web_api_ip_address(self):
+        """Get web_api_ip_address.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Initialize key variables
+        key = 'pattoo'
+        sub_key = 'ip_address'
+
+        # Get result
+        result = search(key, sub_key, self._configuration, die=True)
+        return result
+
+    def web_api_ip_bind_port(self):
+        """Get web_api_ip_bind_port.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Initialize key variables
+        key = 'pattoo'
+        sub_key = 'ip_bind_port'
+
+        # Get result
+        intermediate = search(key, sub_key, self._configuration, die=False)
+        if intermediate is None:
+            result = 20202
+        else:
+            result = int(intermediate)
+        return result
+
+    def web_api_server_url(self, graphql=True):
+        """Get pattoo server's remote URL.
+
+        Args:
+            agent_id: Agent ID
+
+        Returns:
+            result: URL.
+
+        """
+        # Create the suffix
+        if bool(graphql) is True:
+            suffix = '/graphql'
+        else:
+            suffix = '/rest/data'
+
+        # Return
+        result = (
+            'http://{}:{}{}{}'.format(
+                self.web_api_ip_address(),
+                self.web_api_ip_bind_port(), PATTOO_API_WEB_PREFIX, suffix))
         return result
 
     def log_directory(self):

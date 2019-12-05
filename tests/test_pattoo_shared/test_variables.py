@@ -511,25 +511,25 @@ class TestAgentAPIVariable(unittest.TestCase):
         """Testing function __init__."""
         # Setup AgentAPIVariable
         ip_bind_port = 1234
-        listen_address = '1.2.3.4'
+        ip_listen_address = '1.2.3.4'
 
         # Test defaults
         aav = AgentAPIVariable()
         self.assertEqual(aav.ip_bind_port, 20201)
-        self.assertEqual(aav.listen_address, '0.0.0.0')
+        self.assertEqual(aav.ip_listen_address, '0.0.0.0')
 
         # Test non-defaults
         aav = AgentAPIVariable(
-            ip_bind_port=ip_bind_port, listen_address=listen_address)
+            ip_bind_port=ip_bind_port, ip_listen_address=ip_listen_address)
         self.assertEqual(aav.ip_bind_port, ip_bind_port)
-        self.assertEqual(aav.listen_address, listen_address)
+        self.assertEqual(aav.ip_listen_address, ip_listen_address)
 
     def test___repr__(self):
         """Testing function __repr__."""
         # Test defaults
         aav = AgentAPIVariable()
         expected = ('''\
-<AgentAPIVariable ip_bind_port=20201, listen_address='0.0.0.0'>''')
+<AgentAPIVariable ip_bind_port=20201, ip_listen_address='0.0.0.0'>''')
         result = aav.__repr__()
         self.assertEqual(expected, result)
 

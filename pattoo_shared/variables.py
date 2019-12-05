@@ -433,7 +433,7 @@ polling_interval={5}, valid={6}>\
 class AgentAPIVariable(object):
     """Variable representation for data required by the AgentAPI."""
 
-    def __init__(self, ip_bind_port=20201, listen_address='0.0.0.0'):
+    def __init__(self, ip_bind_port=20201, ip_listen_address='0.0.0.0'):
         """Initialize the class.
 
         Args:
@@ -446,7 +446,7 @@ class AgentAPIVariable(object):
         """
         # Initialize variables
         self.ip_bind_port = ip_bind_port
-        self.listen_address = listen_address
+        self.ip_listen_address = ip_listen_address
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -459,10 +459,10 @@ class AgentAPIVariable(object):
 
         """
         result = ('''\
-<{0} ip_bind_port={1}, listen_address={2}>\
+<{0} ip_bind_port={1}, ip_listen_address={2}>\
 '''.format(self.__class__.__name__,
            repr(self.ip_bind_port),
-           repr(self.listen_address)
+           repr(self.ip_listen_address)
            )
         )
         return result
