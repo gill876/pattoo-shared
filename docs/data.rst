@@ -8,7 +8,7 @@ This document shows the various key, value pairs used in the ``json`` data used 
 
 {'agent_hostname': 'palisadoes',
  'agent_id': '8273cf01a6ea9334a00b2023f92799cbdf3c72d2de084a45e344c0c487746cc0',
- 'agent_program': 'pattoo-agent-os-autonomousd',
+ 'agent_program': 'pattoo_agent_os_autonomousd',
  'gateways': {
      'gw01': {
          'devices': {
