@@ -16,7 +16,6 @@ import argparse
 import ipaddress
 import multiprocessing
 import os
-from pprint import pprint
 
 # PIP3 libraries
 from gunicorn.app.base import BaseApplication
