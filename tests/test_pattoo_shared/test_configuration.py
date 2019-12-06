@@ -40,15 +40,6 @@ class TestConfig(unittest.TestCase):
         """Testing function __init__."""
         pass
 
-    def test_api_listen_address(self):
-        """Testing function api_listen_address."""
-        # Initialize key values
-        expected = '0.0.0.0'
-
-        # Test
-        result = self.config.api_listen_address()
-        self.assertEqual(result, expected)
-
     def test_polling_interval(self):
         """Testing function polling_interval."""
         # Initialize key values
@@ -61,7 +52,7 @@ class TestConfig(unittest.TestCase):
     def test_api_ip_address(self):
         """Testing function api_ip_address."""
         # Initialize key values
-        expected = '127.0.0.1'
+        expected = '127.0.0.6'
 
         # Test
         result = self.config.api_ip_address()
@@ -70,19 +61,10 @@ class TestConfig(unittest.TestCase):
     def test_api_ip_bind_port(self):
         """Testing function api_ip_bind_port."""
         # Initialize key values
-        expected = 6060
+        expected = 50505
 
         # Test
         result = self.config.api_ip_bind_port()
-        self.assertEqual(result, expected)
-
-    def test_api_uses_https(self):
-        """Testing function api_uses_https."""
-        # Initialize key values
-        expected = False
-
-        # Test
-        result = self.config.api_uses_https()
         self.assertEqual(result, expected)
 
     def test_api_uri(self):
@@ -97,12 +79,31 @@ class TestConfig(unittest.TestCase):
     def test_api_server_url(self):
         """Testing function api_server_url."""
         # Initialize key values
-        expected = 'http://127.0.0.1:6060/pattoo/api/v1/agent/receive/123'
+        expected = 'http://127.0.0.6:50505/pattoo/api/v1/agent/receive/123'
         agent_id = 123
 
         # Test
         result = self.config.api_server_url(agent_id)
         self.assertEqual(result, expected)
+
+    def test_web_api_ip_address(self):
+        """Testing method / function web_api_ip_address."""
+        # Test
+        result = self.config.web_api_ip_address()
+        self.assertEqual(result, '127.0.0.3')
+
+    def test_web_api_ip_bind_port(self):
+        """Testing method / function web_api_ip_bind_port."""
+        # Test
+        result = self.config.web_api_ip_bind_port()
+        self.assertEqual(result, 30303)
+
+    def test_web_api_server_url(self):
+        """Testing method / function web_api_server_url."""
+        # Test
+        result = self.config.web_api_server_url()
+        self.assertEqual(
+            result, 'http://127.0.0.3:30303/pattoo/api/v1/web/graphql')
 
     def test_daemon_directory(self):
         """Testing function daemon_directory."""

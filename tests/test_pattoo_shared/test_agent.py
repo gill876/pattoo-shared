@@ -168,28 +168,28 @@ class TestBasicFunctions(unittest.TestCase):
     def test__ip_binding(self):
         """Testing method / function _ip_binding."""
         # Test with Hostname
-        listen_address = 'localhost'
+        ip_listen_address = 'localhost'
         ip_bind_port = '1000'
         agent_api_variable = AgentAPIVariable(
-            ip_bind_port=ip_bind_port, listen_address=listen_address)
+            ip_bind_port=ip_bind_port, ip_listen_address=ip_listen_address)
         result = agent._ip_binding(agent_api_variable)
         expected = 'localhost:1000'
         self.assertEqual(result, expected)
 
         # Test with IPv4
-        listen_address = '1.2.3.4'
+        ip_listen_address = '1.2.3.4'
         ip_bind_port = '5678'
         agent_api_variable = AgentAPIVariable(
-            ip_bind_port=ip_bind_port, listen_address=listen_address)
+            ip_bind_port=ip_bind_port, ip_listen_address=ip_listen_address)
         result = agent._ip_binding(agent_api_variable)
         expected = '1.2.3.4:5678'
         self.assertEqual(result, expected)
 
         # Test with IPv6
-        listen_address = '1::1'
+        ip_listen_address = '1::1'
         ip_bind_port = '91011'
         agent_api_variable = AgentAPIVariable(
-            ip_bind_port=ip_bind_port, listen_address=listen_address)
+            ip_bind_port=ip_bind_port, ip_listen_address=ip_listen_address)
         result = agent._ip_binding(agent_api_variable)
         expected = '[1::1]:91011'
         self.assertEqual(result, expected)

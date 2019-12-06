@@ -318,13 +318,13 @@ fix.'''.format(self.pidfile_parent))
         log_message = (
             'Pattoo API running on {}:{} and logging to file {}.'
             ''.format(
-                self._agent_api_variable.listen_address,
+                self._agent_api_variable.ip_listen_address,
                 self._agent_api_variable.ip_bind_port,
                 config.log_file_api()))
         log.log2info(1022, log_message)
 
         # Run
-        _StandaloneApplication(self._app, options).run()
+        _StandaloneApplication(self._app, self.parent, options=options).run()
 
 
 class _StandaloneApplication(BaseApplication):
@@ -334,16 +334,18 @@ class _StandaloneApplication(BaseApplication):
 
     """
 
-    def __init__(self, app, options=None):
+    def __init__(self, app, parent, options=None):
         """Initialize the class.
 
         args:
             app: Flask application object of type Flask(__name__)
+            parent: Name of parent process that is invoking the API
             options: Gunicorn CLI options
 
         """
         # Initialize key variables
         self.options = options or {}
+        self.parent = parent
         self.application = app
         super(_StandaloneApplication, self).__init__()
 
@@ -358,9 +360,9 @@ class _StandaloneApplication(BaseApplication):
             self.cfg.set(key.lower(), value)
 
         # Print configuration dictionary settings
-        print('Pattoo Gunicorn configuration')
+        print('Agent {} - Pattoo Gunicorn configuration'.format(self.parent))
         for name, value in self.cfg.settings.items():
-            print('{} = {}'.format(name, value.get()))
+            print(' {} = {}'.format(name, value.get()))
 
     def load(self):
         """Run the Flask application throught the Gunicorn WSGI."""
@@ -383,7 +385,7 @@ def _ip_binding(aav):
 
     """
     # Initialize key variables
-    ip_address = aav.listen_address
+    ip_address = aav.ip_listen_address
     ip_bind_port = aav.ip_bind_port
     result = None
 

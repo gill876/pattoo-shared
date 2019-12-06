@@ -1,14 +1,32 @@
 Introduction
 ============
 
-``pattoo`` stores timeseries data in a database and makes it available for users via a GraphQL API.
+``pattoo`` is a timeseries data store. It was inspired by the need to collect and visualize data from various DevOps, network, industrial PLC controllers, electro-mechanical and enterprise systems.
+
+Its modular design facilitates the creation of custom data collection agents and web interfaces by software developers.
+
+The ``pattoo-agents`` repository provides a number standard data collection agents for:
+
+* Linux
+* SNMP
+* Modbus
+* Bacnet
+
+Operational Overview
+--------------------
+
+``patoo`` handles data in three steps.
+
+#. ``pattoo-agents`` collect data and send it to a central ``pattoo`` server in a standardized format.
+#. The ``pattoo`` server stores the agent data.
+#. The ``pattoo`` web application can be used to visualize the data in a chart format.
 
 PattooShared Objective
 ----------------------
 
 The data posted by ``pattoo`` agents to the central server must be clearly defined. The data stuctures must be identical for easy interoperability.
 
-The PattooShared ``pip`` module creates a universal set of classes to produce and consume ``pattoo`` compatible data.
+The PattooShared ``pip3`` module creates a universal set of classes to produce and consume ``pattoo`` compatible data.
 
 Related Documentation
 ---------------------
@@ -28,6 +46,13 @@ The ``pattoo`` agents collect data from a variety of sources and send them to th
 
 * The `Pattoo Agents documentation <https://pattoo-agents.readthedocs.io/>`_ can be found here.
 * Visit the `Pattoo Agents GitHub site <https://github.com/PalisadoesFoundation/pattoo-agents>`_ to see the code.
+
+Pattoo-Web
+~~~~~~~~~~
+The web front end for viewing ``pattoo`` agent data.
+
+* The `Pattoo Web documentation <https://pattoo-web.readthedocs.io/>`_ can be found here.
+* Visit the `Pattoo Agents GitHub site <https://github.com/PalisadoesFoundation/pattoo-web>`_ to see the code.
 
 Pattoo-Shared
 ~~~~~~~~~~~~~
