@@ -233,7 +233,7 @@ def post(url, data, identifier, save=True):
             log_message = ('''\
 HTTP {} error for identifier "{}" posted to server {}\
 '''.format(result.status_code, identifier, url))
-            log.log2debug(1017, log_message)
+            log.log2warning(1017, log_message)
             # Save data to cache, remote webserver isn't working properly
             _save_data(data, identifier)
 
