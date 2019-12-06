@@ -3,10 +3,12 @@
 
 # Standard imports
 import os
+import ipaddress
 
 # Import project libraries
 from pattoo_shared import files
 from pattoo_shared import log
+from pattoo_shared import url
 from pattoo_shared.constants import (
     PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
 from pattoo_shared.variables import PollingTarget
@@ -127,10 +129,10 @@ class Config(object):
 
         """
         # Return
+        _ip = url.url_ip_address(self.api_ip_address())
         result = (
             'http://{}:{}{}/{}'.format(
-                self.api_ip_address(),
-                self.api_ip_bind_port(), self.api_uri(), agent_id))
+                _ip, self.api_ip_bind_port(), self.api_uri(), agent_id))
         return result
 
     def web_api_ip_address(self):
@@ -190,10 +192,12 @@ class Config(object):
             suffix = '/rest/data'
 
         # Return
+        _ip = url.url_ip_address(self.web_api_ip_address())
         result = (
             'http://{}:{}{}{}'.format(
-                self.web_api_ip_address(),
-                self.web_api_ip_bind_port(), PATTOO_API_WEB_PREFIX, suffix))
+                _ip,
+                self.web_api_ip_bind_port(),
+                PATTOO_API_WEB_PREFIX, suffix))
         return result
 
     def log_directory(self):
