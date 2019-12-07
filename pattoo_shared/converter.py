@@ -16,6 +16,48 @@ from pattoo_shared import data
 from pattoo_shared import log
 
 
+class Counter(object):
+    """Count and format datapoint key-value pairs."""
+
+    def __init__(self):
+        """Initialize the class.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        Variables:
+            self.count: Number of key-value pairs processed
+
+        """
+        # Initialize key variables
+        self.count = 0
+        self._checksums = []
+
+    def counter(self, key, value):
+        """Initialize the class.
+
+        Args:
+            key: Key
+            value: Value
+
+        Returns:
+            result: Tuple of ((key, value), count)
+
+        """
+        # Return
+        checksum = data.hashstring('{}{}'.format(key, value))
+        if checksum not in self._checksums:
+            result = ((key, value), self.count)
+            self.count += 1
+            self._checksums.append(checksum)
+        else:
+            result = ((None, None), None)
+        return result
+
+
 def cache_to_keypairs(_data):
     """Convert agent cache data to AgentPolledData object.
 
@@ -187,6 +229,60 @@ def datapoints_to_dicts(items):
                 'pattoo_checksum': datapoint.checksum
             }
             result.append(data_dict)
+
+    return result
+
+
+def demo(items):
+    """Ingest data.
+
+    Args:
+        items: List of datapoints to convert
+
+    Returns:
+        result: List of datapoints converted to a list of dicts
+
+    """
+    # Initialize key variables
+    datapoints = []
+    counter = Counter()
+    result = {}
+    key_value_pairs = {}
+    pattoo_values = {}
+
+    # Verify input data
+    if isinstance(items, list) is False:
+        items = [items]
+    for item in items:
+        if isinstance(item, DataPoint):
+            datapoints.append(item)
+
+    # Populate dict to get unique key-value pairs
+    for datapoint in datapoints:
+        # Only convert valid data
+        if datapoint.valid is True:
+            id_pairs = []
+            for key, value in [
+                    ('pattoo_key', datapoint.key),
+                    ('pattoo_data_type', datapoint.data_type),
+                    ('pattoo_value', datapoint.value),
+                    ('pattoo_timestamp', datapoint.timestamp),
+                    ('pattoo_checksum', datapoint.checksum)]:
+                (pair, id_pair) = counter.counter(key, value)
+
+                # Only process unknown key-value pairs.
+                if id_pair is not None:
+                    key_value_pairs[pair] = id_pair
+                    id_pairs.append(id_pair)
+
+            for key, value in datapoint.metadata.items():
+                (pair, id_pair) = counter.counter(key, value)
+                # Only process unknown key-value pairs.
+                if id_pair is not None:
+                    key_value_pairs[pair] = id_pair
+
+            result[datapoint.checksum] = id_pairs
+
 
     return result
 
