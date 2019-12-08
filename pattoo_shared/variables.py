@@ -242,11 +242,11 @@ class DataPoint(object):
 class PostingDataPoints(object):
     """Object defining DataPoint objects to post to the pattoo server."""
 
-    def __init__(self, source, polling_interval, datapoints):
+    def __init__(self, agent_id, polling_interval, datapoints):
         """Initialize the class.
 
         Args:
-            source: Unique source ID string
+            agent_id: Unique ID of agent posting data
             polling_interval: Periodic interval over which the data was polled.
             datapoints: List of DataPoint objects
 
@@ -255,22 +255,31 @@ class PostingDataPoints(object):
 
         """
         # Initialize key variables
-        self.pattoo_source = source
-        self.pattoo_polling_interval = polling_interval
+        self.pattoo_agent_id = agent_id
+        self.pattoo_agent_polling_interval = polling_interval
         self.pattoo_datapoints = datapoints
         self.pattoo_timestamp = int(time() * 1000)
 
         # Validation tests
         self.valid = False not in [
-            isinstance(self.pattoo_source, str),
-            isinstance(self.pattoo_polling_interval, int),
-            isinstance(self.pattoo_datapoints, list),
-            self.pattoo_polling_interval is not False,
-            self.pattoo_polling_interval is not True,
+            isinstance(self.pattoo_agent_id, str),
+            isinstance(self.pattoo_agent_polling_interval, int),
+            isinstance(self.pattoo_datapoints, dict),
+            self.pattoo_agent_polling_interval is not False,
+            self.pattoo_agent_polling_interval is not True,
         ]
         if self.valid is True:
             self.valid = False not in [
-                isinstance(_, DataPoint) for _ in self.pattoo_datapoints]
+                self.valid,
+                'datapoint_pairs' in datapoints.keys(),
+                'key_value_pairs' in datapoints.keys()
+                ]
+        if self.valid is True:
+            self.valid = False not in [
+                self.valid,
+                isinstance(datapoints['datapoint_pairs'], list),
+                isinstance(datapoints['key_value_pairs'], dict)
+                ]
 
 
 class DeviceDataPoints(object):
@@ -364,8 +373,8 @@ class AgentPolledData(object):
             None
 
         Variables:
-            self.data: List of DeviceGateway objects created by polling
-            self.valid: True if the object contains DeviceGateway objects
+            self.data: List of DeviceDataPoints objects created by polling
+            self.valid: True if the object contains DeviceDataPoints objects
 
         """
         # Initialize key variables
@@ -374,7 +383,7 @@ class AgentPolledData(object):
         self.agent_timestamp = int(time() * 1000)
         self.agent_id = files.get_agent_id(
             agent_program, self.agent_hostname, config)
-        self.polling_interval = config.polling_interval() * 1000
+        self.agent_polling_interval = config.polling_interval() * 1000
         self.data = []
         self.valid = False
 
@@ -394,15 +403,15 @@ class AgentPolledData(object):
 polling_interval={5}, valid={6}>\
 '''.format(self.__class__.__name__, repr(self.agent_id),
            repr(self.agent_program), repr(self.agent_hostname),
-           repr(self.agent_timestamp), repr(self.polling_interval),
+           repr(self.agent_timestamp), repr(self.agent_polling_interval),
            repr(self.valid)))
         return result
 
     def add(self, items):
-        """Append DeviceGateway to the internal self.data list.
+        """Append DeviceDataPoints to the internal self.data list.
 
         Args:
-            items: A DeviceGateway object list
+            items: A DeviceDataPoints object list
 
         Returns:
             None
@@ -426,7 +435,7 @@ polling_interval={5}, valid={6}>\
                 # Set object as being.valid
                 self.valid = False not in [
                     bool(self.agent_id), bool(self.agent_program),
-                    bool(self.agent_hostname), bool(self.polling_interval),
+                    bool(self.agent_hostname), bool(self.agent_polling_interval),
                     bool(self.data)]
 
 

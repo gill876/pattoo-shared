@@ -92,8 +92,8 @@ class PostAgent(Post):
 
         """
         # Get extracted data
-        _data = converter.agentdata_to_post(agentdata)
         identifier = agentdata.agent_id
+        _data = converter.agentdata_to_post(agentdata)
         data = converter.posting_data_points(_data)
 
         # Log message that ties the identifier to an agent_program
