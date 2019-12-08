@@ -10,8 +10,7 @@ from .variables import (
     PostingDataPoints)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, DATAPOINT_KEYS,
-    CACHE_KEYS)
+    MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, CACHE_KEYS)
 from pattoo_shared import data
 from pattoo_shared import log
 
@@ -29,12 +28,13 @@ class Counter(object):
             None
 
         Variables:
-            self.count: Number of key-value pairs processed
+            self._count: Number of key-value pairs processed
 
         """
         # Initialize key variables
-        self.count = 0
-        self._checksums = []
+        self._count = 0
+        self.pairs = {}
+        self.inverse_pairs = {}
 
     def counter(self, key, value):
         """Initialize the class.
@@ -48,13 +48,12 @@ class Counter(object):
 
         """
         # Return
-        checksum = data.hashstring('{}{}'.format(key, value))
-        if checksum not in self._checksums:
-            result = ((key, value), self.count)
-            self.count += 1
-            self._checksums.append(checksum)
-        else:
-            result = ((None, None), None)
+        pair = (key, value)
+        if pair not in self.pairs:
+            self.pairs[pair] = self._count
+            self.inverse_pairs[self._count] = pair
+            self._count += 1
+        result = self.pairs[pair]
         return result
 
 
@@ -62,8 +61,7 @@ def cache_to_keypairs(_data):
     """Convert agent cache data to AgentPolledData object.
 
     Args:
-        items: Cache data
-        source: Source of the cache data
+        _data: Data read from JSON cache file
 
     Returns:
         result: Validated cache data. [] if invalid.
@@ -85,71 +83,130 @@ def cache_to_keypairs(_data):
             log.log2warning(1034, _log_message)
             return []
 
-    # Intialize variables needed later
-    polling_interval = _data['pattoo_polling_interval']
-    items = _data['pattoo_datapoints']
-    source = _data['pattoo_source']
+    ####################################################################
+    # Verify pattoo_datapoints
+    ####################################################################
 
-    # Verify we are getting a list
-    if isinstance(items, list) is False:
+    # Verify we are getting a dict of datapoints
+    if isinstance(_data['pattoo_datapoints'], dict) is False:
         log.log2warning(1035, _log_message)
         return []
 
-    # Verify contents of lists
-    for item in items:
-        # Initialize data
-        valids = []
-        keypairs = []
+    # Verify we are getting the correct key count
+    if len(_data['pattoo_datapoints']) != 2:
+        log.log2warning(1048, _log_message)
+        return []
 
-        # Verify dicts are in the list
-        if isinstance(item, dict) is False:
-            continue
+    # Verify we are getting the correct keys
+    for item in ['key_value_pairs', 'datapoint_pairs']:
+        if item not in _data['pattoo_datapoints']:
+            log.log2warning(1049, _log_message)
+            return []
 
-        # Get all the key-pairs for the item
-        keypairs = []
-        for key, value in sorted(item.items()):
-            # All the right keys
-            valids.append(key in DATAPOINT_KEYS)
-            valids.append(len(item) == len(DATAPOINT_KEYS))
-            valids.append(isinstance(key, str))
+    # Verify we are datapoint defining keys
+    if isinstance(
+            _data['pattoo_datapoints']['key_value_pairs'], dict) is False:
+        log.log2warning(1050, _log_message)
+        return []
+    if isinstance(
+            _data['pattoo_datapoints']['datapoint_pairs'], list) is False:
+        log.log2warning(1051, _log_message)
+        return []
 
-            # Work on metadata
-            if key == 'pattoo_metadata':
-                # Must be a dict
-                if isinstance(value, list) is False:
-                    valids.append(False)
-                    continue
+    # Prepare for datapoint processing
+    key_value_pairs = _data['pattoo_datapoints']['key_value_pairs']
+    datapoint_pairs = _data['pattoo_datapoints']['datapoint_pairs']
 
-                # Add metadata keypairs as a list of tuples
-                for keypair_dict in value:
-                    if isinstance(keypair_dict, dict) is False:
-                        continue
-                    keypairs.extend(_keypairs(keypair_dict, RESERVED_KEYS))
+    # Process each datapoint
+    for pair_ids in datapoint_pairs:
+        item = {}
 
-            # Work on the data_type
-            if key == 'pattoo_data_type':
-                valids.append(value in [
-                    DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
-                    DATA_STRING, DATA_NONE])
+        # Validate and assign key-values from datapoints
+        for pair_id in pair_ids:
+            # Lookup on a string of pair_id as the JSON in the cache file is
+            # keyed by string integers
+            _kv = key_value_pairs.get(str(pair_id))
+            if isinstance(_kv, list) is False:
+                log.log2warning(1046, _log_message)
+                return []
+            if len(_kv) != 2:
+                log.log2warning(1045, _log_message)
+                return []
+            (key, value) = _kv
+            item[key] = value
 
-        # Append to result
-        if False not in valids:
-            # Add the datasource to the original checksum for better uniqueness
-            checksum = _checksum(source, item)
-            pattoo_db_variable = PattooDBrecord(
-                pattoo_checksum=checksum,
-                pattoo_key=item['pattoo_key'],
-                pattoo_source=source,
-                pattoo_polling_interval=polling_interval,
-                pattoo_timestamp=item['pattoo_timestamp'],
-                pattoo_data_type=item['pattoo_data_type'],
-                pattoo_value=item['pattoo_value'],
-                pattoo_metadata=keypairs
-            )
+        # Assign datapoint values to PattooDBrecord
+        pattoo_db_variable = _make_pattoo_db_record(item)
+        if bool(pattoo_db_variable) is True:
             result.append(pattoo_db_variable)
 
     # Return
     return result
+
+
+def _make_pattoo_db_record(item):
+    """Ingest data.
+
+    Args:
+        item: Dict of key-value pairs DataPoint
+
+    Returns:
+        pattoo_db_variable: PattooDBrecord object
+
+    """
+    # Initialize data
+    valids = []
+    pattoo_db_variable = None
+    _log_message = 'Invalid cache data.'
+    reserved_keys_non_metadata = [
+        _ for _ in RESERVED_KEYS if _ != 'pattoo_metadata']
+    metadata = {}
+
+    '''
+    Make sure we have all keys required for creating a PattooDBrecord
+    Omit 'pattoo_metadata' as we need to recreate it. 'pattoo_metadata' was
+    extracted to its component key-value pairs before the agent posted it to
+    the pattoo API
+    '''
+    for key in reserved_keys_non_metadata:
+        valids.append(key in item.keys())
+    if False in valids:
+        log.log2warning(1047, _log_message)
+        return None
+
+    # Get metadata for item
+    for key, value in sorted(item.items()):
+        if key not in reserved_keys_non_metadata:
+            metadata[key] = value
+            valids.append(isinstance(key, str))
+
+        # Work on the data_type
+        if key == 'pattoo_data_type':
+            valids.append(value in [
+                DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT,
+                DATA_STRING, DATA_NONE])
+
+    # Append to result
+    if False not in valids:
+        # Add the datasource to the original checksum for better uniqueness
+        checksum = _checksum(
+            item['pattoo_agent_id'],
+            item['pattoo_agent_polled_device'],
+            item['pattoo_checksum'])
+        pattoo_db_variable = PattooDBrecord(
+            pattoo_checksum=checksum,
+            pattoo_key=item['pattoo_key'],
+            pattoo_agent_id=item['pattoo_agent_id'],
+            pattoo_agent_polling_interval=item[
+                'pattoo_agent_polling_interval'],
+            pattoo_timestamp=item['pattoo_timestamp'],
+            pattoo_data_type=item['pattoo_data_type'],
+            pattoo_value=item['pattoo_value'],
+            pattoo_metadata=_keypairs(metadata)
+        )
+
+    # Return
+    return pattoo_db_variable
 
 
 def agentdata_to_datapoints(agentdata):
@@ -183,7 +240,9 @@ def agentdata_to_datapoints(agentdata):
                     'pattoo_agent_id': agentdata.agent_id,
                     'pattoo_agent_program': agentdata.agent_program,
                     'pattoo_agent_hostname': agentdata.agent_hostname,
-                    'pattoo_agent_polled_device': ddv.device
+                    'pattoo_agent_polled_device': ddv.device,
+                    'pattoo_agent_polling_interval': (
+                        agentdata.agent_polling_interval)
                 }
                 for key, value in sorted(metadata.items()):
                     _dv.add(ConverterMetadata(key, value))
@@ -194,61 +253,21 @@ def agentdata_to_datapoints(agentdata):
 
 
 def datapoints_to_dicts(items):
-    """Ingest data.
+    """Convert a list of DataPoint objects to a standardized dict for posting.
 
     Args:
         items: List of datapoints to convert
 
     Returns:
-        result: List of datapoints converted to a list of dicts
-
-    """
-    # Initialize key variables
-    datapoints = []
-    result = []
-
-    # Verify input data
-    if isinstance(items, list) is False:
-        items = [items]
-    for item in items:
-        if isinstance(item, DataPoint):
-            datapoints.append(item)
-
-    # Convert to a list of dicts
-    for datapoint in datapoints:
-        # Only convert valid data
-        if datapoint.valid is True:
-            data_dict = {
-                'pattoo_metadata': [
-                    {str(key): str(value)} for key, value in sorted(
-                        datapoint.metadata.items())],
-                'pattoo_key': datapoint.key,
-                'pattoo_data_type': datapoint.data_type,
-                'pattoo_value': datapoint.value,
-                'pattoo_timestamp': datapoint.timestamp,
-                'pattoo_checksum': datapoint.checksum
-            }
-            result.append(data_dict)
-
-    return result
-
-
-def demo(items):
-    """Ingest data.
-
-    Args:
-        items: List of datapoints to convert
-
-    Returns:
-        result: List of datapoints converted to a list of dicts
+        result: Dict of 'key_value_pairs' and 'pattoo_datapoints' dicts
+            key_value_pairs = Keyed by (key, value) with an ID value
+            pattoo_datapoints = List of ID values with unique datapoint ID key
 
     """
     # Initialize key variables
     datapoints = []
     counter = Counter()
-    result = {}
-    key_value_pairs = {}
-    pattoo_values = {}
+    all_dps = []
 
     # Verify input data
     if isinstance(items, list) is False:
@@ -261,29 +280,33 @@ def demo(items):
     for datapoint in datapoints:
         # Only convert valid data
         if datapoint.valid is True:
-            id_pairs = []
-            for key, value in [
-                    ('pattoo_key', datapoint.key),
-                    ('pattoo_data_type', datapoint.data_type),
-                    ('pattoo_value', datapoint.value),
-                    ('pattoo_timestamp', datapoint.timestamp),
-                    ('pattoo_checksum', datapoint.checksum)]:
-                (pair, id_pair) = counter.counter(key, value)
+            dp_pair_ids = []
+            dp_key_values = {}
 
-                # Only process unknown key-value pairs.
-                if id_pair is not None:
-                    key_value_pairs[pair] = id_pair
-                    id_pairs.append(id_pair)
+            # Convert metadata into list of tuples
+            key_values = list(datapoint.metadata.items())
 
-            for key, value in datapoint.metadata.items():
-                (pair, id_pair) = counter.counter(key, value)
-                # Only process unknown key-value pairs.
-                if id_pair is not None:
-                    key_value_pairs[pair] = id_pair
+            # Convert non metadata into list of tuples
+            key_values.extend([
+                ('pattoo_key', datapoint.key),
+                ('pattoo_data_type', datapoint.data_type),
+                ('pattoo_value', datapoint.value),
+                ('pattoo_timestamp', datapoint.timestamp),
+                ('pattoo_checksum', datapoint.checksum)])
 
-            result[datapoint.checksum] = id_pairs
+            # Process tuples
+            for key, value in key_values:
+                # Assign ID to each key-value pair and store for later
+                id_pair = counter.counter(key, value)
+                dp_pair_ids.append(id_pair)
+                dp_key_values[key] = value
 
+            # Create a unique key tuple for the datapoint
+            all_dps.append(dp_pair_ids)
 
+    result = {
+        'key_value_pairs': counter.inverse_pairs,
+        'datapoint_pairs': all_dps}
     return result
 
 
@@ -298,19 +321,19 @@ def agentdata_to_post(agentdata):
 
     """
     # Initialize key Variables
-    source = agentdata.agent_id
-    polling_interval = agentdata.polling_interval
+    agent_id = agentdata.agent_id
+    polling_interval = agentdata.agent_polling_interval
     _data = agentdata_to_datapoints(agentdata)
     _datapoints = datapoints_to_dicts(_data)
-    result = datapoints_to_post(source, polling_interval, _datapoints)
+    result = datapoints_to_post(agent_id, polling_interval, _datapoints)
     return result
 
 
-def datapoints_to_post(source, polling_interval, datapoints):
+def datapoints_to_post(agent_id, polling_interval, datapoints):
     """Create data to post to the pattoo API.
 
     Args:
-        source: Unique source ID string
+        agent_id: Unique ID of agent posting data
         polling_interval: Interval over which the data is periodically polled
         datapoints: List of DataPoint objects
 
@@ -318,7 +341,7 @@ def datapoints_to_post(source, polling_interval, datapoints):
         result: Dict of data to post
 
     """
-    result = PostingDataPoints(source, polling_interval, datapoints)
+    result = PostingDataPoints(agent_id, polling_interval, datapoints)
     return result
 
 
@@ -333,14 +356,14 @@ def posting_data_points(_data):
 
     """
     result = {
-        'pattoo_source_timestamp': _data.pattoo_timestamp,
-        'pattoo_source': _data.pattoo_source,
-        'pattoo_polling_interval': _data.pattoo_polling_interval,
+        'pattoo_agent_timestamp': _data.pattoo_timestamp,
+        'pattoo_agent_id': _data.pattoo_agent_id,
+        'pattoo_agent_polling_interval': _data.pattoo_agent_polling_interval,
         'pattoo_datapoints': _data.pattoo_datapoints}
     return result
 
 
-def _keypairs(_data, exclude_list):
+def _keypairs(_data):
     """Make key-pairs from metadata dict.
 
     Args:
@@ -357,14 +380,14 @@ def _keypairs(_data, exclude_list):
     for _key, value in _data.items():
         # We want to make sure that we don't have
         # duplicate key-value pairs
-        if _key in exclude_list:
+        if _key in RESERVED_KEYS:
             continue
         # Key-Value pairs must be strings
         if isinstance(_key, str) is False or isinstance(
                 value, str) is False:
             continue
 
-        # Standardize the keys
+        # Standardize the keys use underscores to separate words
         splits = re.findall(r"[\w']+", _key)
         key = '_'.join(splits).lower()
 
@@ -377,36 +400,18 @@ def _keypairs(_data, exclude_list):
     return result
 
 
-def _checksum(identifier, record):
+def _checksum(agent_id, device, datapoint_checksum):
     """Create a unique checksum for a DataPoint based on agent and device.
 
     Args:
-        identifier: Agent ID that reported the datapoints
         record: PattooDBrecord converted to a Dict
+        metadat: DataPoint Metadata
 
     Returns:
         result: Checksum
 
     """
-    # Initialize key variables
-    device = None
-    agent_id = None
-    d_key = 'pattoo_agent_polled_device'
-    a_key = 'pattoo_agent_id'
-
-    # Get the device and agent_id that created the datapoints
-    metadata = record['pattoo_metadata']
-    for item in metadata:
-        device = item.get(d_key, None)
-        if bool(device) is True:
-            break
-    for item in metadata:
-        agent_id = item.get(a_key, None)
-        if bool(agent_id) is True:
-            break
-
     # Create checksum value
-    result = data.hashstring('''{}{}{}{}\
-'''.format(
-        identifier, agent_id, device, record['pattoo_checksum']), sha=512)
+    result = data.hashstring('''{}{}{}\
+'''.format(agent_id, device, datapoint_checksum), sha=512)
     return result

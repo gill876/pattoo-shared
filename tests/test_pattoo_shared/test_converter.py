@@ -5,7 +5,6 @@
 import unittest
 import os
 import sys
-import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -28,7 +27,7 @@ from pattoo_shared.variables import (
     DataPointMetadata, DataPoint, DeviceDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    DATAPOINT_KEYS)
+    DATAPOINT_KEYS, PattooDBrecord)
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -43,78 +42,89 @@ class TestBasicFunctions(unittest.TestCase):
 
     def test_cache_to_keypairs(self):
         """Testing method / function cache_to_keypairs."""
-        self.maxDiff = None
-
         cache = {
-            'pattoo_source': '1234',
-            'pattoo_polling_interval': 30,
-            'pattoo_datapoints': [
-                {'pattoo_metadata': [
-                    {'pattoo_agent_hostname': 'palisadoes'},
-                    {'pattoo_agent_id': '1234'},
-                    {'pattoo_agent_program': 'program_1'},
-                    {'pattoo_device': 'device_1'},
-                    {'gateway': 'palisadoes'}],
-                 'pattoo_key': 30386,
-                 'pattoo_data_type': 99,
-                 'pattoo_value': 523.0,
-                 'pattoo_timestamp': 1574011824387,
-                 'pattoo_checksum': '123'}
-            ]
+            'pattoo_agent_id': '123bb3a17c6cc915a98a859226d282b394ee0964956b7'
+                               'd23c145fe9d94567241',
+            'pattoo_agent_polling_interval': 10000,
+            'pattoo_agent_timestamp': 1575789070210,
+            'pattoo_datapoints': {
+                'datapoint_pairs': [
+                    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                    [11, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14]],
+                'key_value_pairs': {
+                    '0': ['agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1'],
+                    '1': ['pattoo_agent_hostname', 'swim'],
+                    '2': ['pattoo_agent_id',
+                          '123bb3a17c6cc915a98a859226d282b'
+                          '394ee0964956b7d23c145fe9d94567241'],
+                    '3': ['pattoo_agent_polled_device', 'localhost'],
+                    '4': ['pattoo_agent_polling_interval', '10000'],
+                    '5': ['pattoo_agent_program', 'pattoo_agent_snmpd'],
+                    '6': ['pattoo_key', 'agent_snmpd_.1.3.6.1.2.1.2.2.1.10'],
+                    '7': ['pattoo_data_type', 32],
+                    '8': ['pattoo_value', 4057039287.0],
+                    '9': ['pattoo_timestamp', 1575789070107],
+                    '10': ['pattoo_checksum',
+                           'f6ac40a45ec4fa7d19823d8c318bb0c6d0a19f79ad4b04ab5'
+                           '290d65f42250296'],
+                    '11': ['agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2'],
+                    '12': ['pattoo_value', 0.0],
+                    '13': ['pattoo_timestamp', 1575789070108],
+                    '14': ['pattoo_checksum',
+                           '2849bef00a05419c4614610814a1a8088a89a81a8192dbfa2'
+                           '77598e1ff3389da']
+                }
+            }
         }
 
         # Test
-        results = converter.cache_to_keypairs(cache)
-        self.assertTrue(isinstance(results, list))
-        for _, result in enumerate(results):
-            self.assertEqual(result.pattoo_checksum, '''\
-5c531afb2e4106cc78f99ff895ef99d2fa587f7272a91f82244f06caddf89176c299afc0ef4a44\
-7d6c5042dff4690e271a3d09aabf97465faba20591f818ab27''')
-            self.assertEqual(result.pattoo_timestamp, 1574011824387)
-            self.assertEqual(result.pattoo_value, 523.0)
-            self.assertEqual(result.pattoo_polling_interval, 30000)
-            self.assertEqual(result.pattoo_data_type, 99)
-            self.assertEqual(result.pattoo_key, 30386)
-            _metadata = cache['pattoo_datapoints'][0]['pattoo_metadata']
-            self.assertEqual(
-                result.pattoo_metadata,
-                [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
-                    _dict.items())])
+        pattoo_db_records = converter.cache_to_keypairs(cache)
 
-        # Test for all types of data types
-        for data_type in [DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT]:
-            cache = {
-                'pattoo_source': '1234',
-                'pattoo_polling_interval': 30,
-                'pattoo_datapoints': [
-                    {'pattoo_metadata': [
-                        {'pattoo_agent_hostname': 'palisadoes'},
-                        {'pattoo_agent_id': '1234'},
-                        {'pattoo_agent_program': 'program_1'},
-                        {'pattoo_device': 'device_1'},
-                        {'gateway': 'palisadoes'}],
-                     'pattoo_key': 30386,
-                     'pattoo_data_type': data_type,
-                     'pattoo_value': 523.0,
-                     'pattoo_timestamp': 1574011824387,
-                     'pattoo_checksum': '123'}
-                ]
-            }
+        # pattoo_db_records[0]
+        # should have the values in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        result = pattoo_db_records[0]
+        expected = PattooDBrecord(
+            pattoo_checksum='5306d34dac4c0c90b5cdc09c37a62c0d3056c6f58044b7a9'
+                            'e2c93c65d0de9d88e4173b5972e73b59cecdad4a80e28fc7'
+                            'a0edd32db653156b05cf80efb818f5c8',
+            pattoo_metadata=[
+                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1'),
+                ('pattoo_agent_hostname', 'swim'),
+                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_program', 'pattoo_agent_snmpd')],
+            pattoo_data_type=32,
+            pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
+            pattoo_value=4057039287.0,
+            pattoo_timestamp=1575789070107,
+            pattoo_agent_id='123bb3a17c6cc915a98a859226d282b394ee0964956b7d2'
+                            '3c145fe9d94567241',
+            pattoo_agent_polling_interval='10000')
+        self.assertEqual(result, expected)
 
-            # Test
-            results = converter.cache_to_keypairs(cache)
-            self.assertTrue(isinstance(results, list))
-            for _, result in enumerate(results):
-                self.assertEqual(result.pattoo_timestamp, 1574011824387)
-                self.assertEqual(result.pattoo_value, 523.0)
-                self.assertEqual(result.pattoo_polling_interval, 30000)
-                self.assertEqual(result.pattoo_data_type, data_type)
-                self.assertEqual(result.pattoo_key, 30386)
-                _metadata = cache['pattoo_datapoints'][0]['pattoo_metadata']
-                self.assertEqual(
-                    result.pattoo_metadata,
-                    [(_k_, _v_) for _dict in _metadata for _k_, _v_ in sorted(
-                        _dict.items())])
+        # pattoo_db_records[1]
+        # should have the values in [11, 1, 2, 3, 4, 5, 6, 7, 12, 13, 14]
+        result = pattoo_db_records[1]
+        expected = PattooDBrecord(
+            pattoo_checksum='5decef67c60b4528f142373f2d796b28241c9af51d78abe5'
+                            '29c92830e7491134de1dd600fb9c517f72a57a0f68640684'
+                            '4a3ca1138c69a494cbedcb36e5e866b9',
+            pattoo_metadata=[
+                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2'),
+                ('pattoo_agent_hostname', 'swim'),
+                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_program', 'pattoo_agent_snmpd')],
+            pattoo_data_type=32,
+            pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
+            pattoo_value=0.0,
+            pattoo_timestamp=1575789070108,
+            pattoo_agent_id='123bb3a17c6cc915a98a859226d282b394ee0964956b7d23'
+                            'c145fe9d94567241',
+            pattoo_agent_polling_interval='10000')
+        self.assertEqual(result, expected)
+
+    def test__make_pattoo_db_record(self):
+        """Testing method / function _make_pattoo_db_record."""
+        pass
 
     def test_agentdata_to_datapoints(self):
         """Testing method / function agentdata_to_datapoints."""
@@ -143,7 +153,8 @@ class TestBasicFunctions(unittest.TestCase):
             'pattoo_agent_id': apd.agent_id,
             'pattoo_agent_program': agent_program,
             'pattoo_agent_hostname': apd.agent_hostname,
-            'pattoo_agent_polled_device': device
+            'pattoo_agent_polled_device': device,
+            'pattoo_agent_polling_interval': apd.agent_polling_interval
         }
         result = converter.agentdata_to_datapoints(apd)
 
@@ -164,18 +175,16 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function datapoints_to_dicts."""
         # Initialize key variables
         datapoints = []
-        now = time.time()
 
         # Create DataPoints
-        for value in range(0, 5):
+        for value in range(0, 2):
             metadata = []
-            for meta in range(0, 22, 7):
+            for meta in range(0, 2):
                 metadata.append(DataPointMetadata(int(meta), str(meta * 2)))
 
             # Create the datapoint
             datapoint = DataPoint(
-                'label_{}'.format(value), value,
-                data_type=('type_{}'.format(value))
+                'label_{}'.format(value), value, data_type=DATA_INT
             )
             # Add metadata
             for meta in metadata:
@@ -190,20 +199,29 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Start testing
         result = converter.datapoints_to_dicts(datapoints)
-        self.assertTrue(isinstance(result, list))
-        for value, item in enumerate(result):
-            self.assertEqual(item['pattoo_data_type'], 'type_{}'.format(value))
-            self.assertEqual(item['pattoo_key'], 'label_{}'.format(value))
-            self.assertTrue(item['pattoo_timestamp'] >= now)
-            self.assertTrue(item['pattoo_timestamp'] <= now + 1000)
-            self.assertTrue(isinstance(item['pattoo_checksum'], str))
-            self.assertTrue(isinstance(item['pattoo_metadata'], list))
-            self.assertTrue(len(item['pattoo_metadata'], 4))
-            for meta, metadata in enumerate(item['pattoo_metadata']):
-                self.assertTrue(metadata, dict)
-                for m_key, m_value in metadata.items():
-                    self.assertEqual(2 * int(m_key), int(m_value))
-                    self.assertEqual(int(m_key) % 7, 0)
+        expected = {
+            'key_value_pairs': {
+                0: ('0', '0'),
+                1: ('1', '2'),
+                2: ('pattoo_key', 'label_0'),
+                3: ('pattoo_data_type', 99),
+                4: ('pattoo_value', 0),
+                5: ('pattoo_timestamp', 1575794447250),
+                6: ('pattoo_checksum',
+                    '284d21bff49bbde9eb7fc3ad98a88e5cbf72830f69743b47bd2c349'
+                    '407807f68'),
+                7: ('pattoo_key', 'label_1'),
+                8: ('pattoo_value', 1),
+                9: ('pattoo_checksum',
+                    'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
+                    '0b083d098')},
+            'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 5, 9]]}
+
+        self.assertEqual(
+            result['datapoint_pairs'], expected['datapoint_pairs'])
+        for key, value in result['key_value_pairs'].items():
+            if key != 5:
+                self.assertEqual(expected['key_value_pairs'][key], value)
 
     def test_agentdata_to_post(self):
         """Testing method / function agentdata_to_post."""
@@ -228,32 +246,27 @@ class TestBasicFunctions(unittest.TestCase):
         # Test DeviceGateway to AgentPolledData
         apd.add(ddv)
         result = converter.agentdata_to_post(apd)
-        self.assertEqual(result.pattoo_source, apd.agent_id)
+        self.assertEqual(result.pattoo_agent_id, apd.agent_id)
         self.assertEqual(
-            result.pattoo_polling_interval, polling_interval * 1000)
-        self.assertTrue(isinstance(result.pattoo_datapoints, list))
+            result.pattoo_agent_polling_interval, polling_interval * 1000)
+        self.assertTrue(isinstance(result.pattoo_datapoints, dict))
 
-        # We have a dict to evaluate
-        datapoint = result.pattoo_datapoints[0]
-        self.assertTrue(isinstance(datapoint, dict))
-        self.assertTrue(
-            datapoint['pattoo_checksum'],
-            'a488c71cafa214ee81f670eb0f935dc809374daee0664fe815f28ea628c3c8b3')
-        self.assertTrue(datapoint['pattoo_data_type'], DATA_INT)
-        self.assertTrue(datapoint['pattoo_key'], key)
-        self.assertTrue(datapoint['pattoo_value'], value)
+        # Test the key value pairs
+        item = result.pattoo_datapoints['key_value_pairs']
+        self.assertTrue('datapoint_pairs' in result.pattoo_datapoints)
+        self.assertTrue('key_value_pairs' in result.pattoo_datapoints)
+        self.assertTrue(isinstance(item, dict))
+        self.assertEqual(item[3], ('pattoo_agent_polling_interval', '20000'))
+        self.assertEqual(item[4], ('pattoo_agent_program', 'panda_bear'))
+        self.assertEqual(item[5], ('pattoo_key', 'gummy_bear'))
+        self.assertEqual(item[6], ('pattoo_data_type', 99))
+        self.assertEqual(item[7], ('pattoo_value', 457))
 
-        expected_metadata = {
-            'pattoo_agent_id': apd.agent_id,
-            'pattoo_agent_program': apd.agent_program,
-            'pattoo_agent_hostname': apd.agent_hostname,
-            'pattoo_agent_polled_device': device
-        }
-        for item in datapoint['pattoo_metadata']:
-            for key, value in item.items():
-                self.assertTrue(isinstance(value, str))
-                self.assertTrue(isinstance(key, str))
-                self.assertEqual(value, str(expected_metadata[key]))
+        # Test the pointers to the key value pairs
+        item = result.pattoo_datapoints['datapoint_pairs']
+        self.assertTrue(isinstance(item, list))
+        self.assertEqual(len(item), 1)
+        self.assertEqual(len(item[0]), 10)
 
     def test_datapoints_to_post(self):
         """Testing method / function datapoints_to_post."""
@@ -267,8 +280,9 @@ class TestBasicFunctions(unittest.TestCase):
             source, polling_interval, datapoints)
 
         # Test
-        self.assertEqual(result.pattoo_polling_interval, polling_interval)
-        self.assertEqual(result.pattoo_source, source)
+        self.assertEqual(
+            result.pattoo_agent_polling_interval, polling_interval)
+        self.assertEqual(result.pattoo_agent_id, source)
         self.assertEqual(result.pattoo_datapoints, datapoints)
         self.assertEqual(result.pattoo_datapoints[0].key, key)
         self.assertEqual(result.pattoo_datapoints[0].value, value)
@@ -286,11 +300,34 @@ class TestBasicFunctions(unittest.TestCase):
         result = converter.posting_data_points(pdp)
 
         # Test
-        self.assertEqual(result['pattoo_polling_interval'], polling_interval)
-        self.assertEqual(result['pattoo_source'], source)
+        self.assertEqual(
+            result['pattoo_agent_polling_interval'], polling_interval)
+        self.assertEqual(result['pattoo_agent_id'], source)
         self.assertEqual(result['pattoo_datapoints'], datapoints)
         self.assertEqual(result['pattoo_datapoints'][0].key, key)
         self.assertEqual(result['pattoo_datapoints'][0].value, value)
+
+    def test__keypairs(self):
+        """Testing method / function _keypairs."""
+        # Test
+        data = {'test this out': 7}
+        result = converter._keypairs(data)
+        expected = []
+        self.assertEqual(result, expected)
+
+        data = {'test this out': '7'}
+        result = converter._keypairs(data)
+        expected = [('test_this_out', '7')]
+        self.assertEqual(result, expected)
+
+    def test__checksum(self):
+        """Testing method / function _checksum."""
+        # Test
+        result = converter._checksum(1, 2, 3)
+        expected = ('''\
+3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1eb8b85103e3be7\
+ba613b31bb5c9c36214dc9f14a42fd7a2fdb84856bca5c44c2''')
+        self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':

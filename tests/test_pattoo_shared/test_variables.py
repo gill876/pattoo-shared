@@ -46,41 +46,48 @@ class TestPostingDataPoints(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Setup PostingDataPoints - Valid
-        source = '1234'
+        agent_id = '1234'
         polling_interval = 10
-        datapoints = [DataPoint('key', 10)]
-        result = PostingDataPoints(source, polling_interval, datapoints)
-        self.assertEqual(result.pattoo_source, source)
-        self.assertEqual(result.pattoo_datapoints, datapoints)
-        self.assertEqual(result.pattoo_polling_interval, polling_interval)
+        _datapoints = {
+            'datapoint_pairs': [[0], [1]],
+            'key_value_pairs': {
+                '0': ['key_01', 'value_01'],
+                '1': ['key_02', 'value_02']}
+            }
+        result = PostingDataPoints(agent_id, polling_interval, _datapoints)
+        self.assertEqual(result.pattoo_agent_id, agent_id)
+        self.assertEqual(result.pattoo_datapoints, _datapoints)
+        self.assertEqual(
+            result.pattoo_agent_polling_interval, polling_interval)
         self.assertTrue(result.valid)
 
         # Setup PostingDataPoints - Invalid
-        for source in [1, True, None, False, {1: 2}, [1, 2]]:
+        for agent_id in [1, True, None, False, {1: 2}, [1, 2]]:
             polling_interval = 10
-            datapoints = [DataPoint('key', 10)]
-            result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.pattoo_source, source)
-            self.assertEqual(result.pattoo_datapoints, datapoints)
-            self.assertEqual(result.pattoo_polling_interval, polling_interval)
+            result = PostingDataPoints(agent_id, polling_interval, _datapoints)
+            self.assertEqual(result.pattoo_agent_id, agent_id)
+            self.assertEqual(result.pattoo_datapoints, _datapoints)
+            self.assertEqual(
+                result.pattoo_agent_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
         for polling_interval in ['1', True, None, False, {1: 2}, [1, 2]]:
-            source = '1234'
-            datapoints = [DataPoint('key', 10)]
-            result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.pattoo_source, source)
-            self.assertEqual(result.pattoo_datapoints, datapoints)
-            self.assertEqual(result.pattoo_polling_interval, polling_interval)
+            agent_id = '1234'
+            result = PostingDataPoints(agent_id, polling_interval, _datapoints)
+            self.assertEqual(result.pattoo_agent_id, agent_id)
+            self.assertEqual(result.pattoo_datapoints, _datapoints)
+            self.assertEqual(
+                result.pattoo_agent_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
         for datapoints in [1, True, None, False, {1: 2}, [1, 2]]:
-            source = '1234'
+            agent_id = '1234'
             polling_interval = 10
-            result = PostingDataPoints(source, polling_interval, datapoints)
-            self.assertEqual(result.pattoo_source, source)
+            result = PostingDataPoints(agent_id, polling_interval, datapoints)
+            self.assertEqual(result.pattoo_agent_id, agent_id)
             self.assertEqual(result.pattoo_datapoints, datapoints)
-            self.assertEqual(result.pattoo_polling_interval, polling_interval)
+            self.assertEqual(
+                result.pattoo_agent_polling_interval, polling_interval)
             self.assertFalse(result.valid)
 
 
@@ -427,7 +434,7 @@ class TestAgentPolledData(unittest.TestCase):
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
         self.assertEqual(
-            apd.polling_interval, self.config.polling_interval() * 1000)
+            apd.agent_polling_interval, self.config.polling_interval() * 1000)
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
         self.assertEqual(apd.agent_hostname, agent_hostname)
