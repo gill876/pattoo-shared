@@ -24,7 +24,7 @@ directory. Please fix.''')
 from pattoo_shared import converter
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import (
-    DataPointMetadata, DataPoint, DeviceDataPoints, AgentPolledData)
+    DataPointMetadata, DataPoint, TargetDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, PattooDBrecord)
@@ -132,9 +132,9 @@ class TestBasicFunctions(unittest.TestCase):
         agent_program = 'panda_bear'
         apd = AgentPolledData(agent_program, self.config)
 
-        # Initialize DeviceDataPoints
+        # Initialize TargetDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
 
         # Setup DataPoint
         value = 457
@@ -142,7 +142,7 @@ class TestBasicFunctions(unittest.TestCase):
         data_type = DATA_INT
         variable = DataPoint(key, value, data_type=data_type)
 
-        # Add data to DeviceDataPoints
+        # Add data to TargetDataPoints
         ddv.add(variable)
 
         # Test DeviceGateway to AgentPolledData
@@ -230,9 +230,9 @@ class TestBasicFunctions(unittest.TestCase):
         polling_interval = self.config.polling_interval()
         apd = AgentPolledData(agent_program, self.config)
 
-        # Initialize DeviceDataPoints
+        # Initialize TargetDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
 
         # Setup DataPoint
         value = 457
@@ -240,7 +240,7 @@ class TestBasicFunctions(unittest.TestCase):
         data_type = DATA_INT
         variable = DataPoint(key, value, data_type=data_type)
 
-        # Add data to DeviceDataPoints
+        # Add data to TargetDataPoints
         ddv.add(variable)
 
         # Test DeviceGateway to AgentPolledData

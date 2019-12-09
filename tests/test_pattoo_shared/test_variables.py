@@ -30,7 +30,7 @@ from pattoo_shared.constants import (
     DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, ConverterMetadata, PostingDataPoints,
-    DeviceDataPoints,
+    TargetDataPoints,
     PollingTarget, DevicePollingTargets,
     AgentKey, AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
@@ -343,7 +343,7 @@ timestamp={}, valid=True>'''.format(variable.timestamp))
 73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
 
 
-class TestDeviceDataPoints(unittest.TestCase):
+class TestTargetDataPoints(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -352,9 +352,9 @@ class TestDeviceDataPoints(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DeviceDataPoints
+        # Setup TargetDataPoints
         device = 'localhost'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
 
         # Test initial vlues
         self.assertEqual(ddv.device, device)
@@ -363,21 +363,21 @@ class TestDeviceDataPoints(unittest.TestCase):
 
     def test___repr__(self):
         """Testing function __repr__."""
-        # Setup DeviceDataPoints
+        # Setup TargetDataPoints
         device = 'localhost'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
 
         # Test
         expected = ('''\
-<DeviceDataPoints device='localhost', valid=False, data=[]''')
+<TargetDataPoints device='localhost', valid=False, data=[]''')
         result = ddv.__repr__()
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
-        # Initialize DeviceDataPoints
+        # Initialize TargetDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
         self.assertEqual(ddv.device, device)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
@@ -461,9 +461,9 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
         agent_program = 'panda_bear'
         apd = AgentPolledData(agent_program, self.config)
 
-        # Initialize DeviceDataPoints
+        # Initialize TargetDataPoints
         device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        ddv = TargetDataPoints(device)
         self.assertEqual(ddv.device, device)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
@@ -474,7 +474,7 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
 
-        # Add data to DeviceDataPoints
+        # Add data to TargetDataPoints
         self.assertFalse(ddv.valid)
         ddv.add(variable)
         self.assertTrue(ddv.valid)
@@ -494,7 +494,7 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
         self.assertEqual(len(data), 1)
 
         _ddv = data[0]
-        self.assertTrue(isinstance(_ddv, DeviceDataPoints))
+        self.assertTrue(isinstance(_ddv, TargetDataPoints))
         self.assertEqual(_ddv.device, device)
         self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))

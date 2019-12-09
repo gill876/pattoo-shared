@@ -282,7 +282,7 @@ class PostingDataPoints(object):
                 ]
 
 
-class DeviceDataPoints(object):
+class TargetDataPoints(object):
     """Object defining a list of DataPoint objects.
 
     Stores DataPoints polled from a specific ip_device.
@@ -373,8 +373,8 @@ class AgentPolledData(object):
             None
 
         Variables:
-            self.data: List of DeviceDataPoints objects created by polling
-            self.valid: True if the object contains DeviceDataPoints objects
+            self.data: List of TargetDataPoints objects created by polling
+            self.valid: True if the object contains TargetDataPoints objects
 
         """
         # Initialize key variables
@@ -408,10 +408,10 @@ polling_interval={5}, valid={6}>\
         return result
 
     def add(self, items):
-        """Append DeviceDataPoints to the internal self.data list.
+        """Append TargetDataPoints to the internal self.data list.
 
         Args:
-            items: A DeviceDataPoints object list
+            items: A TargetDataPoints object list
 
         Returns:
             None
@@ -424,7 +424,7 @@ polling_interval={5}, valid={6}>\
         # Only append approved data types
         for item in items:
             # Only append approved data types
-            if isinstance(item, DeviceDataPoints) is True:
+            if isinstance(item, TargetDataPoints) is True:
                 # Ignore invalid values
                 if item.valid is False:
                     continue
