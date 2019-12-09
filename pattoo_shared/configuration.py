@@ -370,7 +370,7 @@ class Config(object):
         # Return
         return result
 
-    def _polling_targets(self, _data):
+    def _polling_points(self, _data):
         """Create list of PollingPoint objects.
 
         Args:

@@ -45,11 +45,11 @@ def hashstring(string, sha=256, utf8=False):
 
     # Encode the string
     hasher.update(bytes(string.encode()))
-    device_hash = hasher.hexdigest()
+    target_hash = hasher.hexdigest()
     if utf8 is True:
-        result = device_hash.encode()
+        result = target_hash.encode()
     else:
-        result = device_hash
+        result = target_hash
 
     # Return
     return result

@@ -353,32 +353,32 @@ class TestTargetDataPoints(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Setup TargetDataPoints
-        device = 'localhost'
-        ddv = TargetDataPoints(device)
+        target = 'localhost'
+        ddv = TargetDataPoints(target)
 
         # Test initial vlues
-        self.assertEqual(ddv.device, device)
+        self.assertEqual(ddv.target, target)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
     def test___repr__(self):
         """Testing function __repr__."""
         # Setup TargetDataPoints
-        device = 'localhost'
-        ddv = TargetDataPoints(device)
+        target = 'localhost'
+        ddv = TargetDataPoints(target)
 
         # Test
         expected = ('''\
-<TargetDataPoints device='localhost', valid=False, data=[]''')
+<TargetDataPoints target='localhost', valid=False, data=[]''')
         result = ddv.__repr__()
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
         # Initialize TargetDataPoints
-        device = 'teddy_bear'
-        ddv = TargetDataPoints(device)
-        self.assertEqual(ddv.device, device)
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
+        self.assertEqual(ddv.target, target)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
@@ -462,9 +462,9 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
         apd = AgentPolledData(agent_program, self.config)
 
         # Initialize TargetDataPoints
-        device = 'teddy_bear'
-        ddv = TargetDataPoints(device)
-        self.assertEqual(ddv.device, device)
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
+        self.assertEqual(ddv.target, target)
         self.assertFalse(ddv.valid)
         self.assertEqual(ddv.data, [])
 
@@ -495,7 +495,7 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
 
         _ddv = data[0]
         self.assertTrue(isinstance(_ddv, TargetDataPoints))
-        self.assertEqual(_ddv.device, device)
+        self.assertEqual(_ddv.target, target)
         self.assertTrue(_ddv.valid)
         self.assertTrue(isinstance(_ddv.data, list))
         self.assertTrue(len(_ddv.data), 1)
@@ -589,30 +589,30 @@ class TestTargetPollingPoints(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Setup TargetPollingPoints
-        device = 'localhost'
-        dpt = TargetPollingPoints(device)
-        self.assertEqual(dpt.device, device)
+        target = 'localhost'
+        dpt = TargetPollingPoints(target)
+        self.assertEqual(dpt.target, target)
         self.assertFalse(dpt.valid)
 
     def test___repr__(self):
         """Testing function __repr__."""
         # Setup variable
-        device = 'localhost'
-        item = TargetPollingPoints(device)
+        target = 'localhost'
+        item = TargetPollingPoints(target)
         result = item.__repr__()
 
         # Test
         expected = ('''\
-<TargetPollingPoints device='localhost', valid=False, data=[]>''')
+<TargetPollingPoints target='localhost', valid=False, data=[]>''')
         result = item.__repr__()
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
         # Initialize TargetPollingPoints
-        device = 'localhost'
-        dpt = TargetPollingPoints(device)
-        self.assertEqual(dpt.device, device)
+        target = 'localhost'
+        dpt = TargetPollingPoints(target)
+        self.assertEqual(dpt.target, target)
         self.assertFalse(dpt.valid)
 
         # Add bad values

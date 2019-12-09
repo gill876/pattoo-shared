@@ -191,7 +191,7 @@ def _make_pattoo_db_record(item):
         # Add the datasource to the original checksum for better uniqueness
         checksum = _checksum(
             item['pattoo_agent_id'],
-            item['pattoo_agent_polled_device'],
+            item['pattoo_agent_polled_target'],
             item['pattoo_checksum'])
         pattoo_db_variable = PattooDBrecord(
             pattoo_checksum=checksum,
@@ -240,7 +240,7 @@ def agentdata_to_datapoints(agentdata):
                     'pattoo_agent_id': agentdata.agent_id,
                     'pattoo_agent_program': agentdata.agent_program,
                     'pattoo_agent_hostname': agentdata.agent_hostname,
-                    'pattoo_agent_polled_device': ddv.device,
+                    'pattoo_agent_polled_target': ddv.target,
                     'pattoo_agent_polling_interval': (
                         agentdata.agent_polling_interval)
                 }
@@ -400,8 +400,8 @@ def _keypairs(_data):
     return result
 
 
-def _checksum(agent_id, device, datapoint_checksum):
-    """Create a unique checksum for a DataPoint based on agent and device.
+def _checksum(agent_id, target, datapoint_checksum):
+    """Create a unique checksum for a DataPoint based on agent and target.
 
     Args:
         record: PattooDBrecord converted to a Dict
@@ -413,5 +413,5 @@ def _checksum(agent_id, device, datapoint_checksum):
     """
     # Create checksum value
     result = data.hashstring('''{}{}{}\
-'''.format(agent_id, device, datapoint_checksum), sha=512)
+'''.format(agent_id, target, datapoint_checksum), sha=512)
     return result

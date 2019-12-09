@@ -57,7 +57,7 @@ class TestBasicFunctions(unittest.TestCase):
                     '2': ['pattoo_agent_id',
                           '123bb3a17c6cc915a98a859226d282b'
                           '394ee0964956b7d23c145fe9d94567241'],
-                    '3': ['pattoo_agent_polled_device', 'localhost'],
+                    '3': ['pattoo_agent_polled_target', 'localhost'],
                     '4': ['pattoo_agent_polling_interval', '10000'],
                     '5': ['pattoo_agent_program', 'pattoo_agent_snmpd'],
                     '6': ['pattoo_key', 'agent_snmpd_.1.3.6.1.2.1.2.2.1.10'],
@@ -90,7 +90,7 @@ class TestBasicFunctions(unittest.TestCase):
             pattoo_metadata=[
                 ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1'),
                 ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_polled_target', 'localhost'),
                 ('pattoo_agent_program', 'pattoo_agent_snmpd')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
@@ -111,7 +111,7 @@ class TestBasicFunctions(unittest.TestCase):
             pattoo_metadata=[
                 ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2'),
                 ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_polled_target', 'localhost'),
                 ('pattoo_agent_program', 'pattoo_agent_snmpd')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
@@ -133,8 +133,8 @@ class TestBasicFunctions(unittest.TestCase):
         apd = AgentPolledData(agent_program, self.config)
 
         # Initialize TargetDataPoints
-        device = 'teddy_bear'
-        ddv = TargetDataPoints(device)
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
 
         # Setup DataPoint
         value = 457
@@ -145,7 +145,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Add data to TargetDataPoints
         ddv.add(variable)
 
-        # Test DeviceGateway to AgentPolledData
+        # Test TargetGateway to AgentPolledData
         apd.add(ddv)
 
         # Test contents
@@ -153,7 +153,7 @@ class TestBasicFunctions(unittest.TestCase):
             'pattoo_agent_id': apd.agent_id,
             'pattoo_agent_program': agent_program,
             'pattoo_agent_hostname': apd.agent_hostname,
-            'pattoo_agent_polled_device': device,
+            'pattoo_agent_polled_target': target,
             'pattoo_agent_polling_interval': apd.agent_polling_interval
         }
         result = converter.agentdata_to_datapoints(apd)
@@ -231,8 +231,8 @@ class TestBasicFunctions(unittest.TestCase):
         apd = AgentPolledData(agent_program, self.config)
 
         # Initialize TargetDataPoints
-        device = 'teddy_bear'
-        ddv = TargetDataPoints(device)
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
 
         # Setup DataPoint
         value = 457
@@ -243,7 +243,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Add data to TargetDataPoints
         ddv.add(variable)
 
-        # Test DeviceGateway to AgentPolledData
+        # Test TargetGateway to AgentPolledData
         apd.add(ddv)
         result = converter.agentdata_to_post(apd)
         self.assertEqual(result.pattoo_agent_id, apd.agent_id)

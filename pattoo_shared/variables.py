@@ -109,7 +109,7 @@ class DataPointMetadata(Metadata):
 
 
 class DataPoint(object):
-    """Variable representation for data retreived from a device.
+    """Variable representation for data retreived from a target.
 
     Stores individual datapoints polled by pattoo agents
 
@@ -130,7 +130,7 @@ class DataPoint(object):
             self.timestamp: Integer of epoch milliseconds
             self.valid: True if the object has a valid data_type
             self.checksum: Hash of self.key, self.data_type and metadata to
-                ensure uniqueness when assigned to a device.
+                ensure uniqueness when assigned to a target.
 
         """
         # Initialize variables
@@ -285,27 +285,27 @@ class PostingDataPoints(object):
 class TargetDataPoints(object):
     """Object defining a list of DataPoint objects.
 
-    Stores DataPoints polled from a specific ip_device.
+    Stores DataPoints polled from a specific ip_target.
 
     """
 
-    def __init__(self, device):
+    def __init__(self, target):
         """Initialize the class.
 
         Args:
-            device: Device polled to get the DataPoint objects
+            target: Target polled to get the DataPoint objects
 
         Returns:
             None
 
         Variables:
-            self.data: List of DataPoints retrieved from the device
+            self.data: List of DataPoints retrieved from the target
             self.valid: True if the object is populated with DataPoints
 
         """
         # Initialize key variables
         self.data = []
-        self.device = device
+        self.target = target
         self.valid = False
         self._checksums = []
 
@@ -321,10 +321,10 @@ class TargetDataPoints(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, valid={2}, data={3}'
+            '<{0} target={1}, valid={2}, data={3}'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
+                repr(self.target), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -351,7 +351,7 @@ class TargetDataPoints(object):
                     self._checksums.append(item.checksum)
 
                 # Set object as being.valid
-                self.valid = False not in [bool(self.data), bool(self.device)]
+                self.valid = False not in [bool(self.data), bool(self.target)]
 
 
 class AgentPolledData(object):
@@ -525,28 +525,28 @@ class PollingPoint(object):
 class TargetPollingPoints(object):
     """Object defining a list of PollingPoint objects.
 
-    Stores PollingPoints polled from a specific ip_device.
+    Stores PollingPoints polled from a specific ip_target.
 
     """
 
-    def __init__(self, device):
+    def __init__(self, target):
         """Initialize the class.
 
         Args:
-            device: Device polled to get the PollingPoint objects
+            target: Target polled to get the PollingPoint objects
 
         Returns:
             None
 
         Variables:
-            self.data: List of PollingPoints retrieved from the device
-            self.device: Name of device from which the data was received
+            self.data: List of PollingPoints retrieved from the target
+            self.target: Name of target from which the data was received
             self.valid: True if the object is populated with PollingPoints
 
         """
         # Initialize key variables
         self.data = []
-        self.device = device
+        self.target = target
         self.valid = False
         self._checksums = []
 
@@ -562,10 +562,10 @@ class TargetPollingPoints(object):
         """
         # Create a printable variation of the value
         result = (
-            '<{0} device={1}, valid={2}, data={3}>'
+            '<{0} target={1}, valid={2}, data={3}>'
             ''.format(
                 self.__class__.__name__,
-                repr(self.device), repr(self.valid), repr(self.data)
+                repr(self.target), repr(self.valid), repr(self.data)
             )
         )
         return result
@@ -596,7 +596,7 @@ class TargetPollingPoints(object):
                     self.data.append(item)
 
                 # Set object as being.valid
-                self.valid = False not in [bool(self.data), bool(self.device)]
+                self.valid = False not in [bool(self.data), bool(self.target)]
 
 
 class AgentKey(object):
