@@ -11,7 +11,7 @@ from pattoo_shared import log
 from pattoo_shared import url
 from pattoo_shared.constants import (
     PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
-from pattoo_shared.variables import PollingTarget
+from pattoo_shared.variables import PollingPoint
 
 
 class Config(object):
@@ -370,14 +370,14 @@ class Config(object):
         # Return
         return result
 
-    def _polling_targets(self, _data):
-        """Create list of PollingTarget objects.
+    def _polling_points(self, _data):
+        """Create list of PollingPoint objects.
 
         Args:
             _data: List of dicts with 'address' and 'multiplier' as keys
 
         Returns:
-            results: List of PollingTarget objects
+            results: List of PollingPoint objects
 
         """
         # Start conversion
@@ -404,7 +404,7 @@ class Config(object):
                     multiplier = item['multiplier']
 
                 # Populate result
-                result = PollingTarget(address=address, multiplier=multiplier)
+                result = PollingPoint(address=address, multiplier=multiplier)
                 results.append(result)
 
         # Return

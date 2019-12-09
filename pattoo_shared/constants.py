@@ -40,7 +40,7 @@ PattooDBrecord = collections.namedtuple(
 
 # Metadata keys added to datapoints by agents
 AGENT_METADATA_KEYS = (
-    'pattoo_agent_id', 'pattoo_agent_polled_device', 'pattoo_agent_program',
+    'pattoo_agent_id', 'pattoo_agent_polled_target', 'pattoo_agent_program',
     'pattoo_agent_hostname', 'pattoo_agent_polling_interval')
     
 # Keys of posted cached data. Based on keys in

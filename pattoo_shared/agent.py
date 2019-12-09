@@ -264,7 +264,7 @@ class AgentAPI(Agent):
         self._agent_api_variable = agent_api_variable
 
     def query(self):
-        """Query all remote devices for data.
+        """Query all remote targets for data.
 
         Args:
             None

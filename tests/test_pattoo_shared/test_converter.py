@@ -5,6 +5,8 @@
 import unittest
 import os
 import sys
+from time import sleep
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,7 +26,7 @@ directory. Please fix.''')
 from pattoo_shared import converter
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import (
-    DataPointMetadata, DataPoint, DeviceDataPoints, AgentPolledData)
+    DataPointMetadata, DataPoint, TargetDataPoints, AgentPolledData)
 from pattoo_shared.constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, PattooDBrecord)
@@ -57,7 +59,7 @@ class TestBasicFunctions(unittest.TestCase):
                     '2': ['pattoo_agent_id',
                           '123bb3a17c6cc915a98a859226d282b'
                           '394ee0964956b7d23c145fe9d94567241'],
-                    '3': ['pattoo_agent_polled_device', 'localhost'],
+                    '3': ['pattoo_agent_polled_target', 'localhost'],
                     '4': ['pattoo_agent_polling_interval', '10000'],
                     '5': ['pattoo_agent_program', 'pattoo_agent_snmpd'],
                     '6': ['pattoo_key', 'agent_snmpd_.1.3.6.1.2.1.2.2.1.10'],
@@ -90,7 +92,7 @@ class TestBasicFunctions(unittest.TestCase):
             pattoo_metadata=[
                 ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1'),
                 ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_polled_target', 'localhost'),
                 ('pattoo_agent_program', 'pattoo_agent_snmpd')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
@@ -111,7 +113,7 @@ class TestBasicFunctions(unittest.TestCase):
             pattoo_metadata=[
                 ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2'),
                 ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_device', 'localhost'),
+                ('pattoo_agent_polled_target', 'localhost'),
                 ('pattoo_agent_program', 'pattoo_agent_snmpd')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
@@ -132,9 +134,9 @@ class TestBasicFunctions(unittest.TestCase):
         agent_program = 'panda_bear'
         apd = AgentPolledData(agent_program, self.config)
 
-        # Initialize DeviceDataPoints
-        device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        # Initialize TargetDataPoints
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
 
         # Setup DataPoint
         value = 457
@@ -142,10 +144,10 @@ class TestBasicFunctions(unittest.TestCase):
         data_type = DATA_INT
         variable = DataPoint(key, value, data_type=data_type)
 
-        # Add data to DeviceDataPoints
+        # Add data to TargetDataPoints
         ddv.add(variable)
 
-        # Test DeviceGateway to AgentPolledData
+        # Test TargetGateway to AgentPolledData
         apd.add(ddv)
 
         # Test contents
@@ -153,7 +155,7 @@ class TestBasicFunctions(unittest.TestCase):
             'pattoo_agent_id': apd.agent_id,
             'pattoo_agent_program': agent_program,
             'pattoo_agent_hostname': apd.agent_hostname,
-            'pattoo_agent_polled_device': device,
+            'pattoo_agent_polled_target': target,
             'pattoo_agent_polling_interval': apd.agent_polling_interval
         }
         result = converter.agentdata_to_datapoints(apd)
@@ -178,6 +180,9 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Create DataPoints
         for value in range(0, 2):
+            # Sleep to force a change in the timestamp
+            sleep(0.1)
+
             metadata = []
             for meta in range(0, 2):
                 metadata.append(DataPointMetadata(int(meta), str(meta * 2)))
@@ -212,15 +217,16 @@ class TestBasicFunctions(unittest.TestCase):
                     '407807f68'),
                 7: ('pattoo_key', 'label_1'),
                 8: ('pattoo_value', 1),
-                9: ('pattoo_checksum',
-                    'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
-                    '0b083d098')},
-            'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 5, 9]]}
+                9: ('pattoo_timestamp', 1575915772433),
+                10: ('pattoo_checksum',
+                     'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
+                     '0b083d098')},
+            'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 9, 10]]}
 
         self.assertEqual(
             result['datapoint_pairs'], expected['datapoint_pairs'])
         for key, value in result['key_value_pairs'].items():
-            if key != 5:
+            if key not in [5, 9]:
                 self.assertEqual(expected['key_value_pairs'][key], value)
 
     def test_agentdata_to_post(self):
@@ -230,9 +236,9 @@ class TestBasicFunctions(unittest.TestCase):
         polling_interval = self.config.polling_interval()
         apd = AgentPolledData(agent_program, self.config)
 
-        # Initialize DeviceDataPoints
-        device = 'teddy_bear'
-        ddv = DeviceDataPoints(device)
+        # Initialize TargetDataPoints
+        target = 'teddy_bear'
+        ddv = TargetDataPoints(target)
 
         # Setup DataPoint
         value = 457
@@ -240,10 +246,10 @@ class TestBasicFunctions(unittest.TestCase):
         data_type = DATA_INT
         variable = DataPoint(key, value, data_type=data_type)
 
-        # Add data to DeviceDataPoints
+        # Add data to TargetDataPoints
         ddv.add(variable)
 
-        # Test DeviceGateway to AgentPolledData
+        # Test TargetGateway to AgentPolledData
         apd.add(ddv)
         result = converter.agentdata_to_post(apd)
         self.assertEqual(result.pattoo_agent_id, apd.agent_id)
