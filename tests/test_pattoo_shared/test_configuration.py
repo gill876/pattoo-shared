@@ -23,7 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import configuration
-from pattoo_shared.variables import PollingTarget
+from pattoo_shared.variables import PollingPoint
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -185,7 +185,7 @@ class TestConfig(unittest.TestCase):
         self.assertTrue(isinstance(result, list))
         self.assertTrue(bool(result))
         for index, value in enumerate(result):
-            self.assertTrue(isinstance(value, PollingTarget))
+            self.assertTrue(isinstance(value, PollingPoint))
             self.assertEqual(value.address, oids[index])
             self.assertEqual(value.multiplier, 8)
 

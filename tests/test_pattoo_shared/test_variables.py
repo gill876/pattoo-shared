@@ -31,7 +31,7 @@ from pattoo_shared.constants import (
 from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, ConverterMetadata, PostingDataPoints,
     TargetDataPoints,
-    PollingTarget, DevicePollingTargets,
+    PollingPoint, TargetPollingPoints,
     AgentKey, AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
@@ -541,7 +541,7 @@ class TestAgentAPIVariable(unittest.TestCase):
         self.assertEqual(expected, result)
 
 
-class TestPollingTarget(unittest.TestCase):
+class TestPollingPoint(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -550,10 +550,10 @@ class TestPollingTarget(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup PollingTarget
+        # Setup PollingPoint
         address = 20
         multiplier = 6
-        result = PollingTarget(address=address, multiplier=multiplier)
+        result = PollingPoint(address=address, multiplier=multiplier)
         self.assertEqual(result.address, address)
         self.assertEqual(result.multiplier, multiplier)
 
@@ -561,7 +561,7 @@ class TestPollingTarget(unittest.TestCase):
         address = 25
         multipliers = [None, False, True, 'foo']
         for multiplier in multipliers:
-            result = PollingTarget(address=address, multiplier=multiplier)
+            result = PollingPoint(address=address, multiplier=multiplier)
             self.assertEqual(result.address, address)
             self.assertEqual(result.multiplier, 1)
 
@@ -570,16 +570,16 @@ class TestPollingTarget(unittest.TestCase):
         # Setup variable
         address = 20
         multiplier = 6
-        item = PollingTarget(address=address, multiplier=multiplier)
+        item = PollingPoint(address=address, multiplier=multiplier)
 
         # Test
         expected = ('''\
-<PollingTarget address={}, multiplier={}>'''.format(address, multiplier))
+<PollingPoint address={}, multiplier={}>'''.format(address, multiplier))
         result = item.__repr__()
         self.assertEqual(result, expected)
 
 
-class TestDevicePollingTargets(unittest.TestCase):
+class TestTargetPollingPoints(unittest.TestCase):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -588,9 +588,9 @@ class TestDevicePollingTargets(unittest.TestCase):
 
     def test___init__(self):
         """Testing function __init__."""
-        # Setup DevicePollingTargets
+        # Setup TargetPollingPoints
         device = 'localhost'
-        dpt = DevicePollingTargets(device)
+        dpt = TargetPollingPoints(device)
         self.assertEqual(dpt.device, device)
         self.assertFalse(dpt.valid)
 
@@ -598,20 +598,20 @@ class TestDevicePollingTargets(unittest.TestCase):
         """Testing function __repr__."""
         # Setup variable
         device = 'localhost'
-        item = DevicePollingTargets(device)
+        item = TargetPollingPoints(device)
         result = item.__repr__()
 
         # Test
         expected = ('''\
-<DevicePollingTargets device='localhost', valid=False, data=[]>''')
+<TargetPollingPoints device='localhost', valid=False, data=[]>''')
         result = item.__repr__()
         self.assertEqual(result, expected)
 
     def test_add(self):
         """Testing function append."""
-        # Initialize DevicePollingTargets
+        # Initialize TargetPollingPoints
         device = 'localhost'
-        dpt = DevicePollingTargets(device)
+        dpt = TargetPollingPoints(device)
         self.assertEqual(dpt.device, device)
         self.assertFalse(dpt.valid)
 
@@ -624,7 +624,7 @@ class TestDevicePollingTargets(unittest.TestCase):
         # Add good values
         address = 20
         multiplier = 6
-        value = PollingTarget(address=address, multiplier=multiplier)
+        value = PollingPoint(address=address, multiplier=multiplier)
         dpt.add(value)
         self.assertTrue(dpt.valid)
         self.assertEqual(len(dpt.data), 1)

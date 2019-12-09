@@ -477,7 +477,7 @@ class AgentAPIVariable(object):
         return result
 
 
-class PollingTarget(object):
+class PollingPoint(object):
     """Object used to track data to be polled."""
 
     def __init__(self, address=None, multiplier=1):
@@ -522,10 +522,10 @@ class PollingTarget(object):
         return result
 
 
-class DevicePollingTargets(object):
-    """Object defining a list of PollingTarget objects.
+class TargetPollingPoints(object):
+    """Object defining a list of PollingPoint objects.
 
-    Stores PollingTargets polled from a specific ip_device.
+    Stores PollingPoints polled from a specific ip_device.
 
     """
 
@@ -533,15 +533,15 @@ class DevicePollingTargets(object):
         """Initialize the class.
 
         Args:
-            device: Device polled to get the PollingTarget objects
+            device: Device polled to get the PollingPoint objects
 
         Returns:
             None
 
         Variables:
-            self.data: List of PollingTargets retrieved from the device
+            self.data: List of PollingPoints retrieved from the device
             self.device: Name of device from which the data was received
-            self.valid: True if the object is populated with PollingTargets
+            self.valid: True if the object is populated with PollingPoints
 
         """
         # Initialize key variables
@@ -571,10 +571,10 @@ class DevicePollingTargets(object):
         return result
 
     def add(self, items):
-        """Append PollingTarget to the internal self.data list.
+        """Append PollingPoint to the internal self.data list.
 
         Args:
-            items: A PollingTarget object list
+            items: A PollingPoint object list
 
         Returns:
             None
@@ -584,9 +584,9 @@ class DevicePollingTargets(object):
         if isinstance(items, list) is False:
             items = [items]
 
-        # Only add PollingTarget objects that are not duplicated
+        # Only add PollingPoint objects that are not duplicated
         for item in items:
-            if isinstance(item, PollingTarget) is True:
+            if isinstance(item, PollingPoint) is True:
                 # Ignore invalid values
                 if item.valid is False:
                     continue
