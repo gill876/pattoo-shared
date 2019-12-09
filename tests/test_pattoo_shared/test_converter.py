@@ -5,6 +5,7 @@
 import unittest
 import os
 import sys
+from time import sleep
 from pprint import pprint
 
 # Try to create a working PYTHONPATH
@@ -179,6 +180,9 @@ class TestBasicFunctions(unittest.TestCase):
 
         # Create DataPoints
         for value in range(0, 2):
+            # Sleep to force a change in the timestamp
+            sleep(0.1)
+
             metadata = []
             for meta in range(0, 2):
                 metadata.append(DataPointMetadata(int(meta), str(meta * 2)))
@@ -213,19 +217,16 @@ class TestBasicFunctions(unittest.TestCase):
                     '407807f68'),
                 7: ('pattoo_key', 'label_1'),
                 8: ('pattoo_value', 1),
-                9: ('pattoo_checksum',
-                    'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
-                    '0b083d098')},
-            'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 5, 9]]}
-
-        print('\n\n')
-        pprint(result)
-        print('\n\n')
+                9: ('pattoo_timestamp', 1575915772433),
+                10: ('pattoo_checksum',
+                     'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
+                     '0b083d098')},
+            'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 9, 10]]}
 
         self.assertEqual(
             result['datapoint_pairs'], expected['datapoint_pairs'])
         for key, value in result['key_value_pairs'].items():
-            if key != 5:
+            if key not in [5, 9]:
                 self.assertEqual(expected['key_value_pairs'][key], value)
 
     def test_agentdata_to_post(self):
