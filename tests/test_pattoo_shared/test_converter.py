@@ -5,6 +5,7 @@
 import unittest
 import os
 import sys
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -216,6 +217,10 @@ class TestBasicFunctions(unittest.TestCase):
                     'a5919eb5fc5bac62e7c80bc04155931f75e22166ed84b1d07f704f4'
                     '0b083d098')},
             'datapoint_pairs': [[0, 1, 2, 3, 4, 5, 6], [0, 1, 7, 3, 8, 5, 9]]}
+
+        print('\n\n')
+        pprint(result)
+        print('\n\n')
 
         self.assertEqual(
             result['datapoint_pairs'], expected['datapoint_pairs'])
