@@ -10,7 +10,8 @@ from .variables import (
     PostingDataPoints)
 from .constants import (
     DATA_FLOAT, DATA_INT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
-    MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, CACHE_KEYS)
+    MAX_KEYPAIR_LENGTH, PattooDBrecord, RESERVED_KEYS, CACHE_KEYS,
+    AGENT_METADATA_KEYS)
 from pattoo_shared import data
 from pattoo_shared import log
 
@@ -169,6 +170,8 @@ def _make_pattoo_db_record(item):
     the pattoo API
     '''
     for key in reserved_keys_non_metadata:
+        valids.append(key in item.keys())
+    for key in AGENT_METADATA_KEYS:
         valids.append(key in item.keys())
     if False in valids:
         log.log2warning(1047, _log_message)
