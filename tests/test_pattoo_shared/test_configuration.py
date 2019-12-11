@@ -40,6 +40,15 @@ class TestConfig(unittest.TestCase):
         """Testing function __init__."""
         pass
 
+    def test_language(self):
+        """Testing function language."""
+        # Initialize key values
+        expected = 'xyz'
+
+        # Test
+        result = self.config.language()
+        self.assertEqual(result, expected)
+
     def test_polling_interval(self):
         """Testing function polling_interval."""
         # Initialize key values
