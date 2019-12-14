@@ -31,7 +31,6 @@ from pattoo_shared.constants import DATA_STRING
 from pattoo_shared.constants import DATA_NONE
 from pattoo_shared.constants import MAX_KEYPAIR_LENGTH
 from pattoo_shared.constants import DATAPOINT_KEYS
-from pattoo_shared.constants import NON_DATAPOINT_KEYS
 from pattoo_shared.constants import RESERVED_KEYS
 from pattoo_shared.constants import CACHE_KEYS
 
@@ -63,16 +62,16 @@ class TestConstants(unittest.TestCase):
             ('pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type',
              'pattoo_key', 'pattoo_value', 'pattoo_timestamp'))
         self.assertEqual(
-            NON_DATAPOINT_KEYS, ['pattoo_agent_id', 'pattoo_agent_polling_interval'])
-        self.assertEqual(
             RESERVED_KEYS,
             ('pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type',
              'pattoo_key', 'pattoo_value', 'pattoo_timestamp',
-             'pattoo_agent_id', 'pattoo_agent_polling_interval'))
+             'pattoo_agent_id', 'pattoo_agent_polled_target',
+             'pattoo_agent_program', 'pattoo_agent_hostname',
+             'pattoo_agent_polling_interval'))
         self.assertEqual(
             CACHE_KEYS,
-            ('pattoo_agent_id', 'pattoo_datapoints', 'pattoo_agent_polling_interval',
-             'pattoo_agent_timestamp'))
+            ('pattoo_agent_id', 'pattoo_datapoints',
+             'pattoo_agent_polling_interval', 'pattoo_agent_timestamp'))
 
         # Test pattoo API constants
         self.assertEqual(

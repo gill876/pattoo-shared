@@ -205,6 +205,9 @@ def _make_pattoo_db_record(item):
             pattoo_timestamp=item['pattoo_timestamp'],
             pattoo_data_type=item['pattoo_data_type'],
             pattoo_value=item['pattoo_value'],
+            pattoo_agent_polled_target=item['pattoo_agent_polled_target'], 
+            pattoo_agent_program=item['pattoo_agent_program'],
+            pattoo_agent_hostname=item['pattoo_agent_hostname'],
             pattoo_metadata=_keypairs(metadata)
         )
 
