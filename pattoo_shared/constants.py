@@ -28,21 +28,20 @@ DATAPOINT_KEYS = (
     'pattoo_checksum', 'pattoo_metadata', 'pattoo_data_type', 'pattoo_key',
     'pattoo_value', 'pattoo_timestamp'
 )
-NON_DATAPOINT_KEYS = ['pattoo_agent_id', 'pattoo_agent_polling_interval']
-
-# Create reserved keys
-_ = list(DATAPOINT_KEYS)
-_.extend(NON_DATAPOINT_KEYS)
-RESERVED_KEYS = tuple(_)
-
-PattooDBrecord = collections.namedtuple(
-    'PattooDBrecord', ' '.join(RESERVED_KEYS))
 
 # Metadata keys added to datapoints by agents
 AGENT_METADATA_KEYS = (
     'pattoo_agent_id', 'pattoo_agent_polled_target', 'pattoo_agent_program',
     'pattoo_agent_hostname', 'pattoo_agent_polling_interval')
-    
+
+# Create reserved keys
+_ = list(DATAPOINT_KEYS)
+_.extend(AGENT_METADATA_KEYS)
+RESERVED_KEYS = tuple(_)
+
+PattooDBrecord = collections.namedtuple(
+    'PattooDBrecord', ' '.join(RESERVED_KEYS))
+
 # Keys of posted cached data. Based on keys in
 # pattoo_shared.constants.PostingDataPoints
 CACHE_KEYS = (

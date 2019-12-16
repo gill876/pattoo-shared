@@ -90,14 +90,14 @@ class TestBasicFunctions(unittest.TestCase):
                             'e2c93c65d0de9d88e4173b5972e73b59cecdad4a80e28fc7'
                             'a0edd32db653156b05cf80efb818f5c8',
             pattoo_metadata=[
-                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1'),
-                ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_target', 'localhost'),
-                ('pattoo_agent_program', 'pattoo_agent_snmpd')],
+                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.1')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
             pattoo_value=4057039287.0,
             pattoo_timestamp=1575789070107,
+            pattoo_agent_polled_target='localhost',
+            pattoo_agent_program='pattoo_agent_snmpd',
+            pattoo_agent_hostname='swim',
             pattoo_agent_id='123bb3a17c6cc915a98a859226d282b394ee0964956b7d2'
                             '3c145fe9d94567241',
             pattoo_agent_polling_interval='10000')
@@ -111,14 +111,14 @@ class TestBasicFunctions(unittest.TestCase):
                             '29c92830e7491134de1dd600fb9c517f72a57a0f68640684'
                             '4a3ca1138c69a494cbedcb36e5e866b9',
             pattoo_metadata=[
-                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2'),
-                ('pattoo_agent_hostname', 'swim'),
-                ('pattoo_agent_polled_target', 'localhost'),
-                ('pattoo_agent_program', 'pattoo_agent_snmpd')],
+                ('agent_snmpd_oid', '.1.3.6.1.2.1.2.2.1.10.2')],
             pattoo_data_type=32,
             pattoo_key='agent_snmpd_.1.3.6.1.2.1.2.2.1.10',
             pattoo_value=0.0,
             pattoo_timestamp=1575789070108,
+            pattoo_agent_polled_target='localhost',
+            pattoo_agent_program='pattoo_agent_snmpd',
+            pattoo_agent_hostname='swim',
             pattoo_agent_id='123bb3a17c6cc915a98a859226d282b394ee0964956b7d23'
                             'c145fe9d94567241',
             pattoo_agent_polling_interval='10000')

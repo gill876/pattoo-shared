@@ -370,6 +370,28 @@ class Config(object):
         # Return
         return result
 
+    def language(self):
+        """Get language.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        key = 'main'
+        sub_key = 'language'
+        intermediate = search(key, sub_key, self._configuration, die=False)
+
+        # Default to 'en'
+        if bool(intermediate) is False:
+            result = 'en'
+        else:
+            result = str(intermediate)
+        return result
+
     def _polling_points(self, _data):
         """Create list of PollingPoint objects.
 
