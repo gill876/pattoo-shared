@@ -389,7 +389,7 @@ class Config(object):
         if bool(intermediate) is False:
             result = 'en'
         else:
-            result = str(intermediate)
+            result = str(intermediate).lower()
         return result
 
     def _polling_points(self, _data):
