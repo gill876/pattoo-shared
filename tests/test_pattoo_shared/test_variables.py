@@ -30,8 +30,8 @@ from pattoo_shared.constants import (
     DATA_INT, DATA_STRING, DATA_FLOAT, DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, ConverterMetadata, PostingDataPoints,
-    TargetDataPoints,
-    PollingPoint, TargetPollingPoints,
+    TargetDataPoints, TargetPollingPoints,
+    PollingPoint, IPTargetPollingPoints,
     AgentKey, AgentPolledData, AgentAPIVariable)
 from tests.libraries.configuration import UnittestConfig
 
@@ -577,6 +577,26 @@ class TestPollingPoint(unittest.TestCase):
 <PollingPoint address={}, multiplier={}>'''.format(address, multiplier))
         result = item.__repr__()
         self.assertEqual(result, expected)
+
+
+class TestIPTargetPollingPoints(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test___init__(self):
+        """Testing function __init__."""
+        # Test
+        for address in [123, 'koala_bear', '1.2.3', None, True, False, {}, []]:
+            result = IPTargetPollingPoints(address)
+            self.assertFalse(result.valid)
+
+        for address in ['127.0.0.1', '::1', 'localhost', 'www.google.com']:
+            result = IPTargetPollingPoints(address)
+            result.add(PollingPoint(1, 2))
+            self.assertTrue(result.valid)
 
 
 class TestTargetPollingPoints(unittest.TestCase):

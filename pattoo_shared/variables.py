@@ -8,6 +8,7 @@ import re
 # pattoo imports
 from pattoo_shared import data
 from pattoo_shared import files
+from pattoo_shared import network
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
@@ -434,8 +435,10 @@ polling_interval={5}, valid={6}>\
 
                 # Set object as being.valid
                 self.valid = False not in [
-                    bool(self.agent_id), bool(self.agent_program),
-                    bool(self.agent_hostname), bool(self.agent_polling_interval),
+                    bool(self.agent_id),
+                    bool(self.agent_program),
+                    bool(self.agent_hostname),
+                    bool(self.agent_polling_interval),
                     bool(self.data)]
 
 
@@ -597,6 +600,61 @@ class TargetPollingPoints(object):
 
                 # Set object as being.valid
                 self.valid = False not in [bool(self.data), bool(self.target)]
+
+
+class IPTargetPollingPoints(TargetPollingPoints):
+    """Object defining a list of PollingPoint objects.
+
+    Stores PollingPoints polled from a specific ip_target.
+
+    """
+
+    def __init__(self, target):
+        """Initialize the class.
+
+        Args:
+            target: Target polled to get the PollingPoint objects
+
+        Returns:
+            None
+
+        Variables:
+            self.data: List of PollingPoints retrieved from the target
+            self.target: Name of target from which the data was received
+            self.valid: True if the object is populated with PollingPoints
+
+        """
+        # Inherit object
+        TargetPollingPoints.__init__(self, target)
+
+    def add(self, items):
+        """Append PollingPoint to the internal self.data list.
+
+        Args:
+            items: A PollingPoint object list
+
+        Returns:
+            None
+
+        """
+        # Ensure there is a list of objects
+        if isinstance(items, list) is False:
+            items = [items]
+
+        # Only add PollingPoint objects that are not duplicated
+        for item in items:
+            if isinstance(item, PollingPoint) is True:
+                # Ignore invalid values
+                if item.valid is False:
+                    continue
+
+                # Add data to the list
+                if item.checksum not in self._checksums:
+                    self.data.append(item)
+
+                # Set object as being.valid
+                self.valid = False not in [
+                    bool(self.data), bool(network.get_ipaddress(self.target))]
 
 
 class AgentKey(object):
