@@ -3,7 +3,6 @@
 
 # Standard imports
 import os
-import ipaddress
 
 # Import project libraries
 from pattoo_shared import files
@@ -392,7 +391,7 @@ class Config(object):
             result = str(intermediate).lower()
         return result
 
-    def _polling_points(self, _data):
+    def get_polling_points(self, _data):
         """Create list of PollingPoint objects.
 
         Args:
