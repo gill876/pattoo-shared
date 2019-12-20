@@ -55,22 +55,22 @@ class TestBasicFunctions(unittest.TestCase):
         timestamp = 31
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (0, polling_interval))
+        self.assertEqual(result, 0)
 
         timestamp = 301
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (300, polling_interval))
+        self.assertEqual(result, 300)
 
         timestamp = 900
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (900, polling_interval))
+        self.assertEqual(result, 900)
 
         timestamp = 1000
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (900, polling_interval))
+        self.assertEqual(result, 900)
 
         # Initialize key variables
         polling_interval = 30
@@ -78,22 +78,41 @@ class TestBasicFunctions(unittest.TestCase):
         timestamp = 31
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (30, polling_interval))
+        self.assertEqual(result, 30)
 
         timestamp = 301
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (300, polling_interval))
+        self.assertEqual(result, 300)
 
         timestamp = 900
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (900, polling_interval))
+        self.assertEqual(result, 900)
 
         timestamp = 1000
         result = times.normalized_timestamp(
             polling_interval, timestamp=timestamp)
-        self.assertEqual(result, (990, polling_interval))
+        self.assertEqual(result, 990)
+
+    def test_timestamps(self):
+        """Testing function timestamps."""
+        # Test
+        ts_start = 0
+        ts_stop = 100
+        polling_interval = 10
+        expected = list(range(
+            ts_start, ts_stop + polling_interval, polling_interval))
+        result = times.timestamps(ts_start, ts_stop, polling_interval)
+        self.assertEqual(result, expected)
+
+        # Test with more irregular values
+        ts_start = 11
+        ts_stop = 73
+        polling_interval = 13
+        expected = [0, 13, 26, 39, 52, 65]
+        result = times.timestamps(ts_start, ts_stop, polling_interval)
+        self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':

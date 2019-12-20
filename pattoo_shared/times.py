@@ -39,25 +39,25 @@ def validate_timestamp(timestamp, polling_interval):
     return valid
 
 
-def normalized_timestamp(_polling_interval, timestamp=None):
+def normalized_timestamp(_pi, timestamp=None):
     """Normalize timestamp to a multiple of 'polling_interval' seconds.
 
     Args:
         timestamp: epoch timestamp in seconds
-        _polling_interval: Polling interval for data
+        _pi: Polling interval for data
 
     Returns:
         value: Normalized value
 
     """
     # Initialize key variables
-    if isinstance(_polling_interval, int) is False or (
-            _polling_interval is True or _polling_interval is False):
+    if isinstance(_pi, int) is False or (
+            _pi is True or _pi is False):
         log_message = (
-            'Invalid non-integer value for {}'.format(_polling_interval))
+            'Invalid non-integer value for {}'.format(_pi))
         log.log2die(1029, log_message)
     else:
-        polling_interval = abs(_polling_interval)
+        polling_interval = abs(_pi)
 
     # Don't allow 0 values for polling_interval
     if bool(polling_interval) is False:
@@ -70,4 +70,27 @@ def normalized_timestamp(_polling_interval, timestamp=None):
         value = (int(timestamp) // polling_interval) * polling_interval
 
     # Return
-    return (value, polling_interval)
+    return value
+
+
+def timestamps(ts_start_raw, ts_stop_raw, _pi):
+    """Get normalized timestamps list for every sampling_rate number of steps.
+
+    Args:
+        ts_start_raw: Timestamp of the start of the report
+        ts_stop_raw: Timestamp of the end of the report
+        _pi: Polling interval
+
+    Returns:
+        _timestamps: list of timstamps
+
+    """
+    # Normalize timestamps
+    ts_start = normalized_timestamp(_pi, ts_start_raw)
+    ts_stop = normalized_timestamp(_pi, ts_stop_raw)
+
+    # Create a list of timestamps
+    _timestamps = list(range(ts_start, ts_stop + _pi, _pi))
+
+    # Returns
+    return _timestamps
