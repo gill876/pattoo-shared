@@ -46,6 +46,22 @@ class TestBasicFunctions(unittest.TestCase):
     agent_hostname = 'pattoo_host'
     config = Config()
 
+    def test_execute(self):
+        """Testing method / function execute."""
+        # Test known bad command
+        command = '{}'.format(random())
+        with self.assertRaises(SystemExit):
+            files.execute(command)
+
+        # Test known bad command, but don't die
+        command = '{}'.format(random())
+        result = files.execute(command, die=False)
+        self.assertTrue(bool(result))
+
+        # Test known good command (Works in Windows and Linux)
+        result = files.execute('date')
+        self.assertFalse(bool(result))
+
     def test_read_yaml_files(self):
         """Testing method / function read_yaml_files."""
         # Initializing key variables
