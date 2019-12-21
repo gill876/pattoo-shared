@@ -3,9 +3,13 @@
 
 import os
 import time
+import sys
 import json
-import yaml
 from random import random
+import subprocess
+
+# PIP imports
+import yaml
 
 # Pattoo libraries
 from pattoo_shared import log, data
@@ -456,6 +460,72 @@ def get_agent_id(agent_name, agent_hostname, config):
 
     # Return
     return agent_id
+
+
+def execute(command, die=True):
+    """Run the command UNIX CLI command and record output.
+
+    Args:
+        command: CLI command to execute
+        die: Die if errors found
+
+    Returns:
+        returncode: Return code of command execution
+
+    """
+    # Initialize key variables
+    messages = []
+    stdoutdata = ''.encode()
+    stderrdata = ''.encode()
+    returncode = 1
+
+    # Run update_targets script
+    do_command_list = list(command.split(' '))
+
+    # Create the subprocess object
+    try:
+        process = subprocess.Popen(
+            do_command_list,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+        stdoutdata, stderrdata = process.communicate()
+        returncode = process.returncode
+    except:
+        (etype, evalue, etraceback) = sys.exc_info()
+        log_message = ('''\
+Command failure: [Exception:{}, Exception Instance: {}, Stack Trace: {}]\
+'''.format(etype, evalue, etraceback))
+        log.log2warning(1052, log_message)
+
+    # Crash if the return code is not 0
+    if returncode != 0:
+        # Print the Return Code header
+        messages.append(
+            'Return code:{}'.format(returncode)
+        )
+
+        # Print the STDOUT
+        for line in stdoutdata.decode().split('\n'):
+            messages.append(
+                'STDOUT: {}'.format(line)
+            )
+
+        # Print the STDERR
+        for line in stderrdata.decode().split('\n'):
+            messages.append(
+                'STDERR: {}'.format(line)
+            )
+
+        # Log message
+        for log_message in messages:
+            log.log2warning(1042, log_message)
+
+        # Die if required after error found
+        if bool(die) is True:
+            log.log2die(1044, 'Command Failed: {}'.format(command))
+
+    # Return
+    return returncode
 
 
 def _generate_agent_id():
