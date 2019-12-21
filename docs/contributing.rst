@@ -1,22 +1,16 @@
 How To Contribute
 =================
 
-PLACEHOLDER THIS DOES NOT WORK YET
-PLACEHOLDER THIS DOES NOT WORK YET
-PLACEHOLDER THIS DOES NOT WORK YET
-PLACEHOLDER THIS DOES NOT WORK YET
-PLACEHOLDER THIS DOES NOT WORK YET
-
 Below is the workflow for having your contribution accepted into the ``pattoo-shared`` repository.
 
 #. Create an Issue or comment on an existing issue to discuss the feature
 #. If the feature is approved, assign the issue to yourself
 #. Fork the project
 #. Clone the fork to your local machine
-#. Run ``make setup`` to install dependencies to virtualenv (information about virtualenv found further below in this doc)
+#. Run ``python3 setup.py install --user`` to install the package in your local environment.
 #. Add the original project as a remote (git remote add upstream https://github.com/PalisadoesFoundation/pattoo-shared, check with: git remote -v)
 #. Create a topic branch for your change (git checkout -b ``BranchName``\ )
-#. you may create additional branches if modifying multiple parts of the code
+#. You may create additional branches if modifying multiple parts of the code
 #. Write code and Commit your changes locally. Example proper git commit message below:
 
 .. code-block::
@@ -85,32 +79,6 @@ PEP8 and PEP257 Compliance
 --------------------------
 
 You can verify your code for compliance using running the ``make lint`` command from the project root.
-
-VirtualEnv
-----------
-
-``virtualenv`` is a tool to create isolated Python environments.
-It creates an environment that has its own installation directories, that doesn’t share libraries with other virtualenv environments nor does it access the globally installed libraries either.
-
-* The ``pattoo-shared`` project's ``makefile`` will automatically set up a ``makefile`` for you once you have virutalenv installed globally.
-* All dependencies that ``pattoo-shared`` requires, aside from ``pip`` and ``virtualenv`` itself, will be installed to this virtual env.
-* The makefile will run commands such as ``nosetests`` from the virtual env. If you wish to run these commands manually, run them as ``venv/bin/nosetests`` as they would not have been installed to your machine globally.
-
-Makefile
---------
-
-This project contains a makefile which contains a list of utilities that can be run using the ``make command`` command.
-The list of commands is:
-
-
-* dependencies - install project dependencies
-* setup - same as dependencies, exists for convention
-* lint - run pep8 pep257 and pylint on the project. (these can be run individually aswell, ie ``make pep8``\ )
-* test - run nosetests
-* develop - create pattoo-shared executable in /venv/bin/pattoo-shared and /bin/pattoo-shared
-* clean - remove all files and directories created by any other make command(ie venv)
-* synch - Pull down updates from the master branch of official repo into current branch of forked repo
-* contribute - Set up repository for making pull request
 
 Sample .vimrc File for Compliance
 ---------------------------------
