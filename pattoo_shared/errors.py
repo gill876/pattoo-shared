@@ -40,6 +40,7 @@ Minimum value {} is greater than {}. Please fix.\
         '/docs/', '/daemon/', '/log/']
     error_functions = (
         'log2die_safe(', 'log2warning(',
+        'log2exception(', 'log2exception_die(',
         'log2debug(', 'log2live(', 'log2warn(', 'log2die(', 'log2quiet(',
         'log2info(', 'log2screen(', 'log2see(', r'.db_modify(', r'.db_query(',
         r'.db_commit(', r'.db_replace(', r'.db_add(', '.db_add_all(',

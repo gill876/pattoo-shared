@@ -104,7 +104,7 @@ def cache_to_keypairs(_data):
             log.log2warning(1049, _log_message)
             return []
 
-    # Verify we are datapoint defining keys
+    # Verify there are datapoint defining keys
     if isinstance(
             _data['pattoo_datapoints']['key_value_pairs'], dict) is False:
         log.log2warning(1050, _log_message)
@@ -205,7 +205,7 @@ def _make_pattoo_db_record(item):
             pattoo_timestamp=item['pattoo_timestamp'],
             pattoo_data_type=item['pattoo_data_type'],
             pattoo_value=item['pattoo_value'],
-            pattoo_agent_polled_target=item['pattoo_agent_polled_target'], 
+            pattoo_agent_polled_target=item['pattoo_agent_polled_target'],
             pattoo_agent_program=item['pattoo_agent_program'],
             pattoo_agent_hostname=item['pattoo_agent_hostname'],
             pattoo_metadata=_keypairs(metadata)
