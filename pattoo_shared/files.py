@@ -276,6 +276,13 @@ def read_json_files(_directory, die=True, age=0, count=None):
     result = []
     processed = 0
 
+    # Set age
+    try:
+        age = float(age)
+    except:
+        age = 0
+
+    # Verify directory
     if os.path.isdir(_directory) is False:
         log_message = 'Directory "{}" doesn\'t exist!'.format(_directory)
         log.log2die(1009, log_message)

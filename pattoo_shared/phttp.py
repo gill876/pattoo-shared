@@ -173,17 +173,17 @@ class PassiveAgent(object):
                 try:
                     result = json.loads(u_handle.read().decode())
                 except:
-                    error = sys.exc_info()[:2]
+                    (etype, evalue, etraceback) = sys.exc_info()
                     log_message = (
-                        'Error reading JSON from URL {}: ({} {})'
-                        ''.format(url, error[0], error[1]))
+                        'Error reading JSON from URL {}: [{}, {}, {}]'
+                        ''.format(url, etype, evalue, etraceback))
                     log.log2info(1008, log_message)
         except:
             # Most likely no connectivity or the TCP port is unavailable
-            error = sys.exc_info()[:2]
+            (etype, evalue, etraceback) = sys.exc_info()
             log_message = (
-                'Error contacting URL {}: ({} {})'
-                ''.format(url, error[0], error[1]))
+                'Error contacting URL {}: [{}, {}, {}]'
+                ''.format(url, etype, evalue, etraceback))
             log.log2info(1186, log_message)
 
         # Return
@@ -316,7 +316,7 @@ Deleting corrupted cache file {} for identifier {}.\
                 os.remove(filepath)
 
                 # Log removal
-                log_message = ('''
+                log_message = ('''\
     Purging cache file {} after successfully contacting server {}\
     '''.format(filepath, url))
                 log.log2info(1007, log_message)
@@ -351,9 +351,9 @@ def _save_data(data, identifier):
         log_message = '{}'.format(err)
         log.log2warning(1030, log_message)
     except:
+        (etype, evalue, etraceback) = sys.exc_info()
         log_message = ('''\
-API Failure: [{}, {}, {}]\
-'''.format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2]))
+Cache-file save error: [{}, {}, {}]'''.format(etype, evalue, etraceback))
         log.log2warning(1031, log_message)
 
     # Delete file if there is a failure.

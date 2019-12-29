@@ -8,7 +8,7 @@ import datetime
 import time
 import getpass
 import logging
-
+import traceback
 
 # Define global variable
 LOGGER = {}
@@ -237,6 +237,55 @@ def log2die(code, message):
 
     """
     _logit(code, message, error=True)
+
+
+def log2exception_die(code, sys_exc_info, message=None):
+    """Log trace message to file and STDOUT, but don't die.
+
+    Args:
+        code: Message code
+        sys_exc_info: Tuple from exception from sys.exc_info
+        message: Descriptive error string        
+
+    Returns:
+        None
+
+    """
+    # Log
+    log2exception(code, sys_exc_info, message=message, die=True)
+
+
+def log2exception(code, sys_exc_info, message=None, die=False):
+    """Log trace message to file and STDOUT, but don't die.
+
+    Args:
+        code: Message code
+        sys_exc_info: Tuple from exception from sys.exc_info
+        die: Die if True
+
+    Returns:
+        None
+
+    """
+    # Initialize key variables
+    (exc_type, exc_value, exc_traceback) = sys_exc_info
+    log_message = ('''\
+Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
+'''.format(exc_type, exc_value, exc_traceback))
+    log2warning(code, log_message)
+    if bool(message) is True:
+        log2warning(code, message)
+
+    # Write trace to log file
+    from pattoo_shared.configuration import Config
+    config = Config()
+    log_file = config.log_file()
+    with open(log_file, 'a+') as _fh:
+        traceback.print_tb(exc_traceback, file=_fh)
+
+    # Die
+    if bool(die) is True:
+        log2die(code, log_message)
 
 
 def _logit(error_num, error_string, error=False, verbose=False, level='info'):
