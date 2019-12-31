@@ -192,7 +192,7 @@ def _make_pattoo_db_record(item):
     # Append to result
     if False not in valids:
         # Add the datasource to the original checksum for better uniqueness
-        checksum = _checksum(
+        checksum = datapoint_checksum(
             item['pattoo_agent_id'],
             item['pattoo_agent_polled_target'],
             item['pattoo_checksum'])
@@ -406,7 +406,7 @@ def _keypairs(_data):
     return result
 
 
-def _checksum(agent_id, target, datapoint_checksum):
+def datapoint_checksum(agent_id, target, datapoint_checksum):
     """Create a unique checksum for a DataPoint based on agent and target.
 
     Args:
