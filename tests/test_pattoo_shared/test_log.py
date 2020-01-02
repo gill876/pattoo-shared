@@ -95,6 +95,25 @@ class TestBasicFunctions(unittest.TestCase):
         with self.assertRaises(SystemExit):
             log.log2die(self.code, self.message)
 
+    def test_log2exception(self):
+        """Testing function log2exception."""
+        # Test
+        try:
+            float(None)
+        except:
+            _exception = sys.exc_info()
+        log.log2exception(self.code, _exception)
+
+    def test_log2exception_die(self):
+        """Testing function log2exception_die."""
+        # Test
+        try:
+            float(None)
+        except:
+            _exception = sys.exc_info()
+        with self.assertRaises(SystemExit):
+            log.log2exception_die(self.code, _exception)
+
     def test__logit(self):
         """Testing function _logit."""
         pass

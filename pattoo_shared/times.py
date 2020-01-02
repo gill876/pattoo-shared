@@ -54,7 +54,7 @@ def normalized_timestamp(_pi, timestamp=None):
     if isinstance(_pi, int) is False or (
             _pi is True or _pi is False):
         log_message = (
-            'Invalid non-integer value for {}'.format(_pi))
+            'Invalid non-integer "polling_interval" value of {}'.format(_pi))
         log.log2die(1029, log_message)
     else:
         polling_interval = abs(_pi)
