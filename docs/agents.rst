@@ -102,6 +102,19 @@ First create the necessary directories.
             os.environ['PATTOO_CONFIGDIR'] = 'PATTOO_CONFIGDIR=/tmp/pattoo/etc'
 
 #. Finally, you'll need to create a YAML configuration file named ``pattoo.yaml`` in the ``PATTOO_CONFIGDIR`` directory. The configuration must specify:
+    
+        .. code-block:: yaml
+
+            main:
+
+                log_directory: /tmp/pattoo/log
+                daemon_directory: /tmp/pattoo/daemon
+
+            polling:
+                polling_interval: 300
+                ip_address: pattoo.server.name
+                ip_bind_port: 20201
+
     #. ``main`` section:
         #. The logging directory with a ``log_directory`` entry.
         #. The daemon directory with a ``daemon_directory`` entry.
@@ -109,18 +122,6 @@ First create the necessary directories.
         #. A polling interval in seconds with ``polling_interval``. This should match the ``crontab`` interval for running the script, or the in the case of a daemon, the interval between polling cycles. Remember in the case of daemon if the polling takes 5 seconds to complete and the ``polling_interval`` is 300 seconds, then the wait time between the next poll should be 295 seconds.
         #. The IP address or fully qualified domain name of the ``pattoo`` server using the ``ip_address`` parameter.
         #. The TCP/IP port on which the ``pattoo`` server expects to receive agent data with the ``ip_bind_port`` parameter.
-
-            .. code-block:: yaml
-
-                main:
-
-                    log_directory: /tmp/pattoo/log
-                    daemon_directory: /tmp/pattoo/daemon
-
-                polling:
-                    polling_interval: 300
-                    ip_address: pattoo.server.name
-                    ip_bind_port: 20201
 
 
 Sample Agent Script
