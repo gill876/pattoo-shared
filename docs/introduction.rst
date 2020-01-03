@@ -52,7 +52,7 @@ Pattoo-Web
 The web front end for viewing ``pattoo`` agent data.
 
 * The `Pattoo Web documentation <https://pattoo-web.readthedocs.io/>`_ can be found here.
-* Visit the `Pattoo Agents GitHub site <https://github.com/PalisadoesFoundation/pattoo-web>`_ to see the code.
+* Visit the `Pattoo Web GitHub site <https://github.com/PalisadoesFoundation/pattoo-web>`_ to see the code.
 
 Pattoo-Shared
 ~~~~~~~~~~~~~

@@ -23,16 +23,17 @@ General information about the project, including the the prerequisite steps to g
    contributing
    introduction
 
-Package Classes
----------------
+Agents
+------
 
-General information about the classes used in the package.
+General information about agents and the classes used to process data in this package.
 
 .. toctree::
    :maxdepth: 2
    :caption: Package Classes:
 
    class_descriptions
+   agents
 
 Miscellaneous Information
 -------------------------
@@ -44,5 +45,4 @@ Technical background information on the project.
    :caption: Miscellaneous Information:
 
    troubleshooting
-   data
    glossary
