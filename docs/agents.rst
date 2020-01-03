@@ -8,7 +8,7 @@ The data has a standardized format. Both the data format and instructions on how
 JSON Formatting for pattoo-agents
 ---------------------------------
 
-Agents sends data as key-value pairs from multiple sources. Rather than repeating each key-value pair, there is a normalization process that eliminates duplication to reduce the amount of data that needs to be sent and stored in caches.
+Agents send data as key-value pairs from multiple sources. Rather than repeating each key-value pair, there is a normalization process that eliminates duplication to reduce the amount of data that needs to be sent and stored in caches.
 
 This is an example of what that data looks like:
 
