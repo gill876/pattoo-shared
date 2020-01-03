@@ -291,14 +291,21 @@ def read_json_files(_directory, die=True, age=0, count=None):
     for filename in sorted(os.listdir(_directory)):
         # Examine all the '.json' files in directory
         if filename.endswith('.json'):
-            # JSON files found
-            json_found = True
-
             # Read file and add to tuple list
             filepath = '{}{}{}'.format(_directory, os.sep, filename)
             fileage = time.time() - os.stat(filepath).st_mtime
             if fileage > age:
-                result.append((filepath, read_json_file(filepath, die=die)))
+                _data = read_json_file(filepath, die=die)
+                if bool(_data) is True:
+                    # JSON files found
+                    json_found = True
+                    result.append((filepath, _data))
+                else:
+                    # Ignore, don't update 'processed' value
+                    log_message = ('''\
+Error reading file {}. Ignoring.'''.format(filepath))
+                    log.log2debug(1013, log_message)
+                    continue
 
             # Stop if necessary
             processed += 1
@@ -311,7 +318,7 @@ def read_json_files(_directory, die=True, age=0, count=None):
     # properly
     if (json_found is False) and (bool(die) is True):
         log_message = (
-            'No JSON files found in directory "{}" with ".json" '
+            'No valid JSON files found in directory "{}" with ".json" '
             'extension.'.format(_directory))
         log.log2die_safe(1102, log_message)
 
@@ -337,10 +344,9 @@ def read_json_file(filepath, die=True):
             with open(filepath, 'r') as file_handle:
                 result = json.load(file_handle)
         except:
-            log_message = (
-                'Error reading file {}. Check permissions, '
-                'existence and file syntax.'
-                ''.format(filepath))
+            log_message = ('''\
+Error reading file {}. Check permissions, existence and file syntax.\
+'''.format(filepath))
             if bool(die) is True:
                 log.log2die_safe(1012, log_message)
             else:
