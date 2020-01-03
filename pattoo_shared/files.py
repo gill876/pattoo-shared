@@ -304,7 +304,7 @@ def read_json_files(_directory, die=True, age=0, count=None):
                     # Ignore, don't update 'processed' value
                     log_message = ('''\
 Error reading file {}. Ignoring.'''.format(filepath))
-                    log.log2debug(1013, log_message)
+                    log.log2debug(1053, log_message)
                     continue
 
             # Stop if necessary
