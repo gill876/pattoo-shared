@@ -4,11 +4,14 @@
 from time import time
 import socket
 import re
+import sys
 
 # pattoo imports
-from pattoo_shared import data
-from pattoo_shared import files
-from pattoo_shared import network
+from . import data
+from . import files
+from . import network
+from . import log
+from .configuration import Config
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
@@ -363,12 +366,12 @@ class AgentPolledData(object):
 
     """
 
-    def __init__(self, agent_program, config):
+    def __init__(self, agent_program, _config):
         """Initialize the class.
 
         Args:
             agent_program: Name of agent program collecting the data
-            config: Config object
+            config: Agent config object
 
         Returns:
             None
@@ -379,14 +382,22 @@ class AgentPolledData(object):
 
         """
         # Initialize key variables
+        config = Config()
         self.agent_program = agent_program
         self.agent_hostname = socket.getfqdn()
         self.agent_timestamp = int(time() * 1000)
         self.agent_id = files.get_agent_id(
             agent_program, self.agent_hostname, config)
-        self.agent_polling_interval = config.polling_interval() * 1000
         self.data = []
         self.valid = False
+        try:
+            self.agent_polling_interval = _config.polling_interval() * 1000
+        except:
+            _exception = sys.exc_info()
+            log_message = (
+                "Parameter 'polling_interval' not found in configuration.")
+            log.log2warning(1054, log_message)
+            log.log2exception_die(1055, _exception)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
