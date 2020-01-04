@@ -16,6 +16,8 @@ import argparse
 import ipaddress
 import multiprocessing
 import os
+from datetime import datetime
+
 
 # PIP3 libraries
 from gunicorn.app.base import BaseApplication
@@ -351,6 +353,7 @@ class _StandaloneApplication(BaseApplication):
     def load_config(self):
         """Load the configuration."""
         # Initialize key variables
+        now = datetime.now()
         config = dict([(key, value) for key, value in self.options.items()
                        if key in self.cfg.settings and value is not None])
 
@@ -359,9 +362,10 @@ class _StandaloneApplication(BaseApplication):
             self.cfg.set(key.lower(), value)
 
         # Print configuration dictionary settings
-        print('Agent {} - Pattoo Gunicorn configuration'.format(self.parent))
+        print('''{} Agent {} - Pattoo Gunicorn configuration\
+'''.format(now.strftime('%Y-%m-%d %H:%M:%S.%f'), self.parent))
         for name, value in self.cfg.settings.items():
-            print(' {} = {}'.format(name, value.get()))
+            print('  {} = {}'.format(name, value.get()))
 
     def load(self):
         """Run the Flask application throught the Gunicorn WSGI."""

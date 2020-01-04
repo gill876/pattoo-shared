@@ -37,7 +37,8 @@ class Config(object):
         # Expand linux ~ notation for home directories if provided.
         _config_directory = log.check_environment()
         config_directory = os.path.expanduser(_config_directory)
-        self._configuration = files.read_yaml_files(config_directory)
+        config_file = '{}{}pattoo.yaml'.format(config_directory, os.sep)
+        self._configuration = files.read_yaml_file(config_file)
 
     def polling_interval(self):
         """Get interval.
