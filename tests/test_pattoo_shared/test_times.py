@@ -95,6 +95,20 @@ class TestBasicFunctions(unittest.TestCase):
             polling_interval, timestamp=timestamp)
         self.assertEqual(result, 990)
 
+        # Test with boolean None values
+        timestamp = 900001
+        for polling_interval in [None, [], False, {}]:
+            result = times.normalized_timestamp(
+                polling_interval, timestamp=timestamp)
+            self.assertEqual(result, 900000)
+
+        # Test with non integer values
+        timestamp = 300
+        for polling_interval in ['1', [1]]:
+            with self.assertRaises(SystemExit):
+                times.normalized_timestamp(
+                    polling_interval, timestamp=timestamp)
+
     def test_timestamps(self):
         """Testing function timestamps."""
         # Test

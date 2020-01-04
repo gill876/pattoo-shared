@@ -44,20 +44,23 @@ def normalized_timestamp(_pi, timestamp=None):
 
     Args:
         timestamp: epoch timestamp in seconds
-        _pi: Polling interval for data
+        _pi: Polling interval for data. Defaults to assuming 300000 if absent.
 
     Returns:
         value: Normalized value
 
     """
     # Initialize key variables
-    if isinstance(_pi, int) is False or (
-            _pi is True or _pi is False):
-        log_message = (
-            'Invalid non-integer "polling_interval" value of {}'.format(_pi))
-        log.log2die(1029, log_message)
+    if bool(_pi) is True:
+        if isinstance(_pi, int) is False or (
+                _pi is True or _pi is False):
+            log_message = ('''\
+Invalid non-integer "polling_interval" value of {}'''.format(_pi))
+            log.log2die(1029, log_message)
+        else:
+            polling_interval = abs(_pi)
     else:
-        polling_interval = abs(_pi)
+        polling_interval = 300000
 
     # Don't allow 0 values for polling_interval
     if bool(polling_interval) is False:
