@@ -36,7 +36,7 @@ class Post(object):
         # Get posting URL
         self._data = data
         self._identifier = identifier
-        self._url = config.api_server_url(identifier)
+        self._url = config.agent_api_server_url(identifier)
 
     def post(self):
         """Post data to central server.

@@ -23,6 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import configuration
+from pattoo_shared import log
 from pattoo_shared.variables import PollingPoint
 from tests.libraries.configuration import UnittestConfig
 
@@ -49,50 +50,41 @@ class TestConfig(unittest.TestCase):
         result = self.config.language()
         self.assertEqual(result, expected)
 
-    def test_polling_interval(self):
-        """Testing function polling_interval."""
-        # Initialize key values
-        expected = 20
-
-        # Test
-        result = self.config.polling_interval()
-        self.assertEqual(result, expected)
-
-    def test_api_ip_address(self):
-        """Testing function api_ip_address."""
+    def test_agent_api_ip_address(self):
+        """Testing function agent_api_ip_address."""
         # Initialize key values
         expected = '127.0.0.6'
 
         # Test
-        result = self.config.api_ip_address()
+        result = self.config.agent_api_ip_address()
         self.assertEqual(result, expected)
 
-    def test_api_ip_bind_port(self):
-        """Testing function api_ip_bind_port."""
+    def test_agent_api_ip_bind_port(self):
+        """Testing function agent_api_ip_bind_port."""
         # Initialize key values
         expected = 50505
 
         # Test
-        result = self.config.api_ip_bind_port()
+        result = self.config.agent_api_ip_bind_port()
         self.assertEqual(result, expected)
 
-    def test_api_uri(self):
+    def test_agent_api_uri(self):
         """Testing function api_uri."""
         # Initialize key values
         expected = '/pattoo/api/v1/agent/receive'
 
         # Test
-        result = self.config.api_uri()
+        result = self.config.agent_api_uri()
         self.assertEqual(result, expected)
 
-    def test_api_server_url(self):
-        """Testing function api_server_url."""
+    def test_agent_api_server_url(self):
+        """Testing function agent_api_server_url."""
         # Initialize key values
         expected = 'http://127.0.0.6:50505/pattoo/api/v1/agent/receive/123'
         agent_id = 123
 
         # Test
-        result = self.config.api_server_url(agent_id)
+        result = self.config.agent_api_server_url(agent_id)
         self.assertEqual(result, expected)
 
     def test_web_api_ip_address(self):
@@ -179,6 +171,25 @@ class TestConfig(unittest.TestCase):
         result = self.config.agent_cache_directory(agent_id)
         self.assertEqual(result, expected)
 
+
+class TestBasicFunctions(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def test_agent_config_filename(self):
+        """Testing method / function agent_config_filename."""
+        # Test
+        agent_program = 'koala_bear'
+        _config_directory = log.check_environment()
+        config_directory = os.path.expanduser(_config_directory)
+        expected = (
+            '{}{}{}.yaml'.format(config_directory, os.sep, agent_program))
+        result = configuration.agent_config_filename(agent_program)
+        self.assertEqual(result, expected)
+
     def test_get_polling_points(self):
         """Testing function _polling_points."""
         # Initialize key values
@@ -190,21 +201,13 @@ class TestConfig(unittest.TestCase):
              'multiplier': 8}]
 
         # Test with good data
-        result = self.config.get_polling_points(data)
+        result = configuration.get_polling_points(data)
         self.assertTrue(isinstance(result, list))
         self.assertTrue(bool(result))
         for index, value in enumerate(result):
             self.assertTrue(isinstance(value, PollingPoint))
             self.assertEqual(value.address, oids[index])
             self.assertEqual(value.multiplier, 8)
-
-
-class TestBasicFunctions(unittest.TestCase):
-    """Checks all functions and methods."""
-
-    #########################################################################
-    # General object setup
-    #########################################################################
 
     def test_search(self):
         """Testing function search."""

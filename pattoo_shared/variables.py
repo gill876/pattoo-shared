@@ -4,11 +4,13 @@
 from time import time
 import socket
 import re
+import sys
 
 # pattoo imports
-from pattoo_shared import data
-from pattoo_shared import files
-from pattoo_shared import network
+from . import data
+from . import files
+from . import network
+from . import log
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
@@ -363,12 +365,12 @@ class AgentPolledData(object):
 
     """
 
-    def __init__(self, agent_program, config):
+    def __init__(self, agent_program, polling_interval):
         """Initialize the class.
 
         Args:
             agent_program: Name of agent program collecting the data
-            config: Config object
+            polling_interval: Polling interval
 
         Returns:
             None
@@ -382,11 +384,15 @@ class AgentPolledData(object):
         self.agent_program = agent_program
         self.agent_hostname = socket.getfqdn()
         self.agent_timestamp = int(time() * 1000)
-        self.agent_id = files.get_agent_id(
-            agent_program, self.agent_hostname, config)
-        self.agent_polling_interval = config.polling_interval() * 1000
         self.data = []
         self.valid = False
+        self.agent_polling_interval = polling_interval * 1000
+
+        # Get the agent_id
+        from .configuration import Config
+        config = Config()
+        self.agent_id = files.get_agent_id(
+            agent_program, self.agent_hostname, config)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.

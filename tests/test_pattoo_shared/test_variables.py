@@ -427,14 +427,15 @@ class TestAgentPolledData(unittest.TestCase):
         # Setup AgentPolledData variable
         agent_program = 'brown_bear'
         agent_hostname = socket.getfqdn()
-        apd = AgentPolledData(agent_program, self.config)
+        polling_interval = 20
+        apd = AgentPolledData(agent_program, polling_interval)
         agent_id = files.get_agent_id(
             agent_program, agent_hostname, self.config)
 
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
         self.assertEqual(
-            apd.agent_polling_interval, self.config.polling_interval() * 1000)
+            apd.agent_polling_interval, polling_interval * 1000)
         self.assertEqual(apd.agent_id, agent_id)
         self.assertEqual(apd.agent_program, agent_program)
         self.assertEqual(apd.agent_hostname, agent_hostname)
@@ -444,14 +445,15 @@ class TestAgentPolledData(unittest.TestCase):
         """Testing function __repr__."""
         # Setup AgentPolledData
         agent_program = 'brown_bear'
-        apd = AgentPolledData(agent_program, self.config)
+        polling_interval = 20
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Test
         expected = ('''\
 <AgentPolledData agent_id='{}' agent_program='brown_bear', \
 agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
 '''.format(apd.agent_id, apd.agent_hostname, apd.agent_timestamp,
-           self.config.polling_interval() * 1000))
+           polling_interval * 1000))
         result = apd.__repr__()
         self.assertEqual(result, expected)
 
@@ -459,7 +461,8 @@ agent_hostname='{}', timestamp={} polling_interval={}, valid=False>\
         """Testing function append."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        apd = AgentPolledData(agent_program, self.config)
+        polling_interval = 20
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize TargetDataPoints
         target = 'teddy_bear'

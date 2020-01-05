@@ -40,29 +40,7 @@ class Config(object):
         config_file = '{}{}pattoo.yaml'.format(config_directory, os.sep)
         self._configuration = files.read_yaml_file(config_file)
 
-    def polling_interval(self):
-        """Get interval.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        key = 'polling'
-        sub_key = 'polling_interval'
-        intermediate = search(key, sub_key, self._configuration, die=False)
-
-        # Default to 300
-        if bool(intermediate) is False:
-            result = 300
-        else:
-            result = abs(int(intermediate))
-        return result
-
-    def api_ip_address(self):
+    def agent_api_ip_address(self):
         """Get api_ip_address.
 
         Args:
@@ -73,7 +51,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'polling'
+        key = 'pattoo_agent_api'
         sub_key = 'ip_address'
 
         # Get result
@@ -82,8 +60,8 @@ class Config(object):
             result = 'localhost'
         return result
 
-    def api_ip_bind_port(self):
-        """Get api_ip_bind_port.
+    def agent_api_ip_bind_port(self):
+        """Get agent_api_ip_bind_port.
 
         Args:
             None
@@ -93,7 +71,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'polling'
+        key = 'pattoo_agent_api'
         sub_key = 'ip_bind_port'
 
         # Get result
@@ -104,8 +82,8 @@ class Config(object):
             result = int(intermediate)
         return result
 
-    def api_uri(self):
-        """Get api_uri.
+    def agent_api_uri(self):
+        """Get agent_api_uri.
 
         Args:
             None
@@ -118,7 +96,7 @@ class Config(object):
         result = '{}/receive'.format(PATTOO_API_AGENT_PREFIX)
         return result
 
-    def api_server_url(self, agent_id):
+    def agent_api_server_url(self, agent_id):
         """Get pattoo server's remote URL.
 
         Args:
@@ -129,10 +107,12 @@ class Config(object):
 
         """
         # Return
-        _ip = url.url_ip_address(self.api_ip_address())
+        _ip = url.url_ip_address(self.agent_api_ip_address())
         result = (
             'http://{}:{}{}/{}'.format(
-                _ip, self.api_ip_bind_port(), self.api_uri(), agent_id))
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_uri(), agent_id))
         return result
 
     def web_api_ip_address(self):
@@ -146,7 +126,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'pattoo'
+        key = 'pattoo_web_api'
         sub_key = 'ip_address'
 
         # Get result
@@ -164,7 +144,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'pattoo'
+        key = 'pattoo_web_api'
         sub_key = 'ip_bind_port'
 
         # Get result
@@ -213,7 +193,7 @@ class Config(object):
         # Get result
         sub_key = 'log_directory'
         result = None
-        key = 'main'
+        key = 'pattoo'
 
         # Get new result
         _result = search(key, sub_key, self._configuration)
@@ -288,7 +268,7 @@ class Config(object):
         """
         # Get result
         sub_key = 'log_level'
-        key = 'main'
+        key = 'pattoo'
         result = None
 
         # Return
@@ -310,7 +290,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'main'
+        key = 'pattoo'
         sub_key = 'cache_directory'
 
         # Get result
@@ -336,7 +316,7 @@ class Config(object):
 
         """
         # Initialize key variables
-        key = 'main'
+        key = 'pattoo'
         sub_key = 'daemon_directory'
 
         # Get result
@@ -381,7 +361,7 @@ class Config(object):
 
         """
         # Get result
-        key = 'main'
+        key = 'pattoo'
         sub_key = 'language'
         intermediate = search(key, sub_key, self._configuration, die=False)
 
@@ -392,45 +372,64 @@ class Config(object):
             result = str(intermediate).lower()
         return result
 
-    def get_polling_points(self, _data):
-        """Create list of PollingPoint objects.
 
-        Args:
-            _data: List of dicts with 'address' and 'multiplier' as keys
+def agent_config_filename(agent_program):
+    """Get the configuration file name.
 
-        Returns:
-            results: List of PollingPoint objects
+    Args:
+        agent_program: Agent program name
 
-        """
-        # Start conversion
-        results = []
+    Returns:
+        result: Name of file
 
-        if isinstance(_data, list) is True:
-            # Cycle through list
-            for item in _data:
-                # Default multiplier
-                multiplier = 1
+    """
+    # Get the configuration directory
+    # Expand linux ~ notation for home directories if provided.
+    _config_directory = log.check_environment()
+    config_directory = os.path.expanduser(_config_directory)
+    result = '{}{}{}.yaml'.format(config_directory, os.sep, agent_program)
+    return result
 
-                # Reject non dict data
-                if isinstance(item, dict) is False:
-                    continue
 
-                # Assign address value only if present
-                if 'address' in item:
-                    address = item['address']
-                else:
-                    continue
+def get_polling_points(_data):
+    """Create list of PollingPoint objects.
 
-                # Assign replacement multiplier
-                if 'multiplier' in item:
-                    multiplier = item['multiplier']
+    Args:
+        _data: List of dicts with 'address' and 'multiplier' as keys
 
-                # Populate result
-                result = PollingPoint(address=address, multiplier=multiplier)
-                results.append(result)
+    Returns:
+        results: List of PollingPoint objects
 
-        # Return
-        return results
+    """
+    # Start conversion
+    results = []
+
+    if isinstance(_data, list) is True:
+        # Cycle through list
+        for item in _data:
+            # Default multiplier
+            multiplier = 1
+
+            # Reject non dict data
+            if isinstance(item, dict) is False:
+                continue
+
+            # Assign address value only if present
+            if 'address' in item:
+                address = item['address']
+            else:
+                continue
+
+            # Assign replacement multiplier
+            if 'multiplier' in item:
+                multiplier = item['multiplier']
+
+            # Populate result
+            result = PollingPoint(address=address, multiplier=multiplier)
+            results.append(result)
+
+    # Return
+    return results
 
 
 def search(key, sub_key, config_dict, die=True):
