@@ -13,7 +13,227 @@ from pattoo_shared.constants import (
 from pattoo_shared.variables import PollingPoint
 
 
-class Config(object):
+class _Config(object):
+    """Class gathers all configuration information.
+
+    Only processes the following YAML keys in the configuration file:
+
+        main:
+        remote_api:
+
+    """
+
+    def __init__(self, filename):
+        """Initialize the class.
+
+        Args:
+            filename: Name of file to read
+
+        Returns:
+            None
+
+        """
+        # Get the configuration directory
+        # Expand linux ~ notation for home directories if provided.
+        _config_directory = log.check_environment()
+        config_directory = os.path.expanduser(_config_directory)
+        config_file = '{}{}{}'.format(config_directory, os.sep, filename)
+        self._configuration = files.read_yaml_file(config_file)
+
+    def log_directory(self):
+        """Get log_directory.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        sub_key = 'log_directory'
+        result = None
+        key = 'pattoo'
+
+        # Get new result
+        _result = search(key, sub_key, self._configuration)
+
+        # Expand linux ~ notation for home directories if provided.
+        result = os.path.expanduser(_result)
+
+        # Check if value exists. We cannot use log2die_safe as it does not
+        # require a log directory location to work properly
+        if os.path.isdir(result) is False:
+            log_message = (
+                'log_directory: "{}" '
+                'in configuration doesn\'t exist!'.format(result))
+            log.log2die_safe(1003, log_message)
+
+        # Return
+        return result
+
+    def log_file(self):
+        """Get log_file.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        _log_directory = self.log_directory()
+        result = '{}{}pattoo.log'.format(_log_directory, os.sep)
+        return result
+
+    def log_file_api(self):
+        """Get log_file_api.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        _log_directory = self.log_directory()
+        result = '{}{}pattoo-api.log'.format(_log_directory, os.sep)
+        return result
+
+    def log_file_daemon(self):
+        """Get log_file_daemon.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        _log_directory = self.log_directory()
+        result = '{}{}pattoo-daemon.log'.format(_log_directory, os.sep)
+        return result
+
+    def log_level(self):
+        """Get log_level.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        sub_key = 'log_level'
+        key = 'pattoo'
+        result = None
+
+        # Return
+        intermediate = search(key, sub_key, self._configuration, die=False)
+        if intermediate is None:
+            result = 'debug'
+        else:
+            result = '{}'.format(intermediate).lower()
+        return result
+
+    def cache_directory(self):
+        """Determine the cache_directory.
+
+        Args:
+            None
+
+        Returns:
+            value: configured cache_directory
+
+        """
+        # Initialize key variables
+        key = 'pattoo'
+        sub_key = 'cache_directory'
+
+        # Get result
+        _value = search(key, sub_key, self._configuration)
+
+        # Expand linux ~ notation for home directories if provided.
+        value = os.path.expanduser(_value)
+
+        # Create directory if it doesn't exist
+        files.mkdir(value)
+
+        # Return
+        return value
+
+    def agent_cache_directory(self, agent_program):
+        """Get agent_cache_directory.
+
+        Args:
+            agent_program: Name of agent
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        result = '{}/{}'.format(self.cache_directory(), agent_program)
+
+        # Create directory if it doesn't exist
+        files.mkdir(result)
+
+        # Return
+        return result
+
+    def daemon_directory(self):
+        """Determine the daemon_directory.
+
+        Args:
+            None
+
+        Returns:
+            value: configured daemon_directory
+
+        """
+        # Initialize key variables
+        key = 'pattoo'
+        sub_key = 'daemon_directory'
+
+        # Get result
+        _value = search(key, sub_key, self._configuration)
+
+        # Expand linux ~ notation for home directories if provided.
+        value = os.path.expanduser(_value)
+
+        # Create directory if it doesn't exist
+        files.mkdir(value)
+
+        # Return
+        return value
+
+    def language(self):
+        """Get language.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        key = 'pattoo'
+        sub_key = 'language'
+        intermediate = search(key, sub_key, self._configuration, die=False)
+
+        # Default to 'en'
+        if bool(intermediate) is False:
+            result = 'en'
+        else:
+            result = str(intermediate).lower()
+        return result
+
+
+class Config(_Config):
     """Class gathers all configuration information.
 
     Only processes the following YAML keys in the configuration file:
@@ -33,12 +253,8 @@ class Config(object):
             None
 
         """
-        # Get the configuration directory
-        # Expand linux ~ notation for home directories if provided.
-        _config_directory = log.check_environment()
-        config_directory = os.path.expanduser(_config_directory)
-        config_file = '{}{}pattoo.yaml'.format(config_directory, os.sep)
-        self._configuration = files.read_yaml_file(config_file)
+        # Get the configuration
+        _Config.__init__(self, 'pattoo.yaml')
 
     def agent_api_ip_address(self):
         """Get api_ip_address.
@@ -178,198 +394,6 @@ class Config(object):
                 _ip,
                 self.web_api_ip_bind_port(),
                 PATTOO_API_WEB_PREFIX, suffix))
-        return result
-
-    def log_directory(self):
-        """Get log_directory.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        sub_key = 'log_directory'
-        result = None
-        key = 'pattoo'
-
-        # Get new result
-        _result = search(key, sub_key, self._configuration)
-
-        # Expand linux ~ notation for home directories if provided.
-        result = os.path.expanduser(_result)
-
-        # Check if value exists. We cannot use log2die_safe as it does not
-        # require a log directory location to work properly
-        if os.path.isdir(result) is False:
-            log_message = (
-                'log_directory: "{}" '
-                'in configuration doesn\'t exist!'.format(result))
-            log.log2die_safe(1003, log_message)
-
-        # Return
-        return result
-
-    def log_file(self):
-        """Get log_file.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        _log_directory = self.log_directory()
-        result = '{}{}pattoo.log'.format(_log_directory, os.sep)
-        return result
-
-    def log_file_api(self):
-        """Get log_file_api.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        _log_directory = self.log_directory()
-        result = '{}{}pattoo-api.log'.format(_log_directory, os.sep)
-        return result
-
-    def log_file_daemon(self):
-        """Get log_file_daemon.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        _log_directory = self.log_directory()
-        result = '{}{}pattoo-daemon.log'.format(_log_directory, os.sep)
-        return result
-
-    def log_level(self):
-        """Get log_level.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        sub_key = 'log_level'
-        key = 'pattoo'
-        result = None
-
-        # Return
-        intermediate = search(key, sub_key, self._configuration, die=False)
-        if intermediate is None:
-            result = 'debug'
-        else:
-            result = '{}'.format(intermediate).lower()
-        return result
-
-    def cache_directory(self):
-        """Determine the cache_directory.
-
-        Args:
-            None
-
-        Returns:
-            value: configured cache_directory
-
-        """
-        # Initialize key variables
-        key = 'pattoo'
-        sub_key = 'cache_directory'
-
-        # Get result
-        _value = search(key, sub_key, self._configuration)
-
-        # Expand linux ~ notation for home directories if provided.
-        value = os.path.expanduser(_value)
-
-        # Create directory if it doesn't exist
-        files.mkdir(value)
-
-        # Return
-        return value
-
-    def daemon_directory(self):
-        """Determine the daemon_directory.
-
-        Args:
-            None
-
-        Returns:
-            value: configured daemon_directory
-
-        """
-        # Initialize key variables
-        key = 'pattoo'
-        sub_key = 'daemon_directory'
-
-        # Get result
-        _value = search(key, sub_key, self._configuration)
-
-        # Expand linux ~ notation for home directories if provided.
-        value = os.path.expanduser(_value)
-
-        # Create directory if it doesn't exist
-        files.mkdir(value)
-
-        # Return
-        return value
-
-    def agent_cache_directory(self, agent_program):
-        """Get agent_cache_directory.
-
-        Args:
-            agent_program: Name of agent
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        result = '{}/{}'.format(self.cache_directory(), agent_program)
-
-        # Create directory if it doesn't exist
-        files.mkdir(result)
-
-        # Return
-        return result
-
-    def language(self):
-        """Get language.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Get result
-        key = 'pattoo'
-        sub_key = 'language'
-        intermediate = search(key, sub_key, self._configuration, die=False)
-
-        # Default to 'en'
-        if bool(intermediate) is False:
-            result = 'en'
-        else:
-            result = str(intermediate).lower()
         return result
 
 
