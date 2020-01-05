@@ -102,7 +102,7 @@ First create the necessary directories.
             os.environ['PATTOO_CONFIGDIR'] = 'PATTOO_CONFIGDIR=/tmp/pattoo/etc'
 
 #. Finally, you'll need to create a YAML configuration file named ``pattoo.yaml`` in the ``PATTOO_CONFIGDIR`` directory. The configuration must specify:
-    
+
         .. code-block:: yaml
 
             main:
@@ -143,6 +143,11 @@ We'll refer to ``SITE_A`` and ``WORK_1`` as ``targets`` in the code snippet belo
 
     def main():
 
+        # Define the polling interval in seconds (integer).
+        # Scripts must be run at regular intervals and the polling_interval
+        # should be automatically provided to the main() function.
+        polling_interval = 20
+
         # Let's assume the script has already received this data from SITE_A
         site_a_data = [
             ['ABC', 123.456],
@@ -156,7 +161,7 @@ We'll refer to ``SITE_A`` and ``WORK_1`` as ``targets`` in the code snippet belo
         ]
 
         # Setup AgentPolledData
-        agent = AgentPolledData('LAVA_SCRIPT', Config())
+        agent = AgentPolledData('LAVA_SCRIPT', polling_interval)
 
         # Create target objects for SITE_A
         target = TargetDataPoints('SITE_A')

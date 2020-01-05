@@ -132,7 +132,8 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function agentdata_to_datapoints."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        apd = AgentPolledData(agent_program, self.config)
+        polling_interval = 20
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize TargetDataPoints
         target = 'teddy_bear'
@@ -233,8 +234,8 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method / function agentdata_to_post."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
-        polling_interval = self.config.polling_interval()
-        apd = AgentPolledData(agent_program, self.config)
+        polling_interval = 20
+        apd = AgentPolledData(agent_program, polling_interval)
 
         # Initialize TargetDataPoints
         target = 'teddy_bear'
@@ -281,7 +282,7 @@ class TestBasicFunctions(unittest.TestCase):
         value = '_value'
         datapoints = [DataPoint(key, value)]
         source = '1234'
-        polling_interval = self.config.polling_interval()
+        polling_interval = 20
         result = converter.datapoints_to_post(
             source, polling_interval, datapoints)
 
@@ -300,7 +301,7 @@ class TestBasicFunctions(unittest.TestCase):
         value = '_value'
         datapoints = [DataPoint(key, value)]
         source = '1234'
-        polling_interval = self.config.polling_interval()
+        polling_interval = 20
         pdp = converter.datapoints_to_post(
             source, polling_interval, datapoints)
         result = converter.posting_data_points(pdp)

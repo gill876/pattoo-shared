@@ -47,14 +47,12 @@ class UnittestConfig(object):
                 'language': 'xyz',
                 'cache_directory': self._cache_directory,
                 'daemon_directory': self._daemon_directory,
-                'polling_interval': 20
             },
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.6',
                 'ip_bind_port': 50505,
-                'polling_interval': 20
             },
-            'pattoo': {
+            'pattoo_web_api': {
                 'ip_address': '127.0.0.3',
                 'ip_bind_port': 30303,
             }

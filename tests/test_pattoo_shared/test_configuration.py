@@ -23,6 +23,7 @@ directory. Please fix.''')
 
 # Pattoo imports
 from pattoo_shared import configuration
+from pattoo_shared import log
 from pattoo_shared.variables import PollingPoint
 from tests.libraries.configuration import UnittestConfig
 
@@ -177,6 +178,17 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
     # General object setup
     #########################################################################
+
+    def test_agent_config_filename(self):
+        """Testing method / function agent_config_filename."""
+        # Test
+        agent_program = 'koala_bear'
+        _config_directory = log.check_environment()
+        config_directory = os.path.expanduser(_config_directory)
+        expected = (
+            '{}{}{}.yaml'.format(config_directory, os.sep, agent_program))
+        result = configuration.agent_config_filename(agent_program)
+        self.assertEqual(result, expected)
 
     def test_get_polling_points(self):
         """Testing function _polling_points."""

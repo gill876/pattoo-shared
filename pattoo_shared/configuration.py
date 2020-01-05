@@ -373,6 +373,24 @@ class Config(object):
         return result
 
 
+def agent_config_filename(agent_program):
+    """Get the configuration file name.
+
+    Args:
+        agent_program: Agent program name
+
+    Returns:
+        result: Name of file
+
+    """
+    # Get the configuration directory
+    # Expand linux ~ notation for home directories if provided.
+    _config_directory = log.check_environment()
+    config_directory = os.path.expanduser(_config_directory)
+    result = '{}{}{}.yaml'.format(config_directory, os.sep, agent_program)
+    return result
+
+
 def get_polling_points(_data):
     """Create list of PollingPoint objects.
 
