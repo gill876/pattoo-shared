@@ -4,13 +4,11 @@
 from time import time
 import socket
 import re
-import sys
 
 # pattoo imports
 from . import data
 from . import files
 from . import network
-from . import log
 from .constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
@@ -33,6 +31,7 @@ class Metadata(object):
         # Initialize variables
         self.key = key
         self.value = value
+        self.update_checksum = True
 
     def __repr__(self):
         """Return a representation of the attributes of the class.
@@ -54,12 +53,19 @@ class Metadata(object):
 class ConverterMetadata(Metadata):
     """Metadata related to a Converter DataPoint."""
 
-    def __init__(self, key, value):
+    def __init__(self, key, value, update_checksum=True):
         """Initialize the class.
 
         Args:
             key: Metadata key
             value: Metadata value
+            update_checksum: When True, the Datapoint object will update its
+                checksum using the metadata values of objects created with this
+                class. The DataPoint checksums are used to create new database
+                entries. Not all metadata changes should trigger the creation
+                of a new datapoint for charting. The updating of an operating
+                system kernel version as metadata may not necessarily mean a
+                completely new data source.
 
         Returns:
             None
@@ -74,6 +80,7 @@ class ConverterMetadata(Metadata):
         Metadata.__init__(self, key, value)
 
         # Initialize variables
+        self.update_checksum = bool(update_checksum)
         (self.key, self.value, self.valid) = _key_value_valid(
             key, value, metadata=True, override=True)
 
@@ -87,12 +94,19 @@ class ConverterMetadata(Metadata):
 class DataPointMetadata(Metadata):
     """Metadata related to a Regular DataPoint."""
 
-    def __init__(self, key, value):
+    def __init__(self, key, value, update_checksum=True):
         """Initialize the class.
 
         Args:
             key: Metadata key
             value: Metadata value
+            update_checksum: When True, the Datapoint object will update its
+                checksum using the metadata values of objects created with this
+                class. The DataPoint checksums are used to create new database
+                entries. Not all metadata changes should trigger the creation
+                of a new datapoint for charting. The updating of an operating
+                system kernel version as metadata may not necessarily mean a
+                completely new data source.
 
         Returns:
             None
@@ -105,6 +119,7 @@ class DataPointMetadata(Metadata):
         """
         # Inherit object
         Metadata.__init__(self, key, value)
+        self.update_checksum = bool(update_checksum)
 
         # Initialize variables
         (self.key, self.value, self.valid) = _key_value_valid(
@@ -238,8 +253,9 @@ class DataPoint(object):
                 if item.key not in self._metakeys:
                     self.metadata[item.key] = item.value
                     self._metakeys.append(item.key)
-                    self.checksum = data.hashstring(
-                        '{}{}{}'.format(self.checksum, item.key, item.value))
+                    if bool(item.update_checksum) is True:
+                        self.checksum = data.hashstring('''\
+{}{}{}'''.format(self.checksum, item.key, item.value))
 
 
 class PostingDataPoints(object):

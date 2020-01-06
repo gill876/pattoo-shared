@@ -333,14 +333,61 @@ timestamp={}, valid=True>'''.format(variable.timestamp))
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
 
+        # Test adding
         for key, value in [(1, 2), (3, 4), (5, 6)]:
             metadata = DataPointMetadata(key, value)
             variable.add(metadata)
             self.assertEqual(variable.metadata[str(key)], str(value))
 
+        self.assertEqual(len(variable.metadata), 3)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
 73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
+
+        # Test adding duplicates (no change)
+        for key, value in [(1, 2), (3, 4), (5, 6)]:
+            metadata = DataPointMetadata(key, value)
+            variable.add(metadata)
+            self.assertEqual(variable.metadata[str(key)], str(value))
+
+        self.assertEqual(len(variable.metadata), 3)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
+
+        # Test adding with now update_checksum set to False. No change
+        for key, value in [(10, 20), (30, 40), (50, 60)]:
+            metadata = DataPointMetadata(key, value, update_checksum=False)
+            variable.add(metadata)
+            self.assertEqual(variable.metadata[str(key)], str(value))
+
+        self.assertEqual(len(variable.metadata), 6)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
+
+        # Test adding with now update_checksum set to True. No change,
+        # as they have been added already.
+        for key, value in [(10, 20), (30, 40), (50, 60)]:
+            metadata = DataPointMetadata(key, value, update_checksum=True)
+            variable.add(metadata)
+            self.assertEqual(variable.metadata[str(key)], str(value))
+
+        self.assertEqual(len(variable.metadata), 6)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+73ce7225ca1ea55f53c96991c9922a185cf695224b94f2051b8a853049ba1935''')
+
+        # Test adding with now update_checksum set to True
+        for key, value in [(11, 21), (31, 41), (51, 61)]:
+            metadata = DataPointMetadata(key, value, update_checksum=True)
+            variable.add(metadata)
+            self.assertEqual(variable.metadata[str(key)], str(value))
+
+        self.assertEqual(len(variable.metadata), 9)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+2518ce8c9dc0683ef87a6a438c8c79c2ae3fd8ffd38032b6c1d253057d04c8f7''')
 
 
 class TestTargetDataPoints(unittest.TestCase):
@@ -388,18 +435,18 @@ class TestTargetDataPoints(unittest.TestCase):
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
 
-        # Test add
+        # Test adding invalid value
         ddv.add(None)
         self.assertEqual(ddv.data, [])
 
-        # Test addding variable
+        # Test adding variable
         ddv.add(variable)
         self.assertTrue(bool(ddv.data))
         self.assertTrue(isinstance(ddv.data, list))
         self.assertEqual(len(ddv.data), 1)
         checksum = ddv.data[0].checksum
 
-        # Test addding duplicate variable
+        # Test adding duplicate variable (There should be no changes)
         ddv.add(variable)
         self.assertTrue(bool(ddv.data))
         self.assertTrue(isinstance(ddv.data, list))
