@@ -6,7 +6,6 @@ import unittest
 import os
 import sys
 from time import sleep
-from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -263,11 +262,22 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue('datapoint_pairs' in result.pattoo_datapoints)
         self.assertTrue('key_value_pairs' in result.pattoo_datapoints)
         self.assertTrue(isinstance(item, dict))
-        self.assertEqual(item[3], ('pattoo_agent_polling_interval', '20000'))
-        self.assertEqual(item[4], ('pattoo_agent_program', 'panda_bear'))
-        self.assertEqual(item[5], ('pattoo_key', 'gummy_bear'))
-        self.assertEqual(item[6], ('pattoo_data_type', 99))
-        self.assertEqual(item[7], ('pattoo_value', 457))
+
+        # Convert item to a list of tuples for ease of testing
+        tester = [(k, v) for k, v in sorted(item.items())]
+        self.assertEqual(
+            tester[0],
+            (0, ('pattoo_agent_polling_interval', '20000')))
+
+        self.assertEqual(
+            tester[3:8],
+            [
+                (3, ('pattoo_agent_polled_target', 'teddy_bear')),
+                (4, ('pattoo_agent_program', 'panda_bear')),
+                (5, ('pattoo_key', 'gummy_bear')),
+                (6, ('pattoo_data_type', 99)),
+                (7, ('pattoo_value', 457))]
+        )
 
         # Test the pointers to the key value pairs
         item = result.pattoo_datapoints['datapoint_pairs']
