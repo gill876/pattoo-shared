@@ -243,15 +243,21 @@ def agentdata_to_datapoints(agentdata):
             for _dv in ddv.data:
                 # Assign values to DataPoints
                 metadata = {
-                    'pattoo_agent_id': agentdata.agent_id,
-                    'pattoo_agent_program': agentdata.agent_program,
-                    'pattoo_agent_hostname': agentdata.agent_hostname,
-                    'pattoo_agent_polled_target': ddv.target,
-                    'pattoo_agent_polling_interval': (
-                        agentdata.agent_polling_interval)
+                    True: {
+                        'pattoo_agent_id': agentdata.agent_id,
+                        'pattoo_agent_program': agentdata.agent_program,
+                        'pattoo_agent_hostname': agentdata.agent_hostname,
+                        'pattoo_agent_polled_target': ddv.target,
+                    },
+                    False: {
+                        'pattoo_agent_polling_interval': (
+                            agentdata.agent_polling_interval)
+                        }
                 }
-                for key, value in sorted(metadata.items()):
-                    _dv.add(ConverterMetadata(key, value))
+                for update_checksum, items in sorted(metadata.items()):
+                    for key, value in sorted(items.items()):
+                        _dv.add(ConverterMetadata(
+                            key, value, update_checksum=update_checksum))
                 rows.append(_dv)
 
     # Return
