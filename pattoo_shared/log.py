@@ -222,7 +222,7 @@ def log2see(code, message):
 
     """
     # Log to screen and file
-    _logit(code, message, error=False)
+    _logit(code, message, verbose=True, error=False)
 
 
 def log2die(code, message):
@@ -245,7 +245,7 @@ def log2exception_die(code, sys_exc_info, message=None):
     Args:
         code: Message code
         sys_exc_info: Tuple from exception from sys.exc_info
-        message: Descriptive error string        
+        message: Descriptive error string
 
     Returns:
         None
