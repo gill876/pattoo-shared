@@ -127,65 +127,12 @@ First create the necessary directories.
 Sample Agent Script
 ^^^^^^^^^^^^^^^^^^^
 
-We'll refer to ``SITE_A`` and ``WORK_1`` as ``targets`` in the code snippet below.
+There are two sample scripts in the ``examples/bin`` directory. `You can find them here on GitHub <https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_
 
-.. code-block:: python
-
-    #!/usr/bin/env python3
-
-    # Import from the PattooShared library
-    from pattoo_shared.constants import DATA_FLOAT
-    from pattoo_shared.configuration import Config
-    from pattoo_shared.phttp import PostAgent
-    from pattoo_shared.variables import (
-        DataPoint, TargetDataPoints, AgentPolledData)
-
-
-    def main():
-
-        # Define the polling interval in seconds (integer).
-        # Scripts must be run at regular intervals and the polling_interval
-        # should be automatically provided to the main() function.
-        polling_interval = 20
-
-        # Let's assume the script has already received this data from SITE_A
-        site_a_data = [
-            ['ABC', 123.456],
-            ['DEF', 456.789]
-        ]
-
-        # Let's assume the script has already received this data from WORK_1
-        work_1_data = [
-            ['GHI', 654.321],
-            ['JKL', 987.654]
-        ]
-
-        # Setup AgentPolledData
-        agent = AgentPolledData('LAVA_SCRIPT', polling_interval)
-
-        # Create target objects for SITE_A
-        target = TargetDataPoints('SITE_A')
-        for quote in site_a_data:
-            key, value = quote
-            target.add(DataPoint(key, value, data_type=DATA_FLOAT))
-        agent.add(target)
-
-        # Create target objects for WORK_1
-        target = TargetDataPoints('WORK_1')
-        for quote in work_1_data:
-            key, value = quote
-            target.add(DataPoint(key, value, data_type=DATA_FLOAT))
-        agent.add(target)
-
-        # Post the data to pattoo
-        post = PostAgent(agent)
-        post.post()
-
-
-    if __name__ == "__main__":
-        main()
+1. ``sample_agent.py`` which will post data to the ``pattoo`` server only once when run.
+1. ``sample_agent_daemon.py`` which will run as a daemon, periodically posting data to the ``pattoo`` server.
 
 Customizing the Agent Configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In our example script we have not mentioned how the data was obtained. One way would be to add your own custom parameters to a configuration file in the ``PATTOO_CONFIGDIR`` directory. Make sure the file isn't named ``pattoo.yaml`` as this is the file ``pattoo`` uses for its own configuration. Do not inherit the ``pattoo_shared.configuration.Config`` class as this may be subject to change.
+In our example scripts we have not mentioned how the data was obtained. One way would be to add your own custom parameters to a configuration file in the ``PATTOO_CONFIGDIR`` directory. Make sure the file isn't named ``pattoo.yaml`` as this is the file ``pattoo`` uses for its own configuration. Do not inherit the ``pattoo_shared.configuration.Config`` class as this may be subject to change.
