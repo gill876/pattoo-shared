@@ -430,9 +430,6 @@ def get_polling_points(_data):
     if isinstance(_data, list) is True:
         # Cycle through list
         for item in _data:
-            # Default multiplier
-            multiplier = 1
-
             # Reject non dict data
             if isinstance(item, dict) is False:
                 continue
@@ -444,8 +441,7 @@ def get_polling_points(_data):
                 continue
 
             # Assign replacement multiplier
-            if 'multiplier' in item:
-                multiplier = item['multiplier']
+            multiplier = item.get('multiplier', 1)
 
             # Populate result
             result = PollingPoint(address=address, multiplier=multiplier)
