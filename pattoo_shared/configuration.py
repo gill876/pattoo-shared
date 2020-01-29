@@ -13,7 +13,7 @@ from pattoo_shared.constants import (
 from pattoo_shared.variables import PollingPoint
 
 
-class _Config(object):
+class BaseConfig(object):
     """Class gathers all configuration information.
 
     Only processes the following YAML keys in the configuration file:
@@ -235,7 +235,7 @@ class _Config(object):
         return result
 
 
-class Config(_Config):
+class Config(BaseConfig):
     """Class gathers all configuration information."""
 
     def __init__(self):
@@ -249,7 +249,7 @@ class Config(_Config):
 
         """
         # Get the configuration
-        _Config.__init__(self, 'pattoo.yaml')
+        BaseConfig.__init__(self, 'pattoo.yaml')
 
     def agent_api_ip_address(self):
         """Get api_ip_address.

@@ -23,37 +23,42 @@ from datetime import datetime
 from gunicorn.app.base import BaseApplication
 
 # Pattoo libraries
-from pattoo_shared import daemon
+from pattoo_shared.daemon import Daemon
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
+from pattoo_shared.variables import AgentAPIVariable
 
 
 class Agent(object):
     """Agent class for daemons."""
 
-    def __init__(self, parent, child=None):
+    def __init__(self, parent, child=None, config=None):
         """Initialize the class.
 
         Args:
             parent: Name of parent daemon
             child: Name of child daemon
+            config: Config object
 
         Returns:
             None
 
         """
         # Initialize key variables (Parent)
-        config = Config()
+        if config is None:
+            self.config = Config()
+        else:
+            self.config = config
         self.parent = parent
-        self.pidfile_parent = files.pid_file(parent, config)
-        self.lockfile_parent = files.lock_file(parent, config)
+        self.pidfile_parent = files.pid_file(parent, self.config)
+        self.lockfile_parent = files.lock_file(parent, self.config)
 
         # Initialize key variables (Child)
         if bool(child) is None:
             self._pidfile_child = None
         else:
-            self._pidfile_child = files.pid_file(child, config)
+            self._pidfile_child = files.pid_file(child, self.config)
 
     def name(self):
         """Return agent name.
@@ -75,7 +80,7 @@ class Agent(object):
         pass
 
 
-class AgentDaemon(daemon.Daemon):
+class AgentDaemon(Daemon):
     """Class that manages agent deamonization."""
 
     def __init__(self, agent):
@@ -92,7 +97,7 @@ class AgentDaemon(daemon.Daemon):
         self.agent = agent
 
         # Call up the base daemon
-        daemon.Daemon.__init__(self, agent)
+        Daemon.__init__(self, agent)
 
     def run(self):
         """Start polling.
@@ -247,23 +252,31 @@ class AgentAPI(Agent):
 
     """
 
-    def __init__(self, parent, child, agent_api_variable, app):
+    def __init__(self, parent, child, app, config=None):
         """Initialize the class.
 
         Args:
             parent: Name of parent daemon
             child: Name of child daemon
-            agent_api_variable: AgentAPIVariable object
             app: Flask App
+            config: Config object
 
         Returns:
             None
 
         """
         # Initialize key variables
-        Agent.__init__(self, parent, child)
+        if config is None:
+            _config = Config()
+        else:
+            _config = config
+
+        # Apply inheritance
+        Agent.__init__(self, parent, child=child, config=_config)
         self._app = app
-        self._agent_api_variable = agent_api_variable
+        self._agent_api_variable = AgentAPIVariable(
+            ip_bind_port=_config.ip_bind_port(),
+            ip_listen_address=_config.ip_listen_address())
 
     def query(self):
         """Query all remote targets for data.
@@ -275,9 +288,6 @@ class AgentAPI(Agent):
             None
 
         """
-        # Initialize key variables
-        config = Config()
-
         # Check for lock and pid files
         if os.path.exists(self.lockfile_parent) is True:
             log_message = ('''\
@@ -305,11 +315,11 @@ fix.'''.format(self.pidfile_parent))
         ######################################################################
         options = {
             'bind': _ip_binding(self._agent_api_variable),
-            'accesslog': config.log_file_api(),
-            'errorlog': config.log_file_api(),
+            'accesslog': self.config.log_file_api(),
+            'errorlog': self.config.log_file_api(),
             'capture_output': True,
             'pidfile': self._pidfile_child,
-            'loglevel': config.log_level(),
+            'loglevel': self.config.log_level(),
             'workers': _number_of_workers(),
             'umask': 0o0007,
         }
@@ -321,7 +331,7 @@ fix.'''.format(self.pidfile_parent))
             ''.format(
                 self._agent_api_variable.ip_listen_address,
                 self._agent_api_variable.ip_bind_port,
-                config.log_file_api()))
+                self.config.log_file_api()))
         log.log2info(1022, log_message)
 
         # Run

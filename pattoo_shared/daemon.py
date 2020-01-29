@@ -9,7 +9,6 @@ import time
 
 # Pattoo imports
 from pattoo_shared import log
-from pattoo_shared.configuration import Config
 
 
 class Daemon(object):
@@ -34,7 +33,7 @@ class Daemon(object):
         self.name = agent.name()
         self.pidfile = agent.pidfile_parent
         self.lockfile = agent.lockfile_parent
-        self._config = Config()
+        self._config = agent.config
 
     def _daemonize(self):
         """Deamonize class. UNIX double fork mechanism.
