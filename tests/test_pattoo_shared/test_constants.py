@@ -75,7 +75,7 @@ class TestConstants(unittest.TestCase):
 
         # Test pattoo API constants
         self.assertEqual(
-            PATTOO_WEB_SITE_PREFIX, '/pattoo/web')
+            PATTOO_WEB_SITE_PREFIX, '/pattoo')
 
         # Test pattoo API constants
         self.assertEqual(
