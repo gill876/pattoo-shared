@@ -21,7 +21,7 @@ setuptools.setup(
     maintainer_email='peter@palisadoes.org',
 
     # The license can be anything you like
-    license='MIT',
+    license='GPLv3+',
 
     # Automatically find the required package dependencies
     packages=setuptools.find_packages(),
@@ -32,8 +32,8 @@ setuptools.setup(
     long_description_content_type='text/x-rst',
 
     # Minium python version
-    python_requires='>=3.5',
+    python_requires='>=3.6',
 
     # Set up the version
-    version='0.0.77',
+    version='0.0.78',
 )

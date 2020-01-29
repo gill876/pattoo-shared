@@ -235,6 +235,23 @@ class BaseConfig(object):
         return result
 
 
+class ServerConfig(BaseConfig):
+    """Class gathers all configuration information."""
+
+    def __init__(self):
+        """Initialize the class.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Get the configuration
+        BaseConfig.__init__(self, 'pattoo_server.yaml')
+
+
 class Config(BaseConfig):
     """Class gathers all configuration information."""
 
