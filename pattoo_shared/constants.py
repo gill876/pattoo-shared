@@ -53,7 +53,7 @@ CACHE_KEYS = (
 ###############################################################################
 
 _PATTOO = '/pattoo'
-PATTOO_WEB_SITE_PREFIX = '{}/web'.format(_PATTOO)
+PATTOO_WEB_SITE_PREFIX = '{}'.format(_PATTOO)
 PATTOO_API_SITE_PREFIX = '{}/api/v1'.format(_PATTOO)
 PATTOO_API_AGENT_PREFIX = '{}/agent'.format(PATTOO_API_SITE_PREFIX)
 PATTOO_API_WEB_PREFIX = '{}/web'.format(PATTOO_API_SITE_PREFIX)
