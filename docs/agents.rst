@@ -42,7 +42,7 @@ This is an example of what that data looks like:
 
 
 JSON Formatting Description
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...........................
 
 The following explains how the JSON is formatted.
 
@@ -74,8 +74,8 @@ Foo Bar want's to keep track of stock market prices, specifically tickers ``ABC`
 #. Data on ``GHI`` and ``JKL`` can be obtained from a system run by Foo's IT department named ``WORK_1``.
 #. Foo writes an agent script to gather the data from both sources and send it to the ``pattoo`` server. The agent will identify itself as ``LAVA_SCRIPT`` when sending data.
 
-Configuring the Agent
-^^^^^^^^^^^^^^^^^^^^^
+Preparing the Agent Environment
+...............................
 
 You will need to some basic configuration before running the agent.
 
@@ -101,31 +101,68 @@ First create the necessary directories.
 
             os.environ['PATTOO_CONFIGDIR'] = 'PATTOO_CONFIGDIR=/tmp/pattoo/etc'
 
-#. Finally, you'll need to create a YAML configuration file named ``pattoo.yaml`` in the ``PATTOO_CONFIGDIR`` directory. The configuration must specify:
+Configuring the Agent
+.....................
 
-        .. code-block:: yaml
+Finally, you'll need to create a YAML configuration file named ``pattoo.yaml`` in the ``PATTOO_CONFIGDIR`` directory. The configuration must specify:
 
-            main:
+.. code-block:: yaml
 
-                log_directory: /tmp/pattoo/log
-                daemon_directory: /tmp/pattoo/daemon
+   pattoo:
 
-            polling:
-                polling_interval: 300
-                ip_address: pattoo.server.name
-                ip_bind_port: 20201
+       log_level: debug
+       log_directory: PATTOO_LOG_DIRECTORY
+       cache_directory: PATTOO_CACHE_DIRECTORY
+       daemon_directory: PATTOO_DAEMON_DIRECTORY
+       language: en
 
-    #. ``main`` section:
-        #. The logging directory with a ``log_directory`` entry.
-        #. The daemon directory with a ``daemon_directory`` entry.
-    #. ``polling`` section:
-        #. A polling interval in seconds with ``polling_interval``. This should match the ``crontab`` interval for running the script, or the in the case of a daemon, the interval between polling cycles. Remember in the case of daemon if the polling takes 5 seconds to complete and the ``polling_interval`` is 300 seconds, then the wait time between the next poll should be 295 seconds.
-        #. The IP address or fully qualified domain name of the ``pattoo`` server using the ``ip_address`` parameter.
-        #. The TCP/IP port on which the ``pattoo`` server expects to receive agent data with the ``ip_bind_port`` parameter.
+   pattoo_agent_api:
+
+       ip_address: 192.168.1.100
+       ip_bind_port: 20201
+
+Configuration Explanation
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This table outlines the purpose of each configuration parameter
+
+.. list-table::
+   :header-rows: 1
+
+   * - Section
+     - Config Options
+     - Description
+   * - ``pattoo``
+     -
+     - This section defines the locations of key directories for both operation and troubleshooting
+   * -
+     - ``log_directory``
+     - Path to logging directory. Make sure the username running the daemons have RW access to files there.
+   * -
+     - ``log_level``
+     - Default level of logging. ``debug`` is best for troubleshooting.
+   * -
+     - ``cache_directory``
+     - Directory of unsuccessful data posts to ``pattoo``
+   * -
+     - ``daemon_directory``
+     - Directory used to store daemon related data that needs to be maintained between reboots
+   * -
+   - ``language``
+   - Language spoken by the human users of ``pattoo``. Defaults to ``en`` (English)
+   * - ``pattoo_agent_api``
+     -
+     - This section provides information needed by ``pattoo`` agent clients when contacting the pattoo server
+   * -
+     - ``ip_address``
+     - IP address of remote ``pattoo`` server
+   * -
+     - ``ip_bind_port``
+     - Port of remote ``pattoo`` server accepting agent data. Default 20201.
 
 
 Sample Agent Script
-^^^^^^^^^^^^^^^^^^^
+...................
 
 There are two sample scripts in the ``examples/bin`` directory. `You can find them here on GitHub <https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_
 
@@ -133,6 +170,13 @@ There are two sample scripts in the ``examples/bin`` directory. `You can find th
 1. ``sample_agent_daemon.py`` which will run as a daemon, periodically posting data to the ``pattoo`` server.
 
 Customizing the Agent Configuration
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...................................
 
-In our example scripts we have not mentioned how the data was obtained. One way would be to add your own custom parameters to a configuration file in the ``PATTOO_CONFIGDIR`` directory. Make sure the file isn't named ``pattoo.yaml`` as this is the file ``pattoo`` uses for its own configuration. Do not inherit the ``pattoo_shared.configuration.Config`` class as this may be subject to change.
+In our example scripts we have not mentioned how the data was obtained. One way would be to add your own custom parameters to a configuration file in the ``PATTOO_CONFIGDIR`` directory. Make sure the file isn't named ``pattoo.yaml`` as this is the file ``pattoo`` uses for its own configuration.
+
+Translation of Agent key-value Pairs into Something Meaningful
+..............................................................
+
+``pattoo`` agents send data to the ``pattoo`` server as key-value pairs. The keys will automatically be converted into lowercase with whitespace converted to underscores.
+
+The lowercase, underscore modification was done specifically to facilitate multi-lingual support. You will need to create translation files. `This is described in detail here. <https://pattoo.readthedocs.io/en/latest/cli.html>`_
