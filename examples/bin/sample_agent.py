@@ -4,7 +4,7 @@
 from pattoo_shared.constants import DATA_FLOAT
 from pattoo_shared.phttp import PostAgent
 from pattoo_shared.variables import (
-    DataPoint, TargetDataPoints, AgentPolledData)
+    DataPoint, DataPointMetadata, TargetDataPoints, AgentPolledData)
 
 
 def main():
@@ -43,18 +43,32 @@ def main():
     # Setup AgentPolledData
     agent = AgentPolledData('LAVA_SCRIPT', polling_interval)
 
+    # Let's add some metadata that is unlikely to change
+    metadata_static = DataPointMetadata(
+        'Company Name', 'The Palisadoes Foundation', update_checksum=False)
+
+    # Let's add some metadata that will change
+    metadata_dynamic = DataPointMetadata(
+        'Financial Year', '2020')
+
     # Create target objects for SITE_A
     target = TargetDataPoints('SITE_A')
     for quote in site_a_data:
         key, value = quote
-        target.add(DataPoint(key, value, data_type=DATA_FLOAT))
+        datapoint = DataPoint(key, value, data_type=DATA_FLOAT)
+        datapoint.add(metadata_static)
+        datapoint.add(metadata_dynamic)
+        target.add(datapoint)
     agent.add(target)
 
     # Create target objects for WORK_1
     target = TargetDataPoints('WORK_1')
     for quote in work_1_data:
         key, value = quote
-        target.add(DataPoint(key, value, data_type=DATA_FLOAT))
+        datapoint = DataPoint(key, value, data_type=DATA_FLOAT)
+        datapoint.add(metadata_static)
+        datapoint.add(metadata_dynamic)
+        target.add(datapoint)
     agent.add(target)
 
     # Post the data to pattoo
