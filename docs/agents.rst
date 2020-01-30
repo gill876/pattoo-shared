@@ -164,10 +164,11 @@ This table outlines the purpose of each configuration parameter
 Sample Agent Script
 ...................
 
-There are two sample scripts in the ``examples/bin`` directory. `You can find them here on GitHub <https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_
+There are two sample scripts in the ``examples/bin`` directory. `You can find them here<https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_ on GitHub.
 
-1. ``sample_agent.py`` which will post data to the ``pattoo`` server only once when run.
-1. ``sample_agent_daemon.py`` which will run as a daemon, periodically posting data to the ``pattoo`` server.
+#. ``sample_agent.py`` which will post data to the ``pattoo`` server only once when run.
+#. ``sample_agent_daemon.py`` which will run as a daemon, periodically posting data to the ``pattoo`` server.
+    #. A sample ``systemd`` `configuration file template can be found here <https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/systemd>`_ on GitHub. Remember to change the settings for the ``user``, ``group``, ``script path`` and ``PATTOO_CONFIGDIR`` before setting it up.
 
 Customizing the Agent Configuration
 ...................................
