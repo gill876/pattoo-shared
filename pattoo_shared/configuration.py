@@ -13,17 +13,29 @@ from pattoo_shared.constants import (
 from pattoo_shared.variables import PollingPoint
 
 
-class BaseConfig(object):
-    """Class gathers all configuration information.
+def _config_reader(filename):
+    """Read a configuration file.
 
-    Only processes the following YAML keys in the configuration file:
+    Args:
+        filename: Name of file to read
 
-        main:
-        remote_api:
+    Returns:
+        config_dict: Dict representation of YAML in the file
 
     """
+    # Get the configuration directory
+    # Expand linux ~ notation for home directories if provided.
+    _config_directory = log.check_environment()
+    config_directory = os.path.expanduser(_config_directory)
+    config_file = '{}{}{}'.format(config_directory, os.sep, filename)
+    config_dict = files.read_yaml_file(config_file)
+    return config_dict
 
-    def __init__(self, filename):
+
+class BaseConfig(object):
+    """Class gathers all configuration information."""
+
+    def __init__(self):
         """Initialize the class.
 
         Args:
@@ -33,12 +45,8 @@ class BaseConfig(object):
             None
 
         """
-        # Get the configuration directory
-        # Expand linux ~ notation for home directories if provided.
-        _config_directory = log.check_environment()
-        config_directory = os.path.expanduser(_config_directory)
-        config_file = '{}{}{}'.format(config_directory, os.sep, filename)
-        self._pattoo_yaml_configuration = files.read_yaml_file(config_file)
+        # Read data
+        self._base_yaml_configuration = _config_reader('pattoo.yaml')
 
     def log_directory(self):
         """Get log_directory.
@@ -56,7 +64,7 @@ class BaseConfig(object):
         key = 'pattoo'
 
         # Get new result
-        _result = search(key, sub_key, self._pattoo_yaml_configuration)
+        _result = search(key, sub_key, self._base_yaml_configuration)
 
         # Expand linux ~ notation for home directories if provided.
         result = os.path.expanduser(_result)
@@ -133,7 +141,7 @@ class BaseConfig(object):
 
         # Return
         intermediate = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=False)
+            key, sub_key, self._base_yaml_configuration, die=False)
         if intermediate is None:
             result = 'debug'
         else:
@@ -155,7 +163,7 @@ class BaseConfig(object):
         sub_key = 'cache_directory'
 
         # Get result
-        _value = search(key, sub_key, self._pattoo_yaml_configuration)
+        _value = search(key, sub_key, self._base_yaml_configuration)
 
         # Expand linux ~ notation for home directories if provided.
         value = os.path.expanduser(_value)
@@ -200,7 +208,7 @@ class BaseConfig(object):
         sub_key = 'daemon_directory'
 
         # Get result
-        _value = search(key, sub_key, self._pattoo_yaml_configuration)
+        _value = search(key, sub_key, self._base_yaml_configuration)
 
         # Expand linux ~ notation for home directories if provided.
         value = os.path.expanduser(_value)
@@ -225,7 +233,7 @@ class BaseConfig(object):
         key = 'pattoo'
         sub_key = 'language'
         intermediate = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=False)
+            key, sub_key, self._base_yaml_configuration, die=False)
 
         # Default to 'en'
         if bool(intermediate) is False:
@@ -249,7 +257,8 @@ class ServerConfig(BaseConfig):
 
         """
         # Get the configuration
-        BaseConfig.__init__(self, 'pattoo_server.yaml')
+        BaseConfig.__init__(self)
+        self._server_yaml_configuration = _config_reader('pattoo_server.yaml')
 
 
 class Config(BaseConfig):
@@ -266,7 +275,7 @@ class Config(BaseConfig):
 
         """
         # Get the configuration
-        BaseConfig.__init__(self, 'pattoo.yaml')
+        BaseConfig.__init__(self)
 
     def agent_api_ip_address(self):
         """Get api_ip_address.
@@ -284,7 +293,7 @@ class Config(BaseConfig):
 
         # Get result
         result = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=False)
+            key, sub_key, self._base_yaml_configuration, die=False)
         if result is None:
             result = 'localhost'
         return result
@@ -305,7 +314,7 @@ class Config(BaseConfig):
 
         # Get result
         intermediate = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=False)
+            key, sub_key, self._base_yaml_configuration, die=False)
         if intermediate is None:
             result = 20201
         else:
@@ -361,7 +370,7 @@ class Config(BaseConfig):
 
         # Get result
         result = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=True)
+            key, sub_key, self._base_yaml_configuration, die=True)
         return result
 
     def web_api_ip_bind_port(self):
@@ -380,7 +389,7 @@ class Config(BaseConfig):
 
         # Get result
         intermediate = search(
-            key, sub_key, self._pattoo_yaml_configuration, die=False)
+            key, sub_key, self._base_yaml_configuration, die=False)
         if intermediate is None:
             result = 20202
         else:
