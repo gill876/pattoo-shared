@@ -281,25 +281,23 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing function agent_id_file."""
         # Test
         filename = files._File(self.config)
-        expected = filename.agent_id(self.prefix, self.agent_hostname)
-        result = files.agent_id_file(
-            self.prefix, self.agent_hostname, self.config)
+        expected = filename.agent_id(self.prefix)
+        result = files.agent_id_file(self.prefix, self.config)
         self.assertEqual(result, expected)
 
     def test_get_agent_id(self):
         """Testing method / function get_agent_id."""
         # Test. Agent_id shouldn't change
         agent_name = random()
-        agent_hostname = random()
-        expected = files.get_agent_id(agent_name, agent_hostname, self.config)
-        result = files.get_agent_id(agent_name, agent_hostname, self.config)
+        expected = files.get_agent_id(agent_name, self.config)
+        result = files.get_agent_id(agent_name, self.config)
         self.assertEqual(result, expected)
 
         # Delete the file, make sure a new ID is generated
-        filename = files.agent_id_file(agent_name, agent_hostname, self.config)
+        filename = files.agent_id_file(agent_name, self.config)
         os.remove(filename)
-        _expected = files.get_agent_id(agent_name, agent_hostname, self.config)
-        _result = files.get_agent_id(agent_name, agent_hostname, self.config)
+        _expected = files.get_agent_id(agent_name, self.config)
+        _result = files.get_agent_id(agent_name, self.config)
         self.assertEqual(_result, _expected)
         self.assertNotEqual(expected, _expected)
 
@@ -385,7 +383,7 @@ class Test_File(unittest.TestCase):
     def test_agent_id(self):
         """Testing function agent_id."""
         filename = files._File(self.config)
-        result = filename.agent_id(self.prefix, self.agent_hostname)
+        result = filename.agent_id(self.prefix)
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
 
 

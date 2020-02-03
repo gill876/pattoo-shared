@@ -475,8 +475,7 @@ class TestAgentPolledData(unittest.TestCase):
         agent_hostname = socket.getfqdn()
         polling_interval = 20
         apd = AgentPolledData(agent_program, polling_interval)
-        agent_id = files.get_agent_id(
-            agent_program, agent_hostname, self.config)
+        agent_id = files.get_agent_id(agent_program, self.config)
 
         # Test
         self.assertTrue(bool(apd.agent_timestamp))
