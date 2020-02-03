@@ -407,8 +407,7 @@ class AgentPolledData(object):
         # Get the agent_id
         from .configuration import Config
         config = Config()
-        self.agent_id = files.get_agent_id(
-            agent_program, self.agent_hostname, config)
+        self.agent_id = files.get_agent_id(agent_program, config)
 
     def __repr__(self):
         """Return a representation of the attributes of the class.

@@ -120,12 +120,11 @@ class _File(object):
         value = '{}/{}.lock'.format(self._directory.lock(), prefix)
         return value
 
-    def agent_id(self, agent_name, agent_hostname):
+    def agent_id(self, agent_name):
         """Define the hidden agent_id directory.
 
         Args:
             agent_name: Agent name
-            agent_hostname: Agent hostname
 
         Returns:
             value: agent_id directory
@@ -133,8 +132,7 @@ class _File(object):
         """
         # Return
         mkdir(self._directory.agent_id())
-        value = '{}/{}.{}.agent_id'.format(
-            self._directory.agent_id(), agent_hostname, agent_name)
+        value = '{}/{}.agent_id'.format(self._directory.agent_id(), agent_name)
         return value
 
 
@@ -428,7 +426,7 @@ def lock_file(agent_name, config):
     return result
 
 
-def agent_id_file(agent_name, agent_hostname, config):
+def agent_id_file(agent_name, config):
     """Get the agent_idfile for an agent.
 
     Args:
@@ -443,11 +441,11 @@ def agent_id_file(agent_name, agent_hostname, config):
     """
     # Return
     f_obj = _File(config)
-    result = f_obj.agent_id(agent_name, agent_hostname)
+    result = f_obj.agent_id(agent_name)
     return result
 
 
-def get_agent_id(agent_name, agent_hostname, config):
+def get_agent_id(agent_name, config):
     """Create a permanent UID for the agent_name.
 
     Args:
@@ -459,7 +457,7 @@ def get_agent_id(agent_name, agent_hostname, config):
 
     """
     # Initialize key variables
-    filename = agent_id_file(agent_name, agent_hostname, config)
+    filename = agent_id_file(agent_name, config)
 
     # Read environment file with UID if it exists
     if os.path.isfile(filename):
