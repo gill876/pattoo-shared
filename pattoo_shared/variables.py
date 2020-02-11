@@ -133,13 +133,14 @@ class DataPoint(object):
 
     """
 
-    def __init__(self, key, value, data_type=DATA_INT):
+    def __init__(self, key, value, data_type=DATA_INT, timestamp=None):
         """Initialize the class.
 
         Args:
             key: Key related to data value
             value: Data value
             data_type: This MUST be one of the types listed in constants.py
+            timestamp: Integer EPOCH timestamp in milliseconds
 
         Returns:
             None
@@ -159,7 +160,10 @@ class DataPoint(object):
         self._metakeys = []
 
         # Round timestamp to the nearest millisecond.
-        self.timestamp = int(round(time(), 3) * 1000)
+        if data.is_numeric(timestamp) is False:
+            self.timestamp = int(round(time(), 3) * 1000)
+        else:
+            self.timestamp = int(timestamp)
 
         # False validity if value is not of the right type
         self.valid = False not in [
