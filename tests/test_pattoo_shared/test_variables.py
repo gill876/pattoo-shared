@@ -6,7 +6,7 @@ import unittest
 import os
 import sys
 import socket
-
+import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -177,6 +177,7 @@ class TestDataPoint(unittest.TestCase):
         value = 1093454
         _key_ = 'testing'
         _metakey = '_{}'.format(_key_)
+        timestamp = int(time.time() * 1000)
         data_type = DATA_INT
         variable = DataPoint(_key_, value, data_type=data_type)
         variable.add(DataPointMetadata(_metakey, _metakey))
@@ -185,6 +186,27 @@ class TestDataPoint(unittest.TestCase):
         self.assertEqual(variable.data_type, data_type)
         self.assertEqual(variable.value, value)
         self.assertEqual(variable.key, _key_)
+        self.assertTrue(variable.timestamp >= timestamp)
+        self.assertEqual(len(variable.checksum), 64)
+        self.assertEqual(variable.checksum, '''\
+306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
+        self.assertEqual(variable.valid, True)
+
+        # Setup DataPoint - Valid
+        value = 1093454
+        timestamp = 7
+        _key_ = 'testing'
+        _metakey = '_{}'.format(_key_)
+        data_type = DATA_INT
+        variable = DataPoint(
+            _key_, value, data_type=data_type, timestamp=timestamp)
+        variable.add(DataPointMetadata(_metakey, _metakey))
+
+        # Test each variable
+        self.assertEqual(variable.data_type, data_type)
+        self.assertEqual(variable.value, value)
+        self.assertEqual(variable.key, _key_)
+        self.assertEqual(variable.timestamp, timestamp)
         self.assertEqual(len(variable.checksum), 64)
         self.assertEqual(variable.checksum, '''\
 306353a04200e3b889b18c6f78dd8e56a63a287218ec8424e22d31b4b961a905''')
