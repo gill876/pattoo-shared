@@ -340,7 +340,8 @@ def _save_data(data, identifier):
     timestamp = int(time() * 1000)
 
     # Create a unique very long filename to reduce risk of
-    filename = '{}/{}_{}.json'.format(cache_dir, timestamp, identifier)
+    filename = ('''{}{}{}_{}.json\
+'''.format(cache_dir, os.sep, timestamp, identifier))
 
     # Save data
     try:
