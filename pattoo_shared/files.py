@@ -42,7 +42,7 @@ class _Directory(object):
 
         """
         # Return
-        value = '{}/pid'.format(self._root)
+        value = '{}{}pid'.format(self._root, os.sep)
         return value
 
     def lock(self):
@@ -56,7 +56,7 @@ class _Directory(object):
 
         """
         # Return
-        value = '{}/lock'.format(self._root)
+        value = '{}{}lock'.format(self._root, os.sep)
         return value
 
     def agent_id(self):
@@ -70,7 +70,7 @@ class _Directory(object):
 
         """
         # Return
-        value = '{}/agent_id'.format(self._root)
+        value = '{}{}agent_id'.format(self._root, os.sep)
         return value
 
 
@@ -102,7 +102,7 @@ class _File(object):
         """
         # Return
         mkdir(self._directory.pid())
-        value = '{}/{}.pid'.format(self._directory.pid(), prefix)
+        value = '{}{}{}.pid'.format(self._directory.pid(), os.sep, prefix)
         return value
 
     def lock(self, prefix):
@@ -117,7 +117,7 @@ class _File(object):
         """
         # Return
         mkdir(self._directory.lock())
-        value = '{}/{}.lock'.format(self._directory.lock(), prefix)
+        value = '{}{}{}.lock'.format(self._directory.lock(), os.sep, prefix)
         return value
 
     def agent_id(self, agent_name):
@@ -132,7 +132,8 @@ class _File(object):
         """
         # Return
         mkdir(self._directory.agent_id())
-        value = '{}/{}.agent_id'.format(self._directory.agent_id(), agent_name)
+        value = ('''{}{}{}.agent_id\
+'''.format(self._directory.agent_id(), os.sep, agent_name))
         return value
 
 

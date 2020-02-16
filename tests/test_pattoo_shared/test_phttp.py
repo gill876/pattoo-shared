@@ -11,14 +11,14 @@ from time import time
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-if EXEC_DIR.endswith('/pattoo-shared/tests/test_pattoo_shared') is True:
+_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
     sys.path.insert(0, ROOT_DIR)
 else:
-    print('''\
-This script is not installed in the "pattoo-shared/tests/test_pattoo_shared" \
-directory. Please fix.''')
+    print('''This script is not installed in the "{0}" directory. Please fix.\
+'''.format(_EXPECTED))
     sys.exit(2)
 
 # Pattoo imports
@@ -36,15 +36,15 @@ class TestPost(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_post(self):
-        """Testing method / function post."""
+        """Testing method or function named post."""
         pass
 
     def test_purge(self):
-        """Testing method / function purge."""
+        """Testing method or function named purge."""
         pass
 
 
@@ -56,15 +56,15 @@ class TestPassiveAgent(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_relay(self):
-        """Testing method / function relay."""
+        """Testing method or function named relay."""
         pass
 
     def test_get(self):
-        """Testing method / function get."""
+        """Testing method or function named get."""
         pass
 
 
@@ -76,15 +76,15 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
 
     def test_post(self):
-        """Testing method / function post."""
+        """Testing method or function named post."""
         pass
 
     def test_purge(self):
-        """Testing method / function purge."""
+        """Testing method or function named purge."""
         pass
 
     def test__save_data(self):
-        """Testing method / function _save_data."""
+        """Testing method or function named _save_data."""
         # Initialize key variables
         identifier = data.hashstring(str(time()))
 
@@ -99,7 +99,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertTrue(success)
 
     def test__log(self):
-        """Testing method / function _log."""
+        """Testing method or function named _log."""
         pass
 
 

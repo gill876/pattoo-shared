@@ -11,14 +11,14 @@ import sys
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-if EXEC_DIR.endswith('/pattoo-shared/tests/test_pattoo_shared') is True:
+_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
     sys.path.insert(0, ROOT_DIR)
 else:
-    print('''\
-This script is not installed in the "pattoo-shared/tests/test_pattoo_shared" \
-directory. Please fix.''')
+    print('''This script is not installed in the "{0}" directory. Please fix.\
+'''.format(_EXPECTED))
     sys.exit(2)
 
 # Pattoo imports
@@ -88,19 +88,19 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_web_api_ip_address(self):
-        """Testing method / function web_api_ip_address."""
+        """Testing method or function named web_api_ip_address."""
         # Test
         result = self.config.web_api_ip_address()
         self.assertEqual(result, '127.0.0.3')
 
     def test_web_api_ip_bind_port(self):
-        """Testing method / function web_api_ip_bind_port."""
+        """Testing method or function named web_api_ip_bind_port."""
         # Test
         result = self.config.web_api_ip_bind_port()
         self.assertEqual(result, 30303)
 
     def test_web_api_server_url(self):
-        """Testing method / function web_api_server_url."""
+        """Testing method or function named web_api_server_url."""
         # Test
         result = self.config.web_api_server_url()
         self.assertEqual(
@@ -180,7 +180,7 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
 
     def test_agent_config_filename(self):
-        """Testing method / function agent_config_filename."""
+        """Testing method or function named agent_config_filename."""
         # Test
         agent_program = 'koala_bear'
         _config_directory = log.check_environment()

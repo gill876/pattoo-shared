@@ -19,14 +19,14 @@ import yaml
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-if EXEC_DIR.endswith('/pattoo-shared/tests/test_pattoo_shared') is True:
+_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
     sys.path.insert(0, ROOT_DIR)
 else:
-    print('''\
-This script is not installed in the "pattoo-shared/tests/test_pattoo_shared" \
-directory. Please fix.''')
+    print('''This script is not installed in the "{0}" directory. Please fix.\
+'''.format(_EXPECTED))
     sys.exit(2)
 
 # Pattoo imports
@@ -47,7 +47,7 @@ class TestBasicFunctions(unittest.TestCase):
     config = Config()
 
     def test_execute(self):
-        """Testing method / function execute."""
+        """Testing method or function named execute."""
         # Test known bad command
         command = '{}'.format(random())
         with self.assertRaises(SystemExit):
@@ -63,7 +63,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertFalse(bool(result))
 
     def test_read_yaml_files(self):
-        """Testing method / function read_yaml_files."""
+        """Testing method or function named read_yaml_files."""
         # Initializing key variables
         dict_1 = {
             'key1': 1,
@@ -88,8 +88,8 @@ class TestBasicFunctions(unittest.TestCase):
         # Create temp file with known data
         directory = tempfile.mkdtemp()
         filenames = {
-            '{}/file_1.yaml'.format(directory): dict_1,
-            '{}/file_2.yaml'.format(directory): dict_2
+            '{}{}file_1.yaml'.format(directory, os.sep): dict_1,
+            '{}{}file_2.yaml'.format(directory, os.sep): dict_2
         }
         for filename, data_dict in filenames.items():
             with open(filename, 'w') as filehandle:
@@ -105,7 +105,7 @@ class TestBasicFunctions(unittest.TestCase):
             next_file for next_file in os.listdir(
                 directory) if next_file.endswith('.yaml')]
         for delete_file in filelist:
-            delete_path = '{}/{}'.format(directory, delete_file)
+            delete_path = '{}{}{}'.format(directory, os.sep, delete_file)
             os.remove(delete_path)
         os.removedirs(directory)
 
@@ -128,7 +128,7 @@ class TestBasicFunctions(unittest.TestCase):
         # Create temp file with known data
         directory = tempfile.mkdtemp()
         file_data = [
-            (('{}/file_1.yaml').format(directory), dict_1)
+            (('{}{}file_1.yaml').format(directory, os.sep), dict_1)
         ]
         for item in file_data:
             filename = item[0]
@@ -148,12 +148,12 @@ class TestBasicFunctions(unittest.TestCase):
             next_file for next_file in os.listdir(
                 directory) if next_file.endswith('.yaml')]
         for delete_file in filelist:
-            delete_path = ('{}/{}').format(directory, delete_file)
+            delete_path = ('{}{}{}').format(directory, os.sep, delete_file)
             os.remove(delete_path)
         os.removedirs(directory)
 
     def test_read_json_files(self):
-        """Testing method / function read_json_files."""
+        """Testing method or function named read_json_files."""
         # Initializing key variables
         dict_1 = {
             'key1': 1,
@@ -187,8 +187,8 @@ class TestBasicFunctions(unittest.TestCase):
         # Create temp file with known data
         directory = tempfile.mkdtemp()
         filenames = {
-            '{}/file_1.json'.format(directory): dict_1,
-            '{}/file_2.json'.format(directory): dict_2
+            '{}{}file_1.json'.format(directory, os.sep): dict_1,
+            '{}{}file_2.json'.format(directory, os.sep): dict_2
         }
         for filename, data_dict in filenames.items():
             with open(filename, 'w') as filehandle:
@@ -255,8 +255,8 @@ class TestBasicFunctions(unittest.TestCase):
         os.remove(tmpfile)
 
         # Create a sub directory of a temp directory.
-        directory = '/tmp/test_pattoo-unittest/{}.fake'.format(
-            randint(1, 10000) * pi)
+        directory = '{0}tmp{0}test_pattoo-unittest{0}{1}.fake'.format(
+            os.sep, randint(1, 10000) * pi)
         files.mkdir(directory)
         self.assertTrue(os.path.isdir(directory))
         shutil.rmtree(directory)
@@ -286,7 +286,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_get_agent_id(self):
-        """Testing method / function get_agent_id."""
+        """Testing method or function named get_agent_id."""
         # Test. Agent_id shouldn't change
         agent_name = random()
         expected = files.get_agent_id(agent_name, self.config)
@@ -302,7 +302,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertNotEqual(expected, _expected)
 
     def test__generate_agent_id(self):
-        """Testing method / function _generate_agent_id."""
+        """Testing method or function named _generate_agent_id."""
         pass
 
 class Test_Directory(unittest.TestCase):
@@ -328,7 +328,7 @@ class Test_Directory(unittest.TestCase):
         # Test
         directory = files._Directory(self.config)
         config = Config()
-        expected = '{}/pid'.format(config.daemon_directory())
+        expected = '{}{}pid'.format(config.daemon_directory(), os.sep)
         result = directory.pid()
         self.assertEqual(result, expected)
 
@@ -337,7 +337,7 @@ class Test_Directory(unittest.TestCase):
         # Test
         directory = files._Directory(self.config)
         config = Config()
-        expected = '{}/lock'.format(config.daemon_directory())
+        expected = '{}{}lock'.format(config.daemon_directory(), os.sep)
         result = directory.lock()
         self.assertEqual(result, expected)
 
@@ -346,7 +346,7 @@ class Test_Directory(unittest.TestCase):
         # Test
         directory = files._Directory(self.config)
         config = Config()
-        expected = '{}/agent_id'.format(config.daemon_directory())
+        expected = '{}{}agent_id'.format(config.daemon_directory(), os.sep)
         result = directory.agent_id()
         self.assertEqual(result, expected)
 

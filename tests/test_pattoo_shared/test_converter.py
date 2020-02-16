@@ -11,14 +11,14 @@ from time import sleep
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-if EXEC_DIR.endswith('/pattoo-shared/tests/test_pattoo_shared') is True:
+_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
     sys.path.insert(0, ROOT_DIR)
 else:
-    print('''\
-This script is not installed in the "pattoo-shared/tests/test_pattoo_shared" \
-directory. Please fix.''')
+    print('''This script is not installed in the "{0}" directory. Please fix.\
+'''.format(_EXPECTED))
     sys.exit(2)
 
 # Pattoo imports
@@ -42,7 +42,7 @@ class TestBasicFunctions(unittest.TestCase):
     config = Config()
 
     def test_cache_to_keypairs(self):
-        """Testing method / function cache_to_keypairs."""
+        """Testing method or function named cache_to_keypairs."""
         cache = {
             'pattoo_agent_id': '123bb3a17c6cc915a98a859226d282b394ee0964956b7'
                                'd23c145fe9d94567241',
@@ -124,11 +124,11 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test__make_pattoo_db_record(self):
-        """Testing method / function _make_pattoo_db_record."""
+        """Testing method or function named _make_pattoo_db_record."""
         pass
 
     def test_agentdata_to_datapoints(self):
-        """Testing method / function agentdata_to_datapoints."""
+        """Testing method or function named agentdata_to_datapoints."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
         polling_interval = 20
@@ -174,7 +174,7 @@ class TestBasicFunctions(unittest.TestCase):
             self.assertEqual(value, str(expected_metadata[key]))
 
     def test_datapoints_to_dicts(self):
-        """Testing method / function datapoints_to_dicts."""
+        """Testing method or function named datapoints_to_dicts."""
         # Initialize key variables
         datapoints = []
 
@@ -230,7 +230,7 @@ class TestBasicFunctions(unittest.TestCase):
                 self.assertEqual(expected['key_value_pairs'][key], value)
 
     def test_agentdata_to_post(self):
-        """Testing method / function agentdata_to_post."""
+        """Testing method or function named agentdata_to_post."""
         # Setup AgentPolledData
         agent_program = 'panda_bear'
         polling_interval = 20
@@ -286,7 +286,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(len(item[0]), 10)
 
     def test_datapoints_to_post(self):
-        """Testing method / function datapoints_to_post."""
+        """Testing method or function named datapoints_to_post."""
         # Initialize key variables
         key = '_key'
         value = '_value'
@@ -305,7 +305,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result.pattoo_datapoints[0].value, value)
 
     def test_posting_data_points(self):
-        """Testing method / function posting_data_points."""
+        """Testing method or function named posting_data_points."""
         # Initialize key variables
         key = '_key'
         value = '_value'
@@ -325,7 +325,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result['pattoo_datapoints'][0].value, value)
 
     def test__keypairs(self):
-        """Testing method / function _keypairs."""
+        """Testing method or function named _keypairs."""
         # Test
         data = {'test this out': 7}
         result = converter._keypairs(data)
@@ -338,7 +338,7 @@ class TestBasicFunctions(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test__checksum(self):
-        """Testing method / function _checksum."""
+        """Testing method or function named _checksum."""
         # Test
         result = converter._checksum(1, 2, 3)
         expected = ('''\

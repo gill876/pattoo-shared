@@ -9,10 +9,6 @@ import sys
 import collections
 
 
-# Import pattoo libraries
-from pattoo_shared import log
-
-
 def check_source_code(root, minimum=0, maximum=0):
     """Get all the error codes used in pattoo related projects.
 
@@ -35,9 +31,17 @@ Minimum value {} is greater than {}. Please fix.\
 
     # Define where pattoo lives
     ignore_paths = [
-        '/.git/', '/__pycache__/', '/_archive/', '/_deprecated/',
-        '/pattoo-shared/build/', '/pattoo-shared/dist/', '.egg',
-        '/docs/', '/daemon/', '/log/']
+        '{0}.git{0}'.format(os.sep),
+        '{0}__pycache__{0}'.format(os.sep),
+        '{0}_archive{0}'.format(os.sep),
+        '{0}_deprecated{0}'.format(os.sep),
+        '{0}pattoo-shared{0}build{0}'.format(os.sep),
+        '{0}pattoo-shared{0}dist{0}'.format(os.sep),
+        '.egg',
+        '{0}docs{0}'.format(os.sep),
+        '{0}daemon{0}'.format(os.sep),
+        '{0}log{0}'.format(os.sep)
+    ]
     error_functions = (
         'log2die_safe(', 'log2warning(',
         'log2exception(', 'log2exception_die(',

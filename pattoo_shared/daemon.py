@@ -61,7 +61,7 @@ class Daemon(object):
             log.log2die(1060, log_message)
 
         # Decouple from parent environment
-        os.chdir('/')
+        os.chdir('{}'.format(os.sep))
         os.setsid()
         os.umask(0)
 

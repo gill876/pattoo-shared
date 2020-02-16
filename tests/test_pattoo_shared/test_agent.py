@@ -6,21 +6,20 @@ import unittest
 import os
 import sys
 import multiprocessing
-from random import random
 
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-if EXEC_DIR.endswith('/pattoo-shared/tests/test_pattoo_shared') is True:
+_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
     sys.path.insert(0, ROOT_DIR)
 else:
-    print('''\
-This script is not installed in the "pattoo-shared/tests/test_pattoo_shared" \
-directory. Please fix.''')
+    print('''This script is not installed in the "{0}" directory. Please fix.\
+'''.format(_EXPECTED))
     sys.exit(2)
 
 # Pattoo imports
@@ -40,7 +39,7 @@ class TestAgent(unittest.TestCase):
     config = Config()
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         # Initialize key variables
         parent = 'parent'
         child = 'child'
@@ -66,7 +65,7 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(tester._pidfile_child, expected)
 
     def test_name(self):
-        """Testing method / function name."""
+        """Testing method or function named name."""
         # Initialize key variables
         parent = 'parent'
 
@@ -75,7 +74,7 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(tester.name(), parent)
 
     def test_query(self):
-        """Testing method / function query."""
+        """Testing method or function named query."""
         pass
 
 
@@ -87,11 +86,11 @@ class TestAgentDaemon(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_run(self):
-        """Testing method / function run."""
+        """Testing method or function named run."""
         pass
 
 
@@ -103,15 +102,15 @@ class TestAgentCLI(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_process(self):
-        """Testing method / function process."""
+        """Testing method or function named process."""
         pass
 
     def test_control(self):
-        """Testing method / function control."""
+        """Testing method or function named control."""
         pass
 
 
@@ -123,11 +122,11 @@ class TestAgentAPI(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_query(self):
-        """Testing method / function query."""
+        """Testing method or function named query."""
         pass
 
 
@@ -139,15 +138,15 @@ class Test_StandaloneApplication(unittest.TestCase):
     #########################################################################
 
     def test___init__(self):
-        """Testing method / function __init__."""
+        """Testing method or function named __init__."""
         pass
 
     def test_load_config(self):
-        """Testing method / function load_config."""
+        """Testing method or function named load_config."""
         pass
 
     def test_load(self):
-        """Testing method / function load."""
+        """Testing method or function named load."""
         pass
 
 
@@ -159,14 +158,14 @@ class TestBasicFunctions(unittest.TestCase):
     #########################################################################
 
     def test__number_of_workers(self):
-        """Testing method / function _number_of_workers."""
+        """Testing method or function named _number_of_workers."""
         # Test
         expected = (multiprocessing.cpu_count() * 2) + 1
         result = agent._number_of_workers()
         self.assertEqual(result, expected)
 
     def test__ip_binding(self):
-        """Testing method / function _ip_binding."""
+        """Testing method or function named _ip_binding."""
         # Test with Hostname
         ip_listen_address = 'localhost'
         ip_bind_port = '1000'
