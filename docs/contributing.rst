@@ -1,16 +1,20 @@
 How To Contribute
 =================
 
+Start contributing today!
+
+Introduction
+------------
+
 Below is the workflow for having your contribution accepted into the ``pattoo-shared`` repository.
 
 #. Create an Issue or comment on an existing issue to discuss the feature
 #. If the feature is approved, assign the issue to yourself
 #. Fork the project
 #. Clone the fork to your local machine
-#. Run ``python3 setup.py install --user`` to install the package in your local environment.
 #. Add the original project as a remote (git remote add upstream https://github.com/PalisadoesFoundation/pattoo-shared, check with: git remote -v)
 #. Create a topic branch for your change (git checkout -b ``BranchName``\ )
-#. You may create additional branches if modifying multiple parts of the code
+#. you may create additional branches if modifying multiple parts of the code
 #. Write code and Commit your changes locally. An example of a proper ``git commit`` message can be seen below:
 
     .. code-block::
@@ -32,34 +36,31 @@ Below is the workflow for having your contribution accepted into the ``pattoo-sh
 
 #. When you need to synch with upstream (pull the latest changes from main repo into your current branch), do:
 
-   #. ``git fetch upstream``
-   #. ``git merge upstream/master`` (or run ``make synch`` to let the projects makefile handle synching)
+     #. ``git fetch upstream``
+     #. ``git merge upstream/master``
 
 #. Check for unnecessary white space with ``git diff --check``.
 #. Write the necessary unit tests for your changes.
-#. Run all the tests to assure nothing else was accidentally broken (run: ``make test``\ )
+#. Run all the tests to assure nothing else was accidentally broken
 #. Push your changes to your forked repository (git push origin ``branch``\ )
 #. Perform a pull request on GitHub
 #. Your code will be reviewed
 #. If your code passes review, your pull request will be accepted
 
-The ``make contribute`` command encapsulates steps 8 to 12 when you are ready to make a pull request.
-The ``make synch`` command will synch your repository
-
 Code Style Guide
-================
+----------------
 
-For ease of readability and maintainability ``pattoo-shared`` code must follow these guidelines. Code that does not comply will not be added to the ``master`` branch.
+For ease of readability and maintainability code for all ``pattoo`` projects must follow these guidelines. Code that does not comply will not be added to the ``master`` branch.
 
-#. ``pattoo-shared`` uses the `Google Python Style Guide <https://google.github.io/styleguide/pyguide.html#Exceptions>`_ for general style requirements
-#. ``pattoo-shared`` uses the The Chromium Projects Python Style Guidelines for docstrings.
+#. All ``pattoo`` projects use the `Google Python Style Guide <https://google.github.io/styleguide/pyguide.html#Exceptions>`_ for general style requirements
+#. All ``pattoo`` python projects use the The Chromium Projects Python Style Guidelines for docstrings.
 #. Indentations must be multiples of 4 blank spaces. No tabs.
 #. All strings must be enclosed in single quotes
-#. In addition too being pylint compliant, the code must be PEP8 and PEP257 compliant too.
+#. In addition too being ``pylint`` compliant, the code must be PEP8 and PEP257 compliant too.
 #. There should be no trailing spaces in files
 
 Guidelines to remember
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^
 
 * Always opt for the most pythonic solution to a problem
 * Avoid applying idioms from other programming languages
@@ -70,19 +71,15 @@ Guidelines to remember
 * If you are in the middle of a development session and have to interrupt your work, it is a good idea to write a broken unit test about what you want to develop next. When coming back to work, you will have a pointer to where you were and get back on track faster.
 
 Commits
--------
+^^^^^^^
 
-``pattoo-shared`` strives to maintain a proper log of development through well structured git commits. The links below offer insight and advice on the topic of commit messages:
+The ``pattoo`` projects strive to maintain a proper log of development through well structured git commits. The links below offer insight and advice on the topic of commit messages:
+
 #. https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message
 #. http://chris.beams.io/posts/git-commit/
 
-PEP8 and PEP257 Compliance
---------------------------
-
-You can verify your code for compliance using running the ``make lint`` command from the project root.
-
 Sample .vimrc File for Compliance
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 You can use this sample .vimrc file to help meet our style requirements
 
