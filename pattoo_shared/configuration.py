@@ -32,7 +32,7 @@ def _config_reader(filename):
     return config_dict
 
 
-class BaseConfig(object):
+class BaseConfig():
     """Class gathers all configuration information."""
 
     def __init__(self):

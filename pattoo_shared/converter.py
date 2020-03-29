@@ -16,7 +16,7 @@ from pattoo_shared import data
 from pattoo_shared import log
 
 
-class Counter(object):
+class Counter():
     """Count and format datapoint key-value pairs."""
 
     def __init__(self):

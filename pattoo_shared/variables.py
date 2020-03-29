@@ -14,7 +14,7 @@ from .constants import (
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 
 
-class Metadata(object):
+class Metadata():
     """Metadata related to a DataPoint."""
 
     def __init__(self, key, value):
@@ -126,7 +126,7 @@ class DataPointMetadata(Metadata):
             key, value, metadata=True)
 
 
-class DataPoint(object):
+class DataPoint():
     """Variable representation for data retreived from a target.
 
     Stores individual datapoints polled by pattoo agents
@@ -262,7 +262,7 @@ class DataPoint(object):
 {}{}{}'''.format(self.checksum, item.key, item.value))
 
 
-class PostingDataPoints(object):
+class PostingDataPoints():
     """Object defining DataPoint objects to post to the pattoo server."""
 
     def __init__(self, agent_id, polling_interval, datapoints):
@@ -305,7 +305,7 @@ class PostingDataPoints(object):
                 ]
 
 
-class TargetDataPoints(object):
+class TargetDataPoints():
     """Object defining a list of DataPoint objects.
 
     Stores DataPoints polled from a specific ip_target.
@@ -377,7 +377,7 @@ class TargetDataPoints(object):
                 self.valid = False not in [bool(self.data), bool(self.target)]
 
 
-class AgentPolledData(object):
+class AgentPolledData():
     """Object defining data received from / sent by Agent.
 
     Only AgentPolledData objects can be submitted to the pattoo server through
@@ -467,7 +467,7 @@ polling_interval={5}, valid={6}>\
                     bool(self.data)]
 
 
-class AgentAPIVariable(object):
+class AgentAPIVariable():
     """Variable representation for data required by the AgentAPI."""
 
     def __init__(self, ip_bind_port=20201, ip_listen_address='0.0.0.0'):
@@ -505,7 +505,7 @@ class AgentAPIVariable(object):
         return result
 
 
-class PollingPoint(object):
+class PollingPoint():
     """Object used to track data to be polled."""
 
     def __init__(self, address=None, multiplier=1):
@@ -550,7 +550,7 @@ class PollingPoint(object):
         return result
 
 
-class TargetPollingPoints(object):
+class TargetPollingPoints():
     """Object defining a list of PollingPoint objects.
 
     Stores PollingPoints polled from a specific ip_target.

@@ -45,3 +45,12 @@ Technical background information on the project.
 
    troubleshooting
    glossary
+
+Developers
+----------
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developers:
+
+   contributing

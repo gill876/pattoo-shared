@@ -148,8 +148,8 @@ This table outlines the purpose of each configuration parameter
      - ``daemon_directory``
      - Directory used to store daemon related data that needs to be maintained between reboots
    * -
-   - ``language``
-   - Language spoken by the human users of ``pattoo``. Defaults to ``en`` (English)
+     - ``language``
+     - Language spoken by the human users of ``pattoo``. Defaults to ``en`` (English)
    * - ``pattoo_agent_api``
      -
      - This section provides information needed by ``pattoo`` agent clients when contacting the pattoo server
@@ -164,7 +164,7 @@ This table outlines the purpose of each configuration parameter
 Sample Agent Script
 ...................
 
-There are two sample scripts in the ``examples/bin`` directory. `You can find them here<https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_ on GitHub.
+There are two sample scripts in the ``examples/bin`` directory `which can be found here <https://github.com/PalisadoesFoundation/pattoo-shared/tree/master/examples/bin>`_ on GitHub.
 
 #. ``sample_agent.py`` which will post data to the ``pattoo`` server only once when run.
 #. ``sample_agent_daemon.py`` which will run as a daemon, periodically posting data to the ``pattoo`` server.

@@ -15,7 +15,7 @@ import yaml
 from pattoo_shared import log, data
 
 
-class _Directory(object):
+class _Directory():
     """A class for creating the names of hidden directories."""
 
     def __init__(self, config):
@@ -74,7 +74,7 @@ class _Directory(object):
         return value
 
 
-class _File(object):
+class _File():
     """A class for creating the names of hidden files."""
 
     def __init__(self, config):
