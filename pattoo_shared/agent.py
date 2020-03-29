@@ -30,7 +30,7 @@ from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
 
 
-class Agent(object):
+class Agent():
     """Agent class for daemons."""
 
     def __init__(self, parent, child=None, config=None):
@@ -114,7 +114,7 @@ class AgentDaemon(Daemon):
             self.agent.query()
 
 
-class AgentCLI(object):
+class AgentCLI():
     """Class that manages the agent CLI.
 
     Args:

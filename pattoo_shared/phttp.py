@@ -17,7 +17,7 @@ from pattoo_shared.configuration import Config
 from pattoo_shared import converter
 
 
-class Post(object):
+class Post():
     """Class to prepare data for posting to remote pattoo server."""
 
     def __init__(self, identifier, data):
@@ -107,7 +107,7 @@ class PostAgent(Post):
         Post.__init__(self, identifier, data)
 
 
-class PassiveAgent(object):
+class PassiveAgent():
     """Class to handle data from passive Pattoo Agents."""
 
     def __init__(self, agent_program, identifier, url):

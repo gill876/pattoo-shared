@@ -11,7 +11,7 @@ import time
 from pattoo_shared import log
 
 
-class Daemon(object):
+class Daemon():
     """A generic daemon class.
 
     Usage: subclass the daemon class and override the run() method.

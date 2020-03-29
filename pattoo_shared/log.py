@@ -48,7 +48,7 @@ def check_environment():
     return path
 
 
-class _GetLog(object):
+class _GetLog():
     """Class to manage the logging without duplicates."""
 
     def __init__(self):
