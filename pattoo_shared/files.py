@@ -30,6 +30,7 @@ class _Directory():
         """
         # Initialize key variables
         self._root = config.daemon_directory()
+        self._system_root = config.system_daemon_directory()
 
     def pid(self):
         """Define the hidden pid directory.
@@ -42,7 +43,7 @@ class _Directory():
 
         """
         # Return
-        value = '{}{}pid'.format(self._root, os.sep)
+        value = '{}{}pid'.format(self._system_root, os.sep)
         return value
 
     def lock(self):
@@ -56,7 +57,7 @@ class _Directory():
 
         """
         # Return
-        value = '{}{}lock'.format(self._root, os.sep)
+        value = '{}{}lock'.format(self._system_root, os.sep)
         return value
 
     def agent_id(self):
