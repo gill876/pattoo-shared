@@ -35,6 +35,7 @@ class UnittestConfig():
         self._log_directory = tempfile.mkdtemp()
         self._cache_directory = tempfile.mkdtemp()
         self._daemon_directory = tempfile.mkdtemp()
+        self._system_daemon_directory = tempfile.mkdtemp()
 
         # Make sure the configuration directory is OK
         if os.path.isdir(self._config_directory) is False:
@@ -47,6 +48,7 @@ class UnittestConfig():
                 'language': 'xyz',
                 'cache_directory': self._cache_directory,
                 'daemon_directory': self._daemon_directory,
+                'system_daemon_directory': self._system_daemon_directory,
             },
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.6',

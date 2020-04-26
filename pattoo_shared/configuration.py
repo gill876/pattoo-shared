@@ -48,6 +48,20 @@ class BaseConfig():
         # Read data
         self._base_yaml_configuration = _config_reader('pattoo.yaml')
 
+    def config_directory(self):
+        """Get config_directory.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Return
+        result = log.check_environment()
+        return result
+
     def log_directory(self):
         """Get log_directory.
 
@@ -209,6 +223,33 @@ class BaseConfig():
 
         # Get result
         _value = search(key, sub_key, self._base_yaml_configuration)
+
+        # Expand linux ~ notation for home directories if provided.
+        value = os.path.expanduser(_value)
+
+        # Create directory if it doesn't exist
+        files.mkdir(value)
+
+        # Return
+        return value
+
+    def system_daemon_directory(self):
+        """Determine the system_daemon_directory.
+
+        Args:
+            None
+
+        Returns:
+            value: configured system_daemon_directory
+
+        """
+        # Initialize key variables
+        key = 'pattoo'
+        sub_key = 'system_daemon_directory'
+
+        # Get result
+        result = search(key, sub_key, self._base_yaml_configuration, die=False)
+        _value = result if bool(result) else self.daemon_directory()
 
         # Expand linux ~ notation for home directories if provided.
         value = os.path.expanduser(_value)
@@ -499,7 +540,7 @@ def search(key, sub_key, config_dict, die=True):
         log.log2die_safe(1021, 'Invalid configuration file. YAML not found')
 
     # Get new result
-    if key in config_dict:
+    if config_dict.get(key) is not None:
         # Make sure we don't have a None value
         if config_dict[key] is None:
             log_message = (
@@ -507,8 +548,7 @@ def search(key, sub_key, config_dict, die=True):
             log.log2die_safe(1004, log_message)
 
         # Get value we need
-        if sub_key in config_dict[key]:
-            result = config_dict[key][sub_key]
+        result = config_dict[key].get(sub_key)
 
     # Error if not configured
     if result is None and die is True:

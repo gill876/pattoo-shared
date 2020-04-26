@@ -111,6 +111,11 @@ class TestConfig(unittest.TestCase):
         # Nothing should happen. Directory exists in testing.
         _ = self.config.daemon_directory()
 
+    def test_system_daemon_directory(self):
+        """Testing function system_daemon_directory."""
+        # Nothing should happen. Directory exists in testing.
+        _ = self.config.system_daemon_directory()
+
     def test_log_directory(self):
         """Testing function log_directory."""
         # Nothing should happen. Directory exists in testing.

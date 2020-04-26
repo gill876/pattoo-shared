@@ -328,7 +328,7 @@ class Test_Directory(unittest.TestCase):
         # Test
         directory = files._Directory(self.config)
         config = Config()
-        expected = '{}{}pid'.format(config.daemon_directory(), os.sep)
+        expected = '{}{}pid'.format(config.system_daemon_directory(), os.sep)
         result = directory.pid()
         self.assertEqual(result, expected)
 
@@ -337,7 +337,7 @@ class Test_Directory(unittest.TestCase):
         # Test
         directory = files._Directory(self.config)
         config = Config()
-        expected = '{}{}lock'.format(config.daemon_directory(), os.sep)
+        expected = '{}{}lock'.format(config.system_daemon_directory(), os.sep)
         result = directory.lock()
         self.assertEqual(result, expected)
 
