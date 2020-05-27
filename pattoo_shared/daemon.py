@@ -48,6 +48,14 @@ class Daemon():
         # Initialize key variables
         daemon_log_file = self._config.log_file_daemon()
 
+        # Make sure that the log file is accessible.
+        try:
+            open(daemon_log_file, 'a').close()
+        except:
+            log_message = '''Cannot access daemon log file {}. Please check \
+file and directory permissions.'''.format(daemon_log_file)
+            log.log2die(1054, log_message)
+
         # Create a parent process that will manage the child
         # when the code using this class is done.
         try:
@@ -77,7 +85,7 @@ class Daemon():
             log_message = '{} - PID file: {}'.format(log_message, self.pidfile)
             log.log2die(1061, log_message)
 
-        # Redirect standard file descriptors
+        # Redirect standard file descriptors, but first make sure that the
         sys.stdout.flush()
         sys.stderr.flush()
         f_handle_si = open(os.devnull, 'r')
