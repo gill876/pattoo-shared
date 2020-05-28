@@ -18,13 +18,14 @@ from pattoo_shared import converter
 
 
 class Post():
-    """Class to prepare data for posting to remote pattoo server."""
+    """Class to prepare data (as dict) for posting to remote pattoo server."""
 
     def __init__(self, identifier, data):
         """Initialize the class.
 
         Args:
-            metadata: PostingDataPoints object
+            identifier: Unique identifier for the source of the data. (AgentID)
+            data: dict of data to post
 
         Returns:
             None
@@ -42,9 +43,7 @@ class Post():
         """Post data to central server.
 
         Args:
-            save: When True, save data to cache directory if postinf fails
-            data: Data to post. If None, then uses self._post_data (
-                Used for testing and cache purging)
+            None
 
         Returns:
             success: True: if successful
@@ -78,14 +77,13 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
 
 
 class PostAgent(Post):
-    """Class to prepare data for posting to remote pattoo server."""
+    """Class to post AgentPolledData to remote pattoo server."""
 
     def __init__(self, agentdata):
         """Initialize the class.
 
         Args:
-            identifier: Unique identifier for the source of the data.
-            identifier_data: Data from the data source to post
+            agentdata: AgentPolledData object
 
         Returns:
             None
@@ -108,14 +106,15 @@ class PostAgent(Post):
 
 
 class PassiveAgent():
-    """Class to handle data from passive Pattoo Agents."""
+    """Gets data from passive Pattoo Agents for relaying to pattoo API."""
 
     def __init__(self, agent_program, identifier, url):
         """Initialize the class.
 
         Args:
-            url: URL to get
-            identifier: Unique identifier to use for posting data
+            agent_program: Agent program name
+            identifier: Unique identifier for the source of the data. (AgentID)
+            url: URL of content to be retrieved from passive Pattoo agent
 
         Returns:
             None
@@ -195,8 +194,8 @@ def post(url, data, identifier, save=True):
 
     Args:
         url: URL to receive posted data
-        identifier: Identifier to use for posting
-        data: Data to post. If None, then uses self._post_data (
+        identifier: Unique identifier for the source of the data. (AgentID)
+        data: Data dict to post. If None, then uses self._post_data (
             Used for testing and cache purging)
         save: When True, save data to cache directory if postinf fails
 
@@ -258,7 +257,7 @@ def purge(url, identifier):
 
     Args:
         url: URL to receive posted data
-        identifier: Identifier to use for posting
+        identifier: Unique identifier for the source of the data. (AgentID)
 
     Returns:
         None
@@ -327,7 +326,7 @@ def _save_data(data, identifier):
 
     Args:
         data: Dict to save
-        identifier: Identifier
+        identifier: Unique identifier for the source of the data. (AgentID)
 
     Returns:
         success: True: if successful
@@ -375,7 +374,7 @@ def _log(agent_program, identifier):
 
     Args:
         agent_program: Agent program name
-        identifier: Identifier
+        identifier: Unique identifier for the source of the data. (AgentID)
 
     Returns:
         None
