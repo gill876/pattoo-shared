@@ -277,3 +277,71 @@ class Daemon():
         """
         # Simple comment to pass linter
         pass
+
+
+class Graceful_Daemon(Daemon):
+    """Daemon that allows for graceful shutdown
+
+    This daemon should allow for stop/restart commands to perform graceful
+    shutdown of a given process. A graceful shutdown involves checking that
+    whether a current process is running and only ending the process once the
+    current process has completed its currently running task.
+
+    """
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: Agent object
+
+        Returns:
+            None
+
+        """
+        Daemon.__init__(self, agent)
+
+
+    # TODO check that a given system daemon lockfile exists
+    def check_lockfile(self):
+        """Determiens whether the daemon currently has an associated lockfile
+
+        Args:
+            None
+
+        Return:
+            running: True if daemon is currently running or conducing a process
+
+        """
+        pass
+
+    def force(self):
+        """Stop the daemon by deleting the lock file first.
+
+        Inheritted forced method from Daemon that does not comply with graceful
+        shutdowns. Set to not do anything when called.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        pass
+
+    def stop(self):
+        """Stops the daemon gracefully.
+
+        Uses parent class stop method after checking that daemon is no long
+        processing data or making use of a resource.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # processing = False
+        pass
+
