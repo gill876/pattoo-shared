@@ -300,10 +300,10 @@ class Graceful_Daemon(Daemon):
         """
         Daemon.__init__(self, agent)
 
+    def daemon_running(self):
+        """Determines if daemon is running
 
-    # TODO check that a given system daemon lockfile exists
-    def check_lockfile(self):
-        """Determiens whether the daemon currently has an associated lockfile
+        Daemon is running based on whether it has an associated lockfile
 
         Args:
             None
@@ -312,7 +312,15 @@ class Graceful_Daemon(Daemon):
             running: True if daemon is currently running or conducing a process
 
         """
-        pass
+        running = False
+        if self.lockfile is not None:
+            if os.path.exists(self.lockfile) is True:
+                running = True
+
+                log_message = '{} Lock file exists, Process still \
+                running'.format(self.name)
+                log.log2info(20000, log_message)
+        return running
 
     def force(self):
         """Stop the daemon by deleting the lock file first.
@@ -329,10 +337,24 @@ class Graceful_Daemon(Daemon):
         """
         pass
 
+    def __process_log(self):
+        """Generic log message indicating that a given process is no longer
+        running
+
+        Args:
+            none
+
+        Return:
+            None
+
+        """
+        log_message = 'Process {} no longer processing'.format(self.name)
+        log.log2info(2000, log_message)
+
     def stop(self):
         """Stops the daemon gracefully.
 
-        Uses parent class stop method after checking that daemon is no long
+        Uses parent class stop method after checking that daemon is no longer
         processing data or making use of a resource.
 
         Args:
@@ -342,6 +364,31 @@ class Graceful_Daemon(Daemon):
             None
 
         """
-        # processing = False
-        pass
+        # Continually checks if daemon is still running
+        while True:
 
+            if not self.daemon_running():
+                self.__process_log()
+                super.stop(self)
+                break
+
+    def restart(self):
+        """Restarts the daemon gracefully.
+
+        Uses parent class restart method after checking that daemon is no longer
+        processing data or making use of a resource.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Continually checks if daemon is still running
+        while True:
+
+            if not self.daemon_running():
+                self.__process_log()
+                super.restart(self)
+                break
