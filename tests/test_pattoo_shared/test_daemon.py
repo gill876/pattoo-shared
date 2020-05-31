@@ -74,6 +74,14 @@ class TestDaemon(unittest.TestCase):
         """Testing function run."""
         pass
 
+class TestGraceful_Daemon(unittest.TestCase):
+    """
+
+    Checks that daemon start/stop commands confirm to graceful shutdown
+
+    """
+    pass
+
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

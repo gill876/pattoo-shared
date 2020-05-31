@@ -300,6 +300,34 @@ class Graceful_Daemon(Daemon):
         """
         Daemon.__init__(self, agent)
 
+    def __process_log(self):
+        """Generic log message indicating that a given process is no longer
+        running
+
+        Args:
+            none
+
+        Return:
+            None
+
+        """
+        log_message = 'Process {} no longer processing'.format(self.name)
+        log.log2info(1101, log_message)
+
+    @staticmethod
+    def __timeout(currentTime=0):
+        """Keeps track of running time until timeout
+
+        Args:
+            currentTime: current time until timeout
+
+        Return:
+            currentTime: time left until timeout
+
+        """
+        currentTime -= time.time()
+        return currentTime
+
     def daemon_running(self):
         """Determines if daemon is running
 
@@ -319,7 +347,7 @@ class Graceful_Daemon(Daemon):
 
                 log_message = '{} Lock file exists, Process still \
                 running'.format(self.name)
-                log.log2info(20000, log_message)
+                log.log2info(1100, log_message)
         return running
 
     def force(self):
@@ -336,20 +364,6 @@ class Graceful_Daemon(Daemon):
 
         """
         pass
-
-    def __process_log(self):
-        """Generic log message indicating that a given process is no longer
-        running
-
-        Args:
-            none
-
-        Return:
-            None
-
-        """
-        log_message = 'Process {} no longer processing'.format(self.name)
-        log.log2info(2000, log_message)
 
     def stop(self):
         """Stops the daemon gracefully.
@@ -369,7 +383,7 @@ class Graceful_Daemon(Daemon):
 
             if not self.daemon_running():
                 self.__process_log()
-                super.stop(self)
+                super(Graceful_Daemon, self).stop()
                 break
 
     def restart(self):
@@ -390,5 +404,5 @@ class Graceful_Daemon(Daemon):
 
             if not self.daemon_running():
                 self.__process_log()
-                super.restart(self)
+                super(Graceful_Daemon , self).restart()
                 break
