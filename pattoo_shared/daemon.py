@@ -279,7 +279,7 @@ class Daemon():
         pass
 
 
-class Graceful_Daemon(Daemon):
+class GracefulDaemon(Daemon):
     """Daemon that allows for graceful shutdown
 
     This daemon should allow for stop/restart commands to perform graceful
@@ -288,6 +288,75 @@ class Graceful_Daemon(Daemon):
     current process has completed its currently running task.
 
     """
+    class GracefulShutdown():
+        """Facilities graceful shutdown during stop/restart daemon commands
+
+        GracefulShutdown is a callable method which can be used as python
+        decorator that can facilitate checks for a graceful stop/restart of a
+        system daemon.
+
+        """
+
+        @staticmethod
+        def __daemon_running(lock_file_name):
+            """Determines if daemon is running
+
+            Daemon is running based on whether it has an associated lockfile
+
+            Args:
+                None
+
+            Return:
+                running: True if daemon is currently running or conducing a process
+
+            """
+            running = False
+            if lock_file_name is not None:
+                if os.path.exists(lock_file_name) is True:
+                    running = True
+
+            return running
+
+        def __call__(self, fn):
+            """Wrapper class that handles graceful_shutdown prior to using
+            callaback function `fn`
+
+            Args:
+                self: GracefulShutdown instance
+                fn: callback method
+
+            Return:
+                wrapper
+
+            """
+            def wrapper(_self):
+                """Wrapper function that facilitates graceful shutdown
+
+                Args:
+                    _self: daemon instance
+
+                Return:
+                    None
+
+                """
+
+                if self.__daemon_running(_self.lockfile):
+                    log_message = '{} Lock file exists, Process still running'.format(_self.name)
+                    log.log2info(1100, log_message)
+
+                # Continually checks if daemon is still running
+                while True:
+
+                    if not self.__daemon_running(_self.lockfile):
+                        log_message = 'Process {} no longer processing'.format(_self.name)
+                        log.log2info(1101, log_message)
+
+                        fn(_self) # method callback
+                        break
+                else:
+                    fn(_self) # method callback
+            return wrapper
+
     def __init__(self, agent):
         """Initialize the class.
 
@@ -300,55 +369,6 @@ class Graceful_Daemon(Daemon):
         """
         Daemon.__init__(self, agent)
 
-    def __process_log(self):
-        """Generic log message indicating that a given process is no longer
-        running
-
-        Args:
-            none
-
-        Return:
-            None
-
-        """
-        log_message = 'Process {} no longer processing'.format(self.name)
-        log.log2info(1101, log_message)
-
-    @staticmethod
-    def __timeout(currentTime=0):
-        """Keeps track of running time until timeout
-
-        Args:
-            currentTime: current time until timeout
-
-        Return:
-            currentTime: time left until timeout
-
-        """
-        currentTime -= time.time()
-        return currentTime
-
-    def daemon_running(self):
-        """Determines if daemon is running
-
-        Daemon is running based on whether it has an associated lockfile
-
-        Args:
-            None
-
-        Return:
-            running: True if daemon is currently running or conducing a process
-
-        """
-        running = False
-        if self.lockfile is not None:
-            if os.path.exists(self.lockfile) is True:
-                running = True
-
-                log_message = '{} Lock file exists, Process still \
-                running'.format(self.name)
-                log.log2info(1100, log_message)
-        return running
 
     def force(self):
         """Stop the daemon by deleting the lock file first.
@@ -365,6 +385,7 @@ class Graceful_Daemon(Daemon):
         """
         pass
 
+    @GracefulShutdown()
     def stop(self):
         """Stops the daemon gracefully.
 
@@ -378,14 +399,9 @@ class Graceful_Daemon(Daemon):
             None
 
         """
-        # Continually checks if daemon is still running
-        while True:
+        super(GracefulDaemon, self).stop()
 
-            if not self.daemon_running():
-                self.__process_log()
-                super(Graceful_Daemon, self).stop()
-                break
-
+    @GracefulShutdown()
     def restart(self):
         """Restarts the daemon gracefully.
 
@@ -399,10 +415,4 @@ class Graceful_Daemon(Daemon):
             None
 
         """
-        # Continually checks if daemon is still running
-        while True:
-
-            if not self.daemon_running():
-                self.__process_log()
-                super(Graceful_Daemon , self).restart()
-                break
+        super(GracefulDaemon, self).restart()
