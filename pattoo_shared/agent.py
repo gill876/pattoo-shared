@@ -23,7 +23,7 @@ from datetime import datetime
 from gunicorn.app.base import BaseApplication
 
 # Pattoo libraries
-from pattoo_shared.daemon import Daemon, Graceful_Daemon
+from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
@@ -80,7 +80,8 @@ class Agent():
         pass
 
 
-class AgentDaemon(Daemon):
+# class AgentDaemon(Daemon):
+class AgentDaemon(GracefulDaemon):
     """Class that manages agent deamonization."""
 
     def __init__(self, agent):

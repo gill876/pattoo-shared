@@ -9,6 +9,7 @@ import time
 
 # Pattoo imports
 from pattoo_shared import log
+from pattoo_shared.constants import GRACEFUL_TIMEOUT
 
 
 class Daemon():
@@ -345,16 +346,24 @@ class GracefulDaemon(Daemon):
                     log.log2info(1100, log_message)
 
                 # Continually checks if daemon is still running
+                # Exits loop once GRACEFUL_TIMEOUT limit reached
+                # Indicating a failed attempt to gracefully shutdown
+                timeout_counter = time.time()
                 while True:
 
-                    if not self.__daemon_running(_self.lockfile):
+                    if not self.__daemon_running(_self.lockfile) is True:
                         log_message = 'Process {} no longer processing'.format(_self.name)
                         log.log2info(1101, log_message)
 
                         fn(_self) # method callback
                         break
-                else:
-                    fn(_self) # method callback
+
+                    Checking whether GRACEFUL_TIMEOUT limit is reached
+                    current_duration = time.time() - timeout_counter
+                    if current_duration >= GRACEFUL_TIMEOUT:
+                        log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(_self.name)
+                        log.log2info(1102, log_message)
+                        break
             return wrapper
 
     def __init__(self, agent):
@@ -368,22 +377,6 @@ class GracefulDaemon(Daemon):
 
         """
         Daemon.__init__(self, agent)
-
-
-    def force(self):
-        """Stop the daemon by deleting the lock file first.
-
-        Inheritted forced method from Daemon that does not comply with graceful
-        shutdowns. Set to not do anything when called.
-
-        Args:
-            None
-
-        Returns:
-            None
-
-        """
-        pass
 
     @GracefulShutdown()
     def stop(self):
