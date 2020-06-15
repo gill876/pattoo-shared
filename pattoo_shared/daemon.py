@@ -6,6 +6,7 @@ import signal
 import sys
 import os
 import time
+import dbus
 
 # Pattoo imports
 from pattoo_shared import log
@@ -358,7 +359,7 @@ class GracefulDaemon(Daemon):
                         fn(_self) # method callback
                         break
 
-                    Checking whether GRACEFUL_TIMEOUT limit is reached
+                    # Checking whether GRACEFUL_TIMEOUT limit is reached
                     current_duration = time.time() - timeout_counter
                     if current_duration >= GRACEFUL_TIMEOUT:
                         log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(_self.name)
@@ -378,6 +379,28 @@ class GracefulDaemon(Daemon):
         """
         Daemon.__init__(self, agent)
 
+    def start(self):
+        """Start GracefulDaemon
+
+        Calls superclass start method only if related pidfile of daemon does not
+        exist
+
+        Args:
+            None
+
+        Return:
+            None
+
+        """
+        if bool(self.pidfile and os.path.exists(self.pidfile)) is False:
+            super(GracefulDaemon, self).start()
+        else:
+            log_message = 'Process {} already has PID file '.format(self.name)
+            log.log2debug(1103, log_message)
+
+        # Starting systemd service using dbus interface
+
+
     @GracefulShutdown()
     def stop(self):
         """Stops the daemon gracefully.
@@ -393,6 +416,8 @@ class GracefulDaemon(Daemon):
 
         """
         super(GracefulDaemon, self).stop()
+
+        # Changing systemd state of daemon
 
     @GracefulShutdown()
     def restart(self):
