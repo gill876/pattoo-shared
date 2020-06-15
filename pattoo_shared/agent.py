@@ -80,25 +80,8 @@ class Agent():
         pass
 
 
-# class AgentDaemon(Daemon):
-class AgentDaemon(GracefulDaemon):
-    """Class that manages agent deamonization."""
-
-    def __init__(self, agent):
-        """Initialize the class.
-
-        Args:
-            agent: agent object
-
-        Returns:
-            None
-
-        """
-        # Initialize variables to be used by daemon
-        self.agent = agent
-
-        # Call up the base daemon
-        Daemon.__init__(self, agent)
+class AgentDaemonMixin():
+    """ClassMixin defines agent daemons."""
 
     def run(self):
         """Start polling.
@@ -114,6 +97,41 @@ class AgentDaemon(GracefulDaemon):
         while True:
             self.agent.query()
 
+class BaseAgentDaemon(AgentDaemonMixin, Daemon):
+    """Class that manages base agent daemonization"""
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: agent object
+
+        Returns:
+            None
+
+        """
+        # Initialize variables to be used by daemon
+        self.agent = agent
+
+        # Instantiate daemon superclass
+        Daemon.__init__(self, agent)
+
+class GracefulAgentDaemon(AgentDaemonMixin, GracefulDaemon):
+    """Class that manages graceful agent daemonization"""
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: agent object
+
+        Returns:
+            None
+
+        """
+        # Initialize variables to be used by daemon
+        self.agent = agent
+
+        # Instantiate daemon superclass
+        GracefulDaemon.__init__(self, agent)
 
 class AgentCLI():
     """Class that manages the agent CLI.
@@ -205,7 +223,7 @@ class AgentCLI():
         # Get the parser value
         self.parser = parser
 
-    def control(self, agent):
+    def control(self, agent, graceful=False):
         """Control the pattoo agent from the CLI.
 
         Args:
@@ -220,8 +238,13 @@ class AgentCLI():
         parser = self.parser
         args = parser.parse_args()
 
+        # Instantiate agent daemon
+        if graceful is False:
+            _daemon = BaseAgentDaemon(agent)
+        else:
+            _daemon = GracefulAgentDaemon(agent)
+
         # Run daemon
-        _daemon = AgentDaemon(agent)
         if args.start is True:
             _daemon.start()
         elif args.stop is True:
