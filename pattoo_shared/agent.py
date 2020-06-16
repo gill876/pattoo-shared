@@ -144,7 +144,6 @@ class GracefulAgentDaemon(GracefulDaemon):
         while True:
 
             # Ensures that systemd daemon status remains active
-            ActiveState = self.get_unit_prop('test_prop')
             self.agent.query()
 
 class AgentCLI():

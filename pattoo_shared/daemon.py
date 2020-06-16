@@ -6,11 +6,13 @@ import signal
 import sys
 import os
 import time
-import dbus
 
 # Pattoo imports
 from pattoo_shared import log
 from pattoo_shared.constants import GRACEFUL_TIMEOUT
+
+# Third party library
+from pystemd.systemd1 import Unit
 
 
 class Daemon():
@@ -377,69 +379,15 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        # Unit and Unit Properties object instantiation
-        self.unit_obj, self.__unit_props = GracefulDaemon.__get_dbus_interface(agent.name())
+        # Creating unit using third-party dbus module pystemd
+        self.unit = Unit('{}.service'.format(agent.name()))
+        self.unit.load()
+
+        # Manages active state based on agent script entry point
+        self.is_active = 'inactive'
 
         # Daemon superclass instantiation
         Daemon.__init__(self, agent)
-
-    @staticmethod
-    def __get_dbus_interface(agent_name):
-        """Creates dbus interace
-
-        DBus interface Unit and Properities object created to manage systemd
-        daemon status/state.
-
-        Args:
-            agent_name: daemon's associated agent name
-
-        Return:
-            unit_obj: unit object that controls start/stop/restart commands
-            unit_props: unit properties object used to get daemon properties
-
-        """
-        # Systemd Interface varaiables
-        systemd_dbus_name = 'org.freedesktop.systemd1'
-        systemd_dbus_interface = '/org/freedesktop/systemd1'
-        systemd_manager_name = 'org.freedesktop.systemd1.Manager'
-
-        # Unit object Interface and property names
-        unit_object_dbus_name = '{}.Unit'.format(systemd_dbus_name)
-        unit_props_dbus_name = 'org.freedesktop.DBus.Properities'
-        agent_service_name = '{}.service'.format(agent_name)
-
-        # SystemdBus
-        sys_bus = dbus.SystemBus()
-
-        # Creation of systemd1 object
-        systemd = sys_bus.get_object(systemd_dbus_name, systemd_dbus_interface)
-
-        # Instantiate systemd interface manager
-        # and get unit name for unit object
-        systemd_manager = dbus.Interface(systemd, systemd_manager_name)
-        unit_interface_name = systemd_manager.GetUnit(agent_service_name)
-        unit_interface = sys_bus.get_object(systemd_dbus_name, unit_interface_name)
-
-        # Unit Object
-        unit_obj = dbus.Interface(unit_interface, unit_object_dbus_name)
-
-        # Unit Properities
-        unit_props = dbus.Interface(unit_interface, unit_props_dbus_name)
-
-        return unit_obj, unit_props
-
-    def get_unit_prop(self, prop):
-        """Retrieves specific unit object property
-
-        Args:
-            prop: Property to be retrieved
-
-        Returns:
-            prop_state: returns the current state of the property
-
-        """
-        prop_state = self.__unit_props.Get('org.freedesktop.systemd1.Unit', prop)
-        return prop_state
 
     def start(self):
         """Start GracefulDaemon
@@ -461,7 +409,7 @@ class GracefulDaemon(Daemon):
             log.log2debug(1103, log_message)
 
         # Starting systemd service dbus unit object
-        self.unit_obj.Start('fail')
+        self.unit.Unit.Start(b'replace')
 
     @GracefulShutdown()
     def stop(self):
@@ -480,7 +428,7 @@ class GracefulDaemon(Daemon):
         super(GracefulDaemon, self).stop()
 
         # Changing systemd state to inactive
-        self.unit_obj.Stop('fail')
+        self.unit.Unit.Stop(b'fail')
 
     @GracefulShutdown()
     def restart(self):
