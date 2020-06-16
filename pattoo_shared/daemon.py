@@ -398,21 +398,27 @@ class GracefulDaemon(Daemon):
             unit_props: unit properties object used to get daemon properties
 
         """
+        # Systemd Interface varaiables
         systemd_dbus_name = 'org.freedesktop.systemd1'
         systemd_dbus_interface = '/org/freedesktop/systemd1'
         systemd_manager_name = 'org.freedesktop.systemd1.Manager'
+
+        # Unit object Interface and property names
         unit_object_dbus_name = '{}.Unit'.format(systemd_dbus_name)
         unit_props_dbus_name = 'org.freedesktop.DBus.Properities'
         agent_service_name = '{}.service'.format(agent_name)
 
+        # SystemdBus
+        sys_bus = dbus.SystemBus()
+
         # Creation of systemd1 object
-        systemd = dbus.SystemBus().get_object(systemd_dbus_name, systemd_dbus_interface)
+        systemd = sys_bus.get_object(systemd_dbus_name, systemd_dbus_interface)
 
         # Instantiate systemd interface manager
         # and get unit name for unit object
         systemd_manager = dbus.Interface(systemd, systemd_manager_name)
         unit_interface_name = systemd_manager.GetUnit(agent_service_name)
-        unit_interface = systemd.get_object(systemd_dbus_name, unit_interface_name)
+        unit_interface = sys_bus.get_object(systemd_dbus_name, unit_interface_name)
 
         # Unit Object
         unit_obj = dbus.Interface(unit_interface, unit_object_dbus_name)
@@ -455,7 +461,7 @@ class GracefulDaemon(Daemon):
             log.log2debug(1103, log_message)
 
         # Starting systemd service dbus unit object
-        self.unit_obj.Start()
+        self.unit_obj.Start('fail')
 
     @GracefulShutdown()
     def stop(self):
@@ -474,7 +480,7 @@ class GracefulDaemon(Daemon):
         super(GracefulDaemon, self).stop()
 
         # Changing systemd state to inactive
-        self.unit_obj.Stop()
+        self.unit_obj.Stop('fail')
 
     @GracefulShutdown()
     def restart(self):
