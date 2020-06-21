@@ -39,7 +39,7 @@ class BaseConfig():
         """Initialize the class.
 
         Args:
-            filename: Name of file to read
+            None
 
         Returns:
             None
