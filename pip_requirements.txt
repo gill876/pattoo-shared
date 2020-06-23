@@ -5,4 +5,3 @@ six
 requests
 PyYAML
 ipaddress
-pystemd
