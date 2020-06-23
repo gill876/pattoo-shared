@@ -11,10 +11,6 @@ import time
 from pattoo_shared import log
 from pattoo_shared.constants import GRACEFUL_TIMEOUT
 
-# Third party library
-from pystemd.systemd1 import Unit
-
-
 class Daemon():
     """A generic daemon class.
 
@@ -348,24 +344,27 @@ class GracefulDaemon(Daemon):
                     log_message = '{} Lock file exists, Process still running'.format(_self.name)
                     log.log2info(1100, log_message)
 
-                # Continually checks if daemon is still running
-                # Exits loop once GRACEFUL_TIMEOUT limit reached
-                # Indicating a failed attempt to gracefully shutdown
+                # Continually checks if daemon is still running exits loop once
+                # GRACEFUL_TIMEOUT limit reached
                 timeout_counter = time.time()
                 while True:
+                    # Updating timeout duration
+                    current_duration = time.time() - timeout_counter
 
                     if not self.__daemon_running(_self.lockfile) is True:
                         log_message = 'Process {} no longer processing'.format(_self.name)
-                        log.log2info(1101, log_message)
+                        log.log2info(1102, log_message)
 
-                        fn(_self) # method callback
+                        fn(_self)
                         break
-
-                    # Checking whether GRACEFUL_TIMEOUT limit is reached
-                    current_duration = time.time() - timeout_counter
-                    if current_duration >= GRACEFUL_TIMEOUT:
+                    elif current_duration >= GRACEFUL_TIMEOUT:
                         log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(_self.name)
                         log.log2info(1102, log_message)
+
+                        log_message = '{}, hard shutdown in progress'.format(_self.name)
+                        log.log2info(1102, log_message)
+
+                        _self.force()
                         break
             return wrapper
 
@@ -379,37 +378,7 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        # Creating unit using third-party dbus module pystemd
-        self.unit = Unit('{}.service'.format(agent.name()))
-        self.unit.load()
-
-        # Manages active state based on agent script entry point
-        self.is_active = 'inactive'
-
-        # Daemon superclass instantiation
         Daemon.__init__(self, agent)
-
-    def start(self):
-        """Start GracefulDaemon
-
-        Calls superclass start method only if related pidfile of daemon does not
-        exist
-
-        Args:
-            None
-
-        Return:
-            None
-
-        """
-        if bool(self.pidfile and os.path.exists(self.pidfile)) is False:
-            super(GracefulDaemon, self).start()
-        else:
-            log_message = 'Process {} already has PID file '.format(self.name)
-            log.log2debug(1103, log_message)
-
-        # Starting systemd service dbus unit object
-        self.unit.Unit.Start(b'replace')
 
     @GracefulShutdown()
     def stop(self):
@@ -426,9 +395,6 @@ class GracefulDaemon(Daemon):
 
         """
         super(GracefulDaemon, self).stop()
-
-        # Changing systemd state to inactive
-        self.unit.Unit.Stop(b'fail')
 
     @GracefulShutdown()
     def restart(self):
