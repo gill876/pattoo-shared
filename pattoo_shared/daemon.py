@@ -353,7 +353,7 @@ class GracefulDaemon(Daemon):
 
                     if not self.__daemon_running(_self.lockfile) is True:
                         log_message = 'Process {} no longer processing'.format(_self.name)
-                        log.log2info(1102, log_message)
+                        log.log2info(1101, log_message)
 
                         fn(_self)
                         break
@@ -362,7 +362,7 @@ class GracefulDaemon(Daemon):
                         log.log2info(1102, log_message)
 
                         log_message = '{}, hard shutdown in progress'.format(_self.name)
-                        log.log2info(1102, log_message)
+                        log.log2info(1103, log_message)
 
                         _self.force()
                         break
