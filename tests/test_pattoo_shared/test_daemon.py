@@ -6,6 +6,7 @@ import unittest
 import os
 import sys
 
+import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -22,7 +23,9 @@ else:
     sys.exit(2)
 
 # Pattoo imports
-from pattoo_shared import daemon
+from pattoo_shared import files
+from pattoo_shared.daemon import Daemon
+from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
@@ -34,9 +37,41 @@ class TestDaemon(unittest.TestCase):
     # General object setup
     #########################################################################
 
+    # Agent names
+    agent_name = 'parent'
+
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._config = Config()
+        self._agent = Agent(parent=self.agent_name, config=self._config)
+
+        # Instantiation of test daemon
+        self._daemon = Daemon(self._agent)
+
+    def tearDown(self):
+        """Test clean up"""
+        self._config = None
+        self._agent = None
+        self._daemon = None
+
     def test___init__(self):
         """Testing function __init__."""
-        pass
+        # Check daemon name matches agent name
+        self.assertEqual(self._daemon.name, self.agent_name)
+
+        # Checking daemon config
+        self.assertEqual(self._daemon._config, self._config)
+        self.assertEqual(self._daemon._config, self._config)
+
+        # Checking daemon pid_file
+        expected = files.pid_file(self.agent_name, self._config)
+        self.assertEqual(self._daemon.pidfile, expected)
+
+        # Checking daemon lock_file
+        expected = files.lock_file(self.agent_name, self._config)
+        self.assertEqual(self._daemon.lockfile, expected)
 
     def test__daemonize(self):
         """Testing function _daemonize."""
@@ -44,11 +79,33 @@ class TestDaemon(unittest.TestCase):
 
     def test_delpid(self):
         """Testing function delpid."""
-        pass
+
+        # Creating daemon Process ID file(pidfile)
+        os.mknod(self._daemon.pidfile)
+
+        # Checking that pid file has been created
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
+
+        # Delete pid file
+        self._daemon.delpid()
+
+        # Check that pidfile of the daemon has been deleted
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
 
     def test_dellock(self):
         """Testing function dellock."""
-        pass
+
+        # Creating daemon Process ID file(pidfile)
+        os.mknod(self._daemon.lockfile)
+
+        # Checking that pid file has been created
+        self.assertTrue(os.path.exists(self._daemon.lockfile))
+
+        # Delete pid file
+        self._daemon.dellock()
+
+        # Check that pidfile of the daemon has been deleted
+        self.assertFalse(os.path.exists(self._daemon.lockfile))
 
     def test_start(self):
         """Testing function start."""
@@ -74,7 +131,7 @@ class TestDaemon(unittest.TestCase):
         """Testing function run."""
         pass
 
-class TestGraceful_Daemon(unittest.TestCase):
+class TestGracefulDaemon(TestDaemon):
     """
 
     Checks that daemon start/stop commands confirm to graceful shutdown
