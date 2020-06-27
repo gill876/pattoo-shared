@@ -359,10 +359,10 @@ class GracefulDaemon(Daemon):
                         break
                     elif current_duration >= GRACEFUL_TIMEOUT:
                         log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(_self.name)
-                        log.log2info(1102, log_message)
+                        log.log2info(1103, log_message)
 
                         log_message = '{}, hard shutdown in progress'.format(_self.name)
-                        log.log2info(1103, log_message)
+                        log.log2info(1104, log_message)
 
                         _self.force()
                         break
