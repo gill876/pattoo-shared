@@ -30,6 +30,27 @@ from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
+class MockDaemon(Daemon):
+    """Mock Daemon used to test Daemon class
+
+    Built to provide minial functionality to test Daemon run method
+
+    """
+
+    def run(self):
+        """Overriding Daemon run method
+
+        Prints to standard output
+
+        Args:
+            None
+
+        Return:
+            None
+
+        """
+        print('Running')
+
 
 class TestDaemon(unittest.TestCase):
     """Checks all functions and methods."""
@@ -49,7 +70,7 @@ class TestDaemon(unittest.TestCase):
         self._agent = Agent(parent=self.agent_name, config=self._config)
 
         # Instantiation of test daemon
-        self._daemon = Daemon(self._agent)
+        self._daemon = MockDaemon(self._agent)
 
     def tearDown(self):
         """Test clean up"""
@@ -152,7 +173,10 @@ class TestDaemon(unittest.TestCase):
 
     def test_run(self):
         """Testing function run."""
-        pass
+        expected = 'Running\n'
+        with patch('sys.stdout', new = StringIO()) as result:
+            self._daemon.run()
+            self.assertEqual(result.getvalue(), expected)
 
 class TestGracefulDaemon(TestDaemon):
     """
