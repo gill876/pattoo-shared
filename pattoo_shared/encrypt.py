@@ -80,8 +80,6 @@ class Pgpier:
             None
         """
         
-        _keyid = None
-        
         keys = self.list_pub_keys()
         fingerprint = self.fingerprint
 
