@@ -13,6 +13,7 @@ import yaml
 
 # Pattoo libraries
 from pattoo_shared import log, data
+from pattoo_shared import encrypt
 
 
 class _Directory():
@@ -74,6 +75,18 @@ class _Directory():
         value = '{}{}agent_id'.format(self._root, os.sep)
         return value
 
+    def keyring(self):
+        """Define the hidden keyring directory
+        Args:
+            None
+
+        Returns:
+            value (str): keyring directory
+        """
+        # Return
+        value = '{}{}keys{}{}'.format(self._root, os.sep, os.sep, '.gnupg')
+        mkdir(value)
+        return value
 
 class _File():
     """A class for creating the names of hidden files."""
@@ -433,7 +446,6 @@ def agent_id_file(agent_name, config):
 
     Args:
         agent_name: Agent name
-        agent_hostname: Agent hostname
         config: Config object
 
 
@@ -452,7 +464,7 @@ def get_agent_id(agent_name, config):
 
     Args:
         agent_name: Agent name
-        agent_hostname: Agent hostname
+        config: Config object
 
     Returns:
         agent_id: UID for agent
@@ -474,6 +486,32 @@ def get_agent_id(agent_name, config):
     # Return
     return agent_id
 
+def get_gnupg(agent_name, config, agent_email):
+    """Generate key pair and store credentials
+
+    Args:
+        agent_name (str): Agent name
+        config (obj): Config object
+        agent_email (str): Agent email address
+
+    Returns:
+        gpg (obj): Pgpier object
+    """
+    wrapper = '({})'.format(agent_name)
+    d_obj = _Directory(config)
+    key_dir = d_obj.keyring()
+
+    agent_comment = 'Key pair generated for {}'.format(agent_name)
+
+    gpg = encrypt.Pgpier(key_dir)
+    set_values = gpg.set_from_imp(wrapper)
+
+    if set_values is not True:
+        gpg.key_pair(agent_email, agent_name, agent_comment)
+        gpg.exp_main(wrapper)
+        
+    gpg.set_keyid()
+    return gpg
 
 def execute(command, die=True):
     """Run the command UNIX CLI command and record output.

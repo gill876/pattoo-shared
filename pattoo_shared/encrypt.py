@@ -83,10 +83,11 @@ class Pgpier:
         _keyid = None
         
         keys = self.list_pub_keys()
+        fingerprint = self.fingerprint
 
         if keys != []:
             for key in keys:
-                if key['fingerprint'] == self.fingerprint:
+                if key['fingerprint'] == fingerprint:
                     self.keyid = key['keyid']#set keyid associated with fingerprint in class
         else:
             pass
