@@ -44,7 +44,7 @@ def start_daemon():
         None
 
     """
-    subprocess.call(['./daemon_start_test_script.py'])
+    subprocess.call(['python', 'daemon_start_test_script.py'])
 
 class MockDaemon(Daemon):
     """Mock Daemon used to test Daemon class
