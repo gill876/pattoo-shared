@@ -84,8 +84,7 @@ class PostAgent(Post):
         """Initialize the class.
 
         Args:
-            identifier: Unique identifier for the source of the data.
-            identifier_data: Data from the data source to post
+            agentdata: Agent data
 
         Returns:
             None
