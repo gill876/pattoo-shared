@@ -79,6 +79,34 @@ class Agent():
         # Do nothing
         pass
 
+    def set_email(self, email):
+        """Set email address of the agent
+
+        Args:
+            email (str): Agent email address
+
+        Returns:
+            None
+        """
+        self.email = email
+
+    def get_gnupg(self):
+        """Get Pgpier class of the agent
+
+        Args:
+            None
+
+        Returns:
+            gpg (obj): Pgpier object
+        """
+        agent_name = self.parent
+        agent_config = self.config
+        agent_email = self.email
+
+        gpg = files.get_gnupg(agent_name, agent_config, agent_email)
+
+        return gpg
+
 
 class AgentDaemon(Daemon):
     """Class that manages agent deamonization."""
