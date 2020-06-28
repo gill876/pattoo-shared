@@ -4,6 +4,7 @@
 # Standard imports
 import unittest
 import os
+import subprocess
 import sys
 from io import StringIO
 from unittest.mock import patch
@@ -30,27 +31,44 @@ from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
+# TEST CONSTANTS
+AGENT_NAME = 'parent'
+
+def start_daemon():
+    """Allows for the daemon start
+
+    Args:
+        None
+
+    Return:
+        None
+
+    """
+    subprocess.call(['./daemon_start_test_script.py'])
+
 class MockDaemon(Daemon):
     """Mock Daemon used to test Daemon class
 
-    Built to provide minial functionality to test Daemon run method
+    Built to provide minimal functionality to test Daemon run method
 
     """
 
-    def run(self):
+    def run(self, loop=True):
         """Overriding Daemon run method
 
         Prints to standard output
 
         Args:
-            None
+            loop: determines looping functionality is needed, used to test
+            daemon start
 
         Return:
             None
 
         """
         print('Running')
-
+        while loop:
+            pass
 
 class TestDaemon(unittest.TestCase):
     """Checks all functions and methods."""
@@ -59,15 +77,12 @@ class TestDaemon(unittest.TestCase):
     # General object setup
     #########################################################################
 
-    # Agent names
-    agent_name = 'parent'
-
     def setUp(self):
         """Test setup"""
 
         # Setup base config and agent
         self._config = Config()
-        self._agent = Agent(parent=self.agent_name, config=self._config)
+        self._agent = Agent(parent=AGENT_NAME, config=self._config)
 
         # Instantiation of test daemon
         self._daemon = MockDaemon(self._agent)
@@ -88,18 +103,18 @@ class TestDaemon(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Check daemon name matches agent name
-        self.assertEqual(self._daemon.name, self.agent_name)
+        self.assertEqual(self._daemon.name, AGENT_NAME)
 
         # Checking daemon config
         self.assertEqual(self._daemon._config, self._config)
         self.assertEqual(self._daemon._config, self._config)
 
         # Checking daemon pid_file
-        expected = files.pid_file(self.agent_name, self._config)
+        expected = files.pid_file(AGENT_NAME, self._config)
         self.assertEqual(self._daemon.pidfile, expected)
 
         # Checking daemon lock_file
-        expected = files.lock_file(self.agent_name, self._config)
+        expected = files.lock_file(AGENT_NAME, self._config)
         self.assertEqual(self._daemon.lockfile, expected)
 
     def test__daemonize(self):
@@ -138,7 +153,8 @@ class TestDaemon(unittest.TestCase):
 
     def test_start(self):
         """Testing function start."""
-        pass
+        start_daemon()
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
 
     def test_force(self):
         """Testing function force."""
@@ -156,8 +172,8 @@ class TestDaemon(unittest.TestCase):
         """Testing function status."""
 
         # Test status while daemon is running
-        os.mknod(self._daemon.pidfile)
-        expected = 'Daemon is running - {}\n'.format(self.agent_name)
+        start_daemon()
+        expected = 'Daemon is running - {}\n'.format(AGENT_NAME)
 
         with patch('sys.stdout', new = StringIO()) as result:
             self._daemon.status()
@@ -165,7 +181,7 @@ class TestDaemon(unittest.TestCase):
 
         # Test status when daemon has been stopped
         os.remove(self._daemon.pidfile)
-        expected = 'Daemon is stopped - {}\n'.format(self.agent_name)
+        expected = 'Daemon is stopped - {}\n'.format(AGENT_NAME)
 
         with patch('sys.stdout', new = StringIO()) as result:
             self._daemon.status()
@@ -175,7 +191,7 @@ class TestDaemon(unittest.TestCase):
         """Testing function run."""
         expected = 'Running\n'
         with patch('sys.stdout', new = StringIO()) as result:
-            self._daemon.run()
+            self._daemon.run(loop=False)
             self.assertEqual(result.getvalue(), expected)
 
 class TestGracefulDaemon(TestDaemon):
