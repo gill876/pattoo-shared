@@ -5,8 +5,9 @@
 import unittest
 import os
 import sys
+from io import StringIO
+from unittest.mock import patch
 
-import time
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -54,6 +55,13 @@ class TestDaemon(unittest.TestCase):
         """Test clean up"""
         self._config = None
         self._agent = None
+
+        # Removing any relate lock file
+        if os.path.exists(self._daemon.lockfile):
+            os.remove(self._daemon.lockfile)
+        if os.path.exists(self._daemon.pidfile):
+            os.remove(self._daemon.pidfile)
+
         self._daemon = None
 
     def test___init__(self):
@@ -125,7 +133,22 @@ class TestDaemon(unittest.TestCase):
 
     def test_status(self):
         """Testing function status."""
-        pass
+
+        # Test status while daemon is running
+        os.mknod(self._daemon.pidfile)
+        expected = 'Daemon is running - {}\n'.format(self.agent_name)
+
+        with patch('sys.stdout', new = StringIO()) as result:
+            self._daemon.status()
+            self.assertEqual(result.getvalue(), expected)
+
+        # Test status when daemon has been stopped
+        os.remove(self._daemon.pidfile)
+        expected = 'Daemon is stopped - {}\n'.format(self.agent_name)
+
+        with patch('sys.stdout', new = StringIO()) as result:
+            self._daemon.status()
+            self.assertEqual(result.getvalue(), expected)
 
     def test_run(self):
         """Testing function run."""
