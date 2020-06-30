@@ -27,10 +27,76 @@ from pattoo_shared.configuration import Config
 # Importing MockDaemon for start test
 from test_daemon import MockDaemon, AGENT_NAME
 
-# Setting up daemon config
-_config = Config()
-_agent = Agent(parent=AGENT_NAME, config=_config)
+def create_agent():
+    """Creates new agent for use in testing start and restart
 
-# Setting up MockDaemon and startin process for testing
-_daemon = MockDaemon(_agent)
-_daemon.start()
+    Args:
+        None
+
+    Return:
+        _agent: new agent for testing
+
+    """
+    _config = Config()
+    _agent = Agent(parent=AGENT_NAME, config=_config)
+    return _agent
+
+def start_daemon():
+    """Creates a mock daemon for testing start
+
+    Args:
+        None
+
+    Return:
+        None
+
+    """
+    _agent = create_agent()
+
+    # Setting up MockDaemon and starting process for testing
+    _daemon = MockDaemon(_agent)
+    _daemon.start()
+
+def restart_daemon():
+    """Creates a mock daemon for testing restart
+
+    Args:
+        None
+
+    Return:
+        None
+
+    """
+    _agent = create_agent()
+
+    # Setting up MockDaemon and testing restart method
+    _daemon = MockDaemon(_agent)
+    _daemon.restart()
+
+def daemonize_daemon():
+    """Creates a mock daemon for testing daemonizing
+
+    Args:
+        None
+
+    Return:
+        None
+
+    """
+    _agent = create_agent()
+
+    # Setting up MockDaemon and testing daemonize method
+    _daemon = MockDaemon(_agent)
+    _daemon._daemonize()
+
+if __name__ == '__main__':
+    command = sys.argv[1]
+
+    if command == '--start':
+        start_daemon()
+    elif command == '--restart':
+        restart_daemon()
+    elif command == '--daemonize':
+        daemonize_daemon()
+    else:
+        print('No command matches')

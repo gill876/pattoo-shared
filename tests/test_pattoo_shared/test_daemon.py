@@ -34,18 +34,18 @@ from tests.libraries.configuration import UnittestConfig
 # TEST CONSTANTS
 AGENT_NAME = 'parent'
 
-def start_daemon():
+def handle_daemon(command):
     """Allows for the daemon start
 
     Args:
-        None
+        command: either --start/--restart to test
 
     Return:
         None
 
     """
     daemon_start_script_path = os.path.join(EXEC_DIR, 'daemon_start_test_script.py')
-    subprocess.call(['python', daemon_start_script_path])
+    subprocess.call(['python', daemon_start_script_path, command])
 
 class MockDaemon(Daemon):
     """Mock Daemon used to test Daemon class
@@ -154,26 +154,50 @@ class TestDaemon(unittest.TestCase):
 
     def test_start(self):
         """Testing function start."""
-        start_daemon()
+        handle_daemon('--start')
         self.assertTrue(os.path.exists(self._daemon.pidfile))
 
     def test_force(self):
         """Testing function force."""
-        pass
+
+        # Staring Daemon
+        handle_daemon('--start')
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
+
+        # Calling force stop
+        self._daemon.force()
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
 
     def test_stop(self):
         """Testing function stop."""
-        pass
+
+        # Staring Daemon
+        handle_daemon('--start')
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
+        os.mknod(self._daemon.lockfile)
+
+        # Calling force stop
+        self._daemon.stop()
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        self.assertFalse(os.path.exists(self._daemon.lockfile))
 
     def test_restart(self):
         """Testing function restart."""
-        pass
+
+        # Creating daemon pidfile
+        with open(self._daemon.pidfile, 'w') as f:
+            f.write('99999')
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
+
+        # Checking daemon restarting, pidfile should exist
+        handle_daemon('--restart')
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
 
     def test_status(self):
         """Testing function status."""
 
         # Test status while daemon is running
-        start_daemon()
+        handle_daemon('--start')
         expected = 'Daemon is running - {}\n'.format(AGENT_NAME)
 
         with patch('sys.stdout', new = StringIO()) as result:
