@@ -227,7 +227,6 @@ class TestGracefulDaemon(TestDaemon):
     """
     pass
 
-
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests
     UnittestConfig().create()

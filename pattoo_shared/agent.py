@@ -79,7 +79,24 @@ class Agent():
         # Do nothing
         pass
 
-class BaseAgentDaemon(Daemon):
+class AgentDaemonRunMixin(Daemon):
+    """Class that defines basic run function for AgentDaemons"""
+
+    def run(self):
+        """Start Polling
+
+        Args:
+            None
+
+        Return:
+            None
+
+        """
+        # Start polling. (Poller decides frequency)
+        while True:
+            self.agent.query()
+
+class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
     """Class that manages base agent daemonization"""
 
     def __init__(self, agent):
@@ -98,21 +115,7 @@ class BaseAgentDaemon(Daemon):
         # Instantiate daemon superclass
         Daemon.__init__(self, agent)
 
-    def run(self):
-        """Start Polling
-
-        Args:
-            None
-
-        Return:
-            None
-
-        """
-        # Start polling. (Poller decides frequency)
-        while True:
-            self.agent.query()
-
-class GracefulAgentDaemon(GracefulDaemon):
+class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
     """Class that manages graceful agent daemonization"""
     def __init__(self, agent):
         """Initialize the class.
@@ -129,22 +132,6 @@ class GracefulAgentDaemon(GracefulDaemon):
 
         # Instantiate daemon superclass
         GracefulDaemon.__init__(self, agent)
-
-    def run(self):
-        """Start Polling
-
-        Args:
-            None
-
-        Return:
-            None
-
-        """
-        # Start polling. (Poller decides frequency)
-        while True:
-
-            # Ensures that systemd daemon status remains active
-            self.agent.query()
 
 class AgentCLI():
     """Class that manages the agent CLI.
