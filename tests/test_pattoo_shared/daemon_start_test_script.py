@@ -25,21 +25,7 @@ from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 
 # Importing MockDaemon for start test
-from tests.test_pattoo_shared.test_daemon import MockDaemon, AGENT_NAME
-
-def create_agent():
-    """Creates new agent for use in testing start and restart
-
-    Args:
-        None
-
-    Return:
-        _agent: new agent for testing
-
-    """
-    _config = Config()
-    _agent = Agent(parent=AGENT_NAME, config=_config)
-    return _agent
+from tests.test_pattoo_shared.test_daemon import MockDaemon, AGENT_NAME, create_agent
 
 def start_daemon():
     """Creates a mock daemon for testing start

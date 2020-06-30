@@ -26,13 +26,14 @@ else:
 
 # Pattoo imports
 from pattoo_shared import files
-from pattoo_shared.daemon import Daemon
+from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 
 # TEST CONSTANTS
 AGENT_NAME = 'parent'
+_config = Config()
 
 def handle_daemon(command):
     """Allows for the daemon start
@@ -47,12 +48,21 @@ def handle_daemon(command):
     daemon_start_script_path = os.path.join(EXEC_DIR, 'daemon_start_test_script.py')
     subprocess.call(['python', daemon_start_script_path, command])
 
-class MockDaemon(Daemon):
-    """Mock Daemon used to test Daemon class
+def create_agent():
+    """Creates new agent for use in testing start and restart
 
-    Built to provide minimal functionality to test Daemon run method
+    Args:
+        None
+
+    Return:
+        _agent: new agent for testing
 
     """
+    _agent = Agent(parent=AGENT_NAME, config=_config)
+    return _agent
+
+class MockDaemonMixin():
+    """Mixin definging run functoin for MockDaemon and MockGracefulDaemon"""
 
     def run(self, loop=True):
         """Overriding Daemon run method
@@ -71,6 +81,21 @@ class MockDaemon(Daemon):
         while loop:
             pass
 
+
+class MockDaemon(MockDaemonMixin, Daemon):
+    """Mock Daemon used to test Daemon class
+
+    Built to provide minimal functionality to test Daemon run method
+
+    """
+
+class MockGracefulDaemon(MockDaemonMixin, GracefulDaemon):
+    """Mock Graceful Daemon used to test Graceful Daemon class
+
+    Built to provide minimal functionality to test Graceful Daemon run method
+
+    """
+
 class TestDaemon(unittest.TestCase):
     """Checks all functions and methods."""
 
@@ -82,8 +107,8 @@ class TestDaemon(unittest.TestCase):
         """Test setup"""
 
         # Setup base config and agent
-        self._config = Config()
-        self._agent = Agent(parent=AGENT_NAME, config=self._config)
+        self._agent = create_agent()
+        self._config = _config
 
         # Instantiation of test daemon
         self._daemon = MockDaemon(self._agent)
@@ -226,6 +251,44 @@ class TestGracefulDaemon(TestDaemon):
 
     """
 
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._agent = create_agent()
+        self._config = _config
+
+        # Instantiation of test daemon
+        self._daemon = MockGracefulDaemon(self._agent)
+
+    def graceful_fn(self, callback):
+        """Sets up and executes test callback that should implement graceful
+        shutdown
+
+        Args:
+            callback: function that implements graceful shutdown functionality
+
+        Return:
+            wrapper: implements setup before using callback and making
+            assertions
+
+        """
+        def wrapper():
+            """Wrapper function to be returned by graceful_fn"""
+            # Testing proper graceful shutdown by creating lock file to simulate
+            # that a process is currently handling data.
+            handle_daemon('--start')
+            os.mknod(self._daemon.lockfile)
+            self.assertTrue(os.path.exists(self._daemon.lockfile))
+            callback()
+
+            # Checking that both daemon pidfile and lockfile do not exist, which
+            # indicates successful stoppage of daemon.
+            self.assertFalse(os.path.exists(self._daemon.lockfile))
+            self.assertFalse(os.path.exists(self._daemon.pidfile))
+
+        return wrapper
+
     def test_stop(self):
         """Testing graceful stop function"""
 
@@ -233,12 +296,18 @@ class TestGracefulDaemon(TestDaemon):
         # When lock file does not exist
         super(TestGracefulDaemon, self).test_stop()
 
+        # Graceful stop testing
+        self.graceful_fn(self._daemon.stop())
+
     def test_restart(self):
         """Testing graceful restart function"""
 
         # Test base Daemon restart functionality
         # When lock file does not exist
         super(TestGracefulDaemon, self).test_restart()
+
+        # Graceful stop testing
+        self.graceful_fn(handle_daemon('--restart'))
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests
