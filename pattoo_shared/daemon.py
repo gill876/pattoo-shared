@@ -204,16 +204,7 @@ class Daemon():
 
         # Try killing the daemon process
         try:
-            while 1:
-                if self.lockfile is None:
-                    os.kill(pid, signal.SIGTERM)
-                else:
-                    time.sleep(0.3)
-                    if os.path.exists(self.lockfile) is True:
-                        continue
-                    else:
-                        os.kill(pid, signal.SIGTERM)
-                time.sleep(0.3)
+            os.kill(pid, signal.SIGTERM)
         except OSError as err:
             error = str(err.args)
             if error.find("No such process") > 0:
