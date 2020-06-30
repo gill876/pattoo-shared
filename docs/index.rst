@@ -22,6 +22,17 @@ General information about the project, including the the prerequisite steps to g
    about
    contributing
 
+Daemons
+-------
+
+General information about agents and the classes used to process data in this package.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Package Classes:
+
+   daemons
+
 Agents
 ------
 
