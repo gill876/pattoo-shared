@@ -29,7 +29,7 @@ from pattoo_shared.variables import AgentAPIVariable
 from tests.libraries.configuration import UnittestConfig
 
 # Test Daemon importation
-from test_daemon import TestDaemon, TestGracefulDaemon, AGENT_NAME
+from tests.test_pattoo_shared.test_daemon import  TestDaemon, TestGracefulDaemon, AGENT_NAME
 
 class TestAgent(unittest.TestCase):
     """Checks all functions and methods."""
