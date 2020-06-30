@@ -225,7 +225,20 @@ class TestGracefulDaemon(TestDaemon):
     Checks that daemon start/stop commands confirm to graceful shutdown
 
     """
-    pass
+
+    def test_stop(self):
+        """Testing graceful stop function"""
+
+        # Test base Daemon stop functionality
+        # When lock file does not exist
+        super(TestGracefulDaemon, self).test_stop()
+
+    def test_restart(self):
+        """Testing graceful restart function"""
+
+        # Test base Daemon restart functionality
+        # When lock file does not exist
+        super(TestGracefulDaemon, self).test_restart()
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests
