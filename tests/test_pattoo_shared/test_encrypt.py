@@ -10,6 +10,7 @@ import uuid
 import hashlib
 import random
 import string
+import shutil
 
 #PIP imports
 import gnupg
@@ -38,27 +39,36 @@ class TestEncrypt(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         print('setupClass')
-        with tempfile.TemporaryDirectory() as main_dir1:
-            person1 = os.path.join(main_dir1, '{}'.format('.gnupg'))
-            os.mkdir(person1)
-            cls.person1 = person1
-            gpg1 = Pgpier(person1)
-
-            wrapper1 = '(Person1)'
-            person1_name = 'John Brown'
-            person1_email = 'john_brown_2020_test@gmail.com'
-            person1_comment = 'Unit testing with person1'
-
-            result1 = gpg1.set_from_imp(wrapper1)
-
-            if not result1:
-                gpg1.key_pair(person1_email, person1_name, person1_comment)
-                gpg1.exp_main(wrapper1)
-                cls.gpg1 = gpg1
-            print("***\nPerson1 Pgpier directory and key pair generated in: ", person1,
-                "\nName: ", person1_name, "\nEmail: ", person1_email,
-                "\nComment: ", person1_comment, "\n***"
+        
+        main_dir1 = os.path.abspath(
+            os.path.join(
+                os.getcwd(), '{}'.format('keys')
             )
+        )
+        
+        cls.main_dir1 = main_dir1
+        
+        person1 = os.path.join(main_dir1, '{}'.format('.gnupg'))
+        os.makedirs(person1)
+        cls.person1 = person1
+        gpg1 = Pgpier(person1)
+
+        wrapper1 = '(Person1)'
+        person1_name = 'John Brown'
+        person1_email = 'john_brown_2020_test@gmail.com'
+        person1_comment = 'Unit testing with person1'
+
+        result1 = gpg1.set_from_imp(wrapper1)
+
+        if not result1:
+            gpg1.key_pair(person1_email, person1_name, person1_comment)
+            gpg1.exp_main(wrapper1)
+            cls.gpg1 = gpg1
+        print(gpg1.list_pub_keys())
+        print("***\nPerson1 Pgpier directory and key pair generated in: ", person1,
+            "\nName: ", person1_name, "\nEmail: ", person1_email,
+            "\nComment: ", person1_comment, "\n***"
+        )
 
         with tempfile.TemporaryDirectory() as main_dir2:
             person2 = os.path.join(main_dir2, '{}'.format('.gnupg'))
@@ -86,12 +96,15 @@ class TestEncrypt(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         print('teardownClass')
+        print('Removing Person1 Pgpier directory: ', cls.main_dir1)
+        shutil.rmtree(cls.main_dir1)
 
     def setUp(self):
         print('setUp')
 
         print('Retrieve person1 gpg object')
         self.gpg1 = self.__class__.gpg1
+        print(self.gpg1.list_pub_keys())
 
         print('Retrieve person2 gpg object')
         self.gpg2 = self.__class__.gpg2

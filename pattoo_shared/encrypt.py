@@ -81,6 +81,7 @@ class Pgpier:
         """
         
         keys = self.list_pub_keys()
+        print(keys)
         fingerprint = self.fingerprint
 
         if keys != []:
