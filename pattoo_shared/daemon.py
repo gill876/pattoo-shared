@@ -279,85 +279,66 @@ class GracefulDaemon(Daemon):
     current process has completed its currently running task.
 
     """
-    class GracefulShutdown():
-        """Facilities graceful shutdown during stop/restart daemon commands
+    def __daemon_running(self):
+        """Determines if daemon is running
 
-        GracefulShutdown is a callable method which can be used as python
-        decorator that can facilitate checks for a graceful stop/restart of a
-        system daemon.
+        Daemon is running based on whether it has an associated lockfile
+
+        Args:
+            None
+
+        Return:
+            running: True if daemon is currently running or conducing a process
 
         """
+        running = False
+        if self.lockfile is not None:
+            if os.path.exists(self.lockfile) is True:
+                running = True
 
-        @staticmethod
-        def __daemon_running(lock_file_name):
-            """Determines if daemon is running
+        return running
 
-            Daemon is running based on whether it has an associated lockfile
+    def graceful_shutdown(self, fn):
+        """Wrapper class that handles graceful_shutdown prior to using
+        callaback function `fn`
 
-            Args:
-                None
+        Args:
+            self: GracefulShutdown instance
+            fn: callback method
 
-            Return:
-                running: True if daemon is currently running or conducing a process
+        Return:
+            wrapper
 
-            """
-            running = False
-            if lock_file_name is not None:
-                if os.path.exists(lock_file_name) is True:
-                    running = True
+        """
+        def wrapper():
+            """Wrapper function"""
+            if self.__daemon_running():
+                log_message = '{} Lock file exists, Process still running'.format(self.name)
+                log.log2info(1100, log_message)
 
-            return running
+            # Continually checks if daemon is still running exits loop once
+            # GRACEFUL_TIMEOUT limit reached
+            timeout_counter = time.time()
+            while True:
+                # Updating timeout duration
+                current_duration = time.time() - timeout_counter
 
-        def __call__(self, fn):
-            """Wrapper class that handles graceful_shutdown prior to using
-            callaback function `fn`
+                if not self.__daemon_running() is True:
+                    log_message = 'Process {} no longer processing'.format(self.name)
+                    log.log2info(1101, log_message)
 
-            Args:
-                self: GracefulShutdown instance
-                fn: callback method
+                    fn(self)
+                    break
+                elif current_duration >= GRACEFUL_TIMEOUT:
+                    log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(self.name)
+                    log.log2info(1103, log_message)
 
-            Return:
-                wrapper
+                    log_message = '{}, hard shutdown in progress'.format(self.name)
+                    log.log2info(1104, log_message)
 
-            """
-            def wrapper(_self):
-                """Wrapper function that facilitates graceful shutdown
-
-                Args:
-                    _self: daemon instance
-
-                Return:
-                    None
-
-                """
-
-                if self.__daemon_running(_self.lockfile):
-                    log_message = '{} Lock file exists, Process still running'.format(_self.name)
-                    log.log2info(1100, log_message)
-
-                # Continually checks if daemon is still running exits loop once
-                # GRACEFUL_TIMEOUT limit reached
-                timeout_counter = time.time()
-                while True:
-                    # Updating timeout duration
-                    current_duration = time.time() - timeout_counter
-
-                    if not self.__daemon_running(_self.lockfile) is True:
-                        log_message = 'Process {} no longer processing'.format(_self.name)
-                        log.log2info(1101, log_message)
-
-                        fn(_self)
-                        break
-                    elif current_duration >= GRACEFUL_TIMEOUT:
-                        log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(_self.name)
-                        log.log2info(1103, log_message)
-
-                        log_message = '{}, hard shutdown in progress'.format(_self.name)
-                        log.log2info(1104, log_message)
-
-                        _self.force()
-                        break
-            return wrapper
+                    self.force()
+                    break
+        return wrapper
 
     def __init__(self, agent):
         """Initialize the class.
@@ -371,7 +352,6 @@ class GracefulDaemon(Daemon):
         """
         Daemon.__init__(self, agent)
 
-    @GracefulShutdown()
     def stop(self):
         """Stops the daemon gracefully.
 
@@ -385,9 +365,8 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        super(GracefulDaemon, self).stop()
+        self.graceful_shutdown(super(GracefulDaemon, self).stop())
 
-    @GracefulShutdown()
     def restart(self):
         """Restarts the daemon gracefully.
 
@@ -401,4 +380,4 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        super(GracefulDaemon, self).restart()
+        self.graceful_shutdown(super(GracefulDaemon, self).restart())
