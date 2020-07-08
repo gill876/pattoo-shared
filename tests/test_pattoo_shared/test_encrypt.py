@@ -31,7 +31,7 @@ else:
     sys.exit(2)
 
 # Pattoo imports
-from pattoo_shared.encrypt import Pgpier
+import pattoo_shared.encrypt as pgp
 
 class TestEncrypt(unittest.TestCase):
     """Test all methods of Pgpier class
