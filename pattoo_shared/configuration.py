@@ -376,6 +376,18 @@ class Config(BaseConfig):
         result = '{}/receive'.format(PATTOO_API_AGENT_PREFIX)
         return result
 
+    def agent_api_key(self):
+        """Get URL for key exchange.
+
+        Args:
+            None
+
+        Returns:
+            url (str): URL of the key exchange point
+        """
+        url = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
+        return url
+
     def agent_api_server_url(self, agent_id):
         """Get pattoo server's remote URL.
 
@@ -394,6 +406,27 @@ class Config(BaseConfig):
                 self.agent_api_ip_bind_port(),
                 self.agent_api_uri(), agent_id))
         return result
+
+    def agent_api_key_url(self):
+        """Exchange point for public keys
+
+        Args:
+            None
+        
+        Returns:
+            link (str): Link of the key exchange point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_key()
+                )
+            )
+
+        return link
 
     def web_api_ip_address(self):
         """Get web_api_ip_address.
