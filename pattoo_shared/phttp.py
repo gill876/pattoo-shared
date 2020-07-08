@@ -198,7 +198,7 @@ def post(url, data, identifier, save=True):
         identifier: Identifier to use for posting
         data: Data to post. If None, then uses self._post_data (
             Used for testing and cache purging)
-        save: When True, save data to cache directory if postinf fails
+        save: When True, save data to cache directory if posting fails
 
     Returns:
         success: True: if successful
