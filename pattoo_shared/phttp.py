@@ -24,9 +24,8 @@ class Post():
         """Initialize the class.
 
         Args:
-            # metadata: PostingDataPoints object
-            identifier: Identifier
-            data: Data
+            identifier: Agent identifier
+            data: Data from agent
 
         Returns:
             None
