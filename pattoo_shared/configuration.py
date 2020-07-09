@@ -319,18 +319,6 @@ class BaseConfig():
             result = str(intermediate).lower()
         return result
 
-class PattooConfig(BaseConfig):
-    """Class that configures pattoo components"""
-    def __init__(self):
-        """Initialize the class.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-
 
 class ServerConfig(BaseConfig):
     """Class gathers all configuration information."""
