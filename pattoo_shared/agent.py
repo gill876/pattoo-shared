@@ -104,6 +104,7 @@ class Agent():
         agent_email = self.email
 
         gpg = files.get_gnupg(agent_name, agent_config, agent_email)
+        self.gpg = gpg
 
         return gpg
 

@@ -253,6 +253,10 @@ Data for identifier "{}" failed to post to server {}\
     return success
 
 
+def key_exchange():
+    pass
+
+
 def purge(url, identifier):
     """Purge data from cache by posting to central server.
 
