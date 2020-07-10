@@ -134,6 +134,9 @@ class TestEncrypt(unittest.TestCase):
         self.wrapper1 = self.__class__.wrapper1
         self.wrapper2 = self.__class__.wrapper2
 
+        self.email_1 = self.__class__.person1_email
+        self.email_2 = self.__class__.person2_email
+
     def tearDown(self):
         print('tearDown\n')
 
@@ -422,6 +425,20 @@ class TestEncrypt(unittest.TestCase):
         format(original_data, encrypted_data, decrypted_data))
 
         self.assertEqual(original_data, decrypted_data)
+
+    def test_set_email(self):
+        print("***Set email test***")
+        self.gpg1.set_email()
+        self.gpg2.set_email()
+
+        set_email1 = self.gpg1.email_addr
+        set_email2 = self.gpg2.email_addr
+
+        print('Test email1: {}\nTest email2: {}\nSet email1: {}\nSet email2: {}'
+        .format(self.email_1, self.email_2, set_email1, set_email2))
+
+        self.assertEqual(self.email_1, set_email1)
+        self.assertEqual(self.email_2, set_email2)
 
     
 if __name__ == '__main__':

@@ -455,3 +455,31 @@ class Pgpier:
     def gen_symm_key(self, stringLength=70):
         password_characters = string.ascii_letters + string.digits + string.punctuation
         return ''.join(random.choice(password_characters) for i in range(stringLength))
+
+    def set_email(self):
+        """Retrieve email from keyring and set the correponding email address from
+        the set fingperprint
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        # Retrieve gnupg object and set fingerprint
+        gpg = self.gpg
+        fp = self.fingerprint
+
+        # Lists keys from keyring
+        keys = gpg.list_keys()
+
+        for key in keys:
+            if key['fingerprint'] == fp:
+                # Removes space from uids value and returns the items in a list
+                uids = key['uids'][0].split(' ')
+                # Gets the email from the items which is wrapped by "<"<email@example.com>">"
+                wrapped_email = list(filter((lambda item: '<' in item), uids))
+                # Removes "<" and ">" from email
+                email = wrapped_email[0].strip('<>')
+                self.email_addr =  email
