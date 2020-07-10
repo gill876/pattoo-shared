@@ -486,6 +486,7 @@ def get_agent_id(agent_name, config):
     # Return
     return agent_id
 
+
 def set_gnupg(agent_name, config, agent_email):
     """Generate key pair and store credentials
 
@@ -512,6 +513,31 @@ def set_gnupg(agent_name, config, agent_email):
         
     gpg.set_keyid()
     return gpg
+
+
+def get_gnupg(agent_name, config):
+    """Retrieve an already created Pgpier object based the key directory 
+
+    Args:
+        agent_name (str): Agent name
+        config (obj): Config object
+
+    Returns:
+        gpg (obj): Pgpier object if key pair was already generated for <agent_name> 
+        None: If a key pair was not generated for <agent_name>
+    """
+    wrapper = '({})'.format(agent_name)
+    d_obj = _Directory(config)
+    key_dir = d_obj.keyring()
+
+    gpg = encrypt.Pgpier(key_dir)
+    set_values = gpg.set_from_imp(wrapper)
+
+    if set_values is True:
+        return gpg
+    else:
+        return None
+
 
 def execute(command, die=True):
     """Run the command UNIX CLI command and record output.
