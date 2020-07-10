@@ -1,32 +1,47 @@
 #!/usr/bin/env python3
 
 import gnupg
-import uuid, hashlib, os, random, string
+import uuid
+import hashlib
+import os
+import random
+import string
+
 
 class Pgpier:
-    """A class that handles encryption and decryption using the python-gnupg module
+    """A class that handles encryption and decryption
+    using the python-gnupg module
     """
 
     def __init__(self, working_dir):
-        """The Pgpier class will instantiate with the working directory that also has a parent directory
+        """The Pgpier class will instantiate with the working directory
+        that also has a parent directory
 
         Args:
-            working_dir (str): The path to the .gnupg directory where GnuPG files will be stored
-                               with a parent directory where this class will store and handle pertinent
+            working_dir (str): The path to the .gnupg directory where
+                               GnuPG files will be stored
+                               with a parent directory where this class
+                               will store and handle pertinent
                                data
 
         Returns:
             None
         """
-        self.wrk_dir = os.path.abspath(os.path.join(working_dir, os.pardir)) #gets the parent of the working directory
+
+        self.wrk_dir = os.path.abspath(
+            os.path.join(working_dir, os.pardir)
+            )  # gets the parent of the working directory
         self.gnupghome = working_dir
-        self.gpg = gnupg.GPG(gnupghome=working_dir) # , options=['--pinentry-mode=loopback']
-        self.gpg.encoding = 'utf-8' #sets encoding
+        # , options=['--pinentry-mode=loopback']
+        self.gpg = gnupg.GPG(gnupghome=working_dir)
+        self.gpg.encoding = 'utf-8'  # sets encoding
         self.passphrase = None
         self.fingerprint = None
         self.keyid = None
 
-    def key_pair(self, _name_email, _name_real, _name_comment="auto generated using gnupg.py", _key_type="RSA", _key_length=4096):
+    def key_pair(self, _name_email, _name_real,
+                 _name_comment="auto generated using gnupg.py",
+                 _key_type="RSA", _key_length=4096):
         """The generation of the private public key pairs
 
         Args:
@@ -39,14 +54,20 @@ class Pgpier:
         Returns:
             None
         """
-        #generates random passphrase
-        self.passphrase = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
-        #helper method to get key configuration
-        input_data = self.gpg.gen_key_input(key_type=_key_type, key_length=_key_length, name_real=_name_real, name_comment=_name_comment, name_email=_name_email, passphrase=self.passphrase)
-        #generation of key pair
+        # generates random passphrase
+        self.passphrase = hashlib.sha256(str(uuid.uuid4())
+                                         .encode()).hexdigest()
+        # helper method to get key configuration
+        input_data = self.gpg.gen_key_input(key_type=_key_type,
+                                            key_length=_key_length,
+                                            name_real=_name_real,
+                                            name_comment=_name_comment,
+                                            name_email=_name_email,
+                                            passphrase=self.passphrase)
+        # generation of key pair
         key = self.gpg.gen_key(input_data)
-        #print("stderr: ", key.stderr)
-        self.fingerprint = key.fingerprint #store fingerprint in class
+        # print("stderr: ", key.stderr)
+        self.fingerprint = key.fingerprint  # store fingerprint in class
 
     def set_passphrase(self, passphrase):
         """Method to set the passphrase in the class
@@ -71,7 +92,8 @@ class Pgpier:
         self.fingerprint = fingerprint
 
     def set_keyid(self):
-        """Method to set keyid by retrieving all keys stored in the GnuPG keyring and retrieve
+        """Method to set keyid by retrieving all keys stored
+        in the GnuPG keyring and retrieve
         the keyid associated with the main public private key pair
 
         Args:
@@ -80,14 +102,15 @@ class Pgpier:
         Returns:
             None
         """
-        
+
         keys = self.list_pub_keys()
         fingerprint = self.fingerprint
 
         if keys != []:
             for key in keys:
                 if key['fingerprint'] == fingerprint:
-                    self.keyid = key['keyid']#set keyid associated with fingerprint in class
+                    # set keyid associated with fingerprint in class
+                    self.keyid = key['keyid']
         else:
             pass
 
@@ -96,7 +119,7 @@ class Pgpier:
 
         Args:
             None
-        
+
         Returns:
             list: List of dictionaries of each public key stored
         """
@@ -104,8 +127,10 @@ class Pgpier:
         return public_keys
 
     def exp_main(self, _wrapper='(main)'):
-        """Method to store the passphrase for future retrieval and name the file by the fingerprint of the 
-        class. The method also adds a wrapper to the name of the file so that when the Pgpier class is looking
+        """Method to store the passphrase for future retrieval
+        and name the file by the fingerprint of the
+        class. The method also adds a wrapper to the
+        name of the file so that when the Pgpier class is looking
         for the public private key pair, it finds the pair it owns
 
         Args:
@@ -114,63 +139,76 @@ class Pgpier:
         Returns:
             None
         """
-        #lists all files existing in a dir and checks if the file ends with the wrapper
+        # lists all files existing in a dir and checks if
+        # the file ends with the wrapper
         _path = self.wrk_dir
         _filename = self.fingerprint
-        #_wrapper = '(main)'
+        # _wrapper = '(main)'
         _contents = self.passphrase
 
-        file_names = [f for f in os.listdir(_path) if os.path.isfile(f) and f.endswith(_wrapper)]
+        file_names = [f for f in os.listdir(_path) if os.path.isfile(f)
+                      and f.endswith(_wrapper)]
         if file_names != []:
             for f in file_names:
 
-                #removes the wrapper
+                # removes the wrapper
                 file_name_len = len(f)
                 wrapper_len = len(_wrapper)
                 file_nowrap = file_name_len - wrapper_len
                 clean_f_name = f[0:file_nowrap]
 
-                #clean file name
+                # clean file name
                 clean_f = os.path.abspath(os.path.join(_path, clean_f_name))
-                #implement so that if the file already exists it would make a copy
+                # implement so that if the file already
+                # exists it would make a copy
                 try:
-                    #renames the file without the wrapper
+                    # renames the file without the wrapper
                     os.rename(f, clean_f)
                 except Exception as e:
                     print(e)
 
-        _file = os.path.abspath(os.path.join(_path, '{0}{1}'.format(_filename, _wrapper)))
+        _file = os.path.abspath(os.path.join(_path, '{0}{1}'
+                                .format(_filename, _wrapper)))
         with open('{}'.format(_file), '{}'.format('w')) as f:
             f.write(_contents)
 
     def imp_main(self, _wrapper='(main)'):
-        """Method to import the fingerprint and passphrase of the owned public private key pair of the
-        user. The method also looks for a wrapper on the file to distinguish the public private key 
-        pair the user currently owns. 
+        """Method to import the fingerprint and passphrase of the owned
+        public private key pair of the
+        user. The method also looks for a wrapper on the file to
+        distinguish the public private key
+        pair the user currently owns.
 
         Args:
             _wrapper (str): The name of the wrapper
 
         Returns:
-            tuple: String of fingerprint and string of passphrase if it finds the public private key pairs
+            tuple: String of fingerprint and string of passphrase
+            if it finds the public private key pairs
             the user currently owns
-            
-            None: If there are no public private key pair the user currently owns
+
+            None: If there are no public private key pair the user
+            currently owns
         """
 
-        _path = self.wrk_dir #path to parent directory of gnupg home, where Pgpier will operate its own files
-        #_wrapper = '(main)'
+        # path to parent directory of gnupg home
+        # where Pgpier will operate its own files
+        _path = self.wrk_dir
+        # _wrapper = '(main)'
 
-        key = [_file for _file in os.listdir(_path) if _file.endswith(_wrapper)] #returns list of files if it ends with the wrapper
+        # returns list of files if it ends with the wrapper
+        key = [_file for _file in os.listdir(_path)
+               if _file.endswith(_wrapper)]
 
         key_len = len(key)
         if key_len > 1:
-            raise Exception("critical error - 0: more than one main keys\nreport issue")
-        
+            raise Exception("critical error - 0: more than one main"
+                            " keys\nreport issue")
+
         elif key_len == 1:
             _fingerprint = key[0]
 
-            #removes the wrapper
+            # removes the wrapper
             file_name_len = len(_fingerprint)
             wrapper_len = len(_wrapper)
             file_nowrap = file_name_len - wrapper_len
@@ -180,18 +218,20 @@ class Pgpier:
 
             with open('{}'.format(fp_file), '{}'.format('r')) as f:
                 _passphrase = f.read()
-            
+
             if type(_passphrase) != str:
-                raise Exception("critical error - 1: error reading for passphrase\nreport issue")
+                raise Exception("critical error - 1: error reading for "
+                                "passphrase\nreport issue")
 
             return clean_fp, _passphrase
-        
+
         else:
             return None
-    
+
     def set_from_imp(self, wrapper='(main)'):
-        """Method to get the fingerprint and passphrase the user currently owns and then
-        assign those values inside the class to utilize the user's public private key pair
+        """Method to get the fingerprint and passphrase the user
+        currently owns and then assign those values inside
+        the class to utilize the user's public private key pair
 
         Args:
             None
@@ -206,11 +246,11 @@ class Pgpier:
         except Exception as e:
             print(e)
 
-        if result != None:
-            self.set_fingerprint(result[0]) 
+        if result is not None:
+            self.set_fingerprint(result[0])
             self.set_passphrase(result[1])
-        
-        success = True if result != None else False
+
+        success = True if result is not None else False
         return success
 
     def exp_pub_key(self):
@@ -226,14 +266,15 @@ class Pgpier:
         keyid = self.keyid
         gpg = self.gpg
 
-        if keyid != None:
+        if keyid is not None:
             ascii_armored_public_keys = gpg.export_keys(keyid)
             return ascii_armored_public_keys
         else:
             return ascii_armored_public_keys
 
     def imp_pub_key(self, key_data):
-        """Method to import the ASCII public of a user into the current user's GnuPG keyring
+        """Method to import the ASCII public of a user
+         into the current user's GnuPG keyring
 
         Args:
             key_data (str): String of public key armored ASCII
@@ -242,8 +283,8 @@ class Pgpier:
             None
         """
         gpg = self.gpg
-        
-        import_result = gpg.import_keys(key_data)
+
+        gpg.import_keys(key_data)
 
     def pub_file(self):
         """Method to export the armored ASCII public key into an asc file
@@ -254,27 +295,32 @@ class Pgpier:
         Returns:
             None
         """
-        
+
         pub_key = self.exp_pub_key()
         fingerprint = self.fingerprint
         path = self.wrk_dir
-
-        pub_file = os.path.abspath(os.path.join(path, fingerprint)) #export to parent directory of gnupg home
-
-        if pub_key != None: #checks that the class' public key was exported
-            with open('{0}{1}'.format(pub_file, '.asc'), '{}'.format('w')) as f:
+        # export to parent directory of gnupg home
+        pub_file = os.path.abspath(os.path.join(path, fingerprint))
+        # checks that the class' public key was exported
+        if pub_key is not None:
+            with open('{0}{1}'.format(pub_file, '.asc'),
+                      '{}'.format('w')) as f:
                 f.write(pub_key)
 
-    def sym_encrypt_files(self, symmetric_key, file_path, output, delaf=False, algorithm='AES256', armor=True):
+    def sym_encrypt_files(self, symmetric_key, file_path, output,
+                          delaf=False, algorithm='AES256', armor=True):
         """Method to encrypt files using a symmetric key
 
         Args:
-            symmetric_key (str): String of passphrase to be used to encrypt the data
+            symmetric_key (str): String of passphrase to be
+            used to encrypt the data
             file_path (str): Absolute file path to the files to be encrypted
             output (str): Absolute file path to intended file output
             delaf (bool): True if the files should be deleted after encryption
-                          Fasle if the files should be kept after encryption
-            algorithm (str): The type of algorithm to be used to encrypt the data
+                          Fasle if the files should be kept after
+                          encryption
+            algorithm (str): The type of algorithm to be used to encrypt
+                             the data
             armor (bool): True for the return type to be in ASCII string
                           False for the return type to be Crypt object
 
@@ -286,22 +332,30 @@ class Pgpier:
         files_dir = []
 
         files = [f for f in os.listdir(file_path)]
-        
+
         for f in files:
             files_dir.append('{}'.format(f))
 
         for x in files_dir:
-            with open('{}{}{}'.format(file_path, os.sep, x), '{}'.format('r')) as f:
+            with open('{}{}{}'.format(file_path, os.sep, x), '{}'
+                      .format('r')) as f:
                 contents = f.read()
-                crypt = gpg.encrypt(contents, symmetric=algorithm, passphrase=symmetric_key, armor=armor, recipients=None, output='{}{}{}'.format(file_path, os.sep, files_dir[files_dir.index(x)]))
-                #print("ok: ", crypt.ok)
-                #print("status: ", crypt.status)
-                #print("stderr: ", crypt.stderr)
+                gpg.encrypt(contents, symmetric=algorithm,
+                            passphrase=symmetric_key, armor=armor,
+                            recipients=None, output='{}{}{}'.format(file_path,
+                            os.sep, files_dir[files_dir.index(x)]))
+                # print("ok: ", crypt.ok)
+                # print("status: ", crypt.status)
+                # print("stderr: ", crypt.stderr)
             if delaf:
-                os.rename('{}{}{}'.format(file_path, os.sep, files_dir[files_dir.index(x)]), '{}{}{}'.format(output, os.sep, files_dir[files_dir.index(x)]))
+                os.rename('{}{}{}'.format(file_path, os.sep,
+                          files_dir[files_dir.index(x)]), '{}{}{}'
+                          .format(output, os.sep,
+                          files_dir[files_dir.index(x)]))
 
     def encrypt_data(self, data, recipients):
-        """Method to encrypt data using the imported recipient's public key from user's GnuPG keyring
+        """Method to encrypt data using the imported recipient's public
+        key from user's GnuPG keyring
 
         Args:
             data (str): Data to be encrypted
@@ -313,7 +367,7 @@ class Pgpier:
         gpg = self.gpg
 
         encrypted_ascii_data = gpg.encrypt(data, recipients=recipients)
-        #print(encrypted_ascii_data.status)
+        # print(encrypted_ascii_data.status)
         ascii_str = str(encrypted_ascii_data)
         return ascii_str
 
@@ -321,12 +375,17 @@ class Pgpier:
         """Method to decrypt files using a symmetric key
 
         Args:
-            symmetric_key (str): String of passphrase to be used to decrypt the data
-            file_path (str): Absolute file path to the files to be encrypted
+            symmetric_key (str): String of passphrase to be used
+            to decrypt the data
+            file_path (str): Absolute file path to the files to be
+            encrypted
             output (str): Absolute file path to intended file output
-            delaf (bool): True if the files should be deleted after decryption
-                          Fasle if the files should be kept after decryption
-            algorithm (str): The type of algorithm that was used to encrypt the data
+            delaf (bool): True if the files should be deleted after
+                          decryption
+                          Fasle if the files should be kept after
+                          decryption
+            algorithm (str): The type of algorithm that was used to
+                             encrypt the data
             armor (bool): True for the return type to be in ASCII string
                           False for the return type to be Crypt object
 
@@ -338,26 +397,31 @@ class Pgpier:
         files_dir = []
 
         files = [f for f in os.listdir(file_path)]
-        
+
         for f in files:
             files_dir.append('{}'.format(f))
 
         for x in files_dir:
-            with open('{}{}{}'.format(file_path, os.sep, x), '{}'.format('r')) as f:
+            with open('{}{}{}'.format(file_path, os.sep, x),
+                      '{}'.format('r')) as f:
                 crypt = f.read()
-                #print(crypt)
+                # print(crypt)
                 data = gpg.decrypt(crypt, passphrase=symmetric_key)
                 de_data = (data.data).decode('utf-8')
-                #print('\n\n\n\n--->{}<---\n\n\n'.format(de_data))
-                with open('{}{}{}'.format(output, os.sep, files_dir[files_dir.index(x)]), '{}'.format('w')) as decrypted:
+                # print('\n\n\n\n--->{}<---\n\n\n'.format(de_data))
+                with open('{}{}{}'.format(output, os.sep,
+                          files_dir[files_dir.index(x)]),
+                          '{}'.format('w')) as decrypted:
                     decrypted.write(de_data)
-                #print("ok: ", data.ok)
-                #print("status: ", data.status)
-                #print("stderr: ", data.stderr)
+                # print("ok: ", data.ok)
+                # print("status: ", data.status)
+                # print("stderr: ", data.stderr)
             if delaf:
-                os.remove('{}{}{}'.format(file_path, os.sep, x))    
+                os.remove('{}{}{}'.format(file_path, os.sep, x))
+
     def decrypt_data(self, data, passphrase):
-        """Method to decrypt data using the imported recipient's public key from user's GnuPG keyring
+        """Method to decrypt data using the imported recipient's
+        public key from user's GnuPG keyring
 
         Args:
             data (str): Data in String ASCII to be decrypted
@@ -375,22 +439,24 @@ class Pgpier:
         return data
 
     def email_to_key(self, email):
-        """Method to retrieve fingerprint of associated email address from the GnuPG keyring
+        """Method to retrieve fingerprint of associated
+        email address from the GnuPG keyring
 
         Args:
             email (str): Email address
 
         Returns:
-            int: Fingerprint that is associated with the email address if it is found
+            int: Fingerprint that is associated with the email
+            address if it is found
             None: If no associated fingerprint is found
         """
-        gpg = self.gpg
+
         # Gets all available public keys in keyring
         keys = self.list_pub_keys()
 
         result = None
 
-        for key in keys: # Go through each public key
+        for key in keys:  # Go through each public key
             uids = list(filter((lambda item: email in item), key['uids']))
             if uids != []:
                 parts = uids[0].split(' ')
@@ -398,11 +464,12 @@ class Pgpier:
                 unwrapped_email = wrapped_email[0].strip('<>')
                 if unwrapped_email == email:
                     return key['fingerprint']
-        
+
         return result
-    
+
     def trust_key(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
-        """Method to trust public key that was imported to have the ability to encrypt data using
+        """Method to trust public key that was imported to have the
+        ability to encrypt data using
         that public key
 
         Args:
@@ -416,14 +483,18 @@ class Pgpier:
 
         gpg.trust_keys(fingerprint, trustlevel)
 
-    def symmetric_encrypt(self, data, passphrase, algorithm='AES256', armor=True):
-        """Method to encrypt data using symmmetric key encryption using a passphrase and encryption 
+    def symmetric_encrypt(self, data, passphrase,
+                          algorithm='AES256', armor=True):
+        """Method to encrypt data using symmmetric key encryption
+        using a passphrase and encryption
         algorithm
 
         Args:
             data (str): String of data to be encrypted
-            passphrase (str): String of passphrase to be used to encrypt the data
-            algorithm (str): The type of algorithm to be used to encrypte the data
+            passphrase (str): String of passphrase to
+            be used to encrypt the data
+            algorithm (str): The type of algorithm to
+            be used to encrypte the data
             armor (bool): True for the return type to be in ASCII string
                           False for the return type to be Crypt object
 
@@ -432,8 +503,9 @@ class Pgpier:
         """
         gpg = self.gpg
 
-        crypt = gpg.encrypt(data, symmetric=algorithm, passphrase=passphrase, armor=armor, recipients=None)
-        #print(crypt.status)
+        crypt = gpg.encrypt(data, symmetric=algorithm, passphrase=passphrase,
+                            armor=armor, recipients=None)
+        # print(crypt.status)
         return str(crypt)
 
     def symmetric_decrypt(self, data, passphrase):
@@ -442,19 +514,21 @@ class Pgpier:
         Args:
             data (str): Data in ASCII string to be decrypted
             passphrase (str): Passphrase used in the encryption
-        
+
         Returns:
             str: ASCII string of decrypted data
         """
         gpg = self.gpg
 
         data = gpg.decrypt(data, passphrase=passphrase)
-        #print(data.status)
+        # print(data.status)
         return (data.data).decode('utf-8')
-    
+
     def gen_symm_key(self, stringLength=70):
-        password_characters = string.ascii_letters + string.digits + string.punctuation
-        return ''.join(random.choice(password_characters) for i in range(stringLength))
+        password_characters = string.ascii_letters + string.digits\
+                              + string.punctuation
+        return ''.join(random.choice(password_characters)
+                       for i in range(stringLength))
 
     def set_email(self):
         """Retrieve email from keyring and set the correponding email address from
@@ -478,8 +552,9 @@ class Pgpier:
             if key['fingerprint'] == fp:
                 # Removes space from uids value and returns the items in a list
                 uids = key['uids'][0].split(' ')
-                # Gets the email from the items which is wrapped by "<"<email@example.com>">"
+                # Gets the email from the items which is
+                # wrapped by "<"<email@example.com>">"
                 wrapped_email = list(filter((lambda item: '<' in item), uids))
                 # Removes "<" and ">" from email
                 email = wrapped_email[0].strip('<>')
-                self.email_addr =  email
+                self.email_addr = email
