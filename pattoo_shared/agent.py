@@ -90,7 +90,7 @@ class Agent():
         """
         self.email = email
 
-    def get_gnupg(self):
+    def set_gnupg(self):
         """Get Pgpier class of the agent
 
         Args:
@@ -103,7 +103,7 @@ class Agent():
         agent_config = self.config
         agent_email = self.email
 
-        gpg = files.get_gnupg(agent_name, agent_config, agent_email)
+        gpg = files.set_gnupg(agent_name, agent_config, agent_email)
         self.gpg = gpg
 
         return gpg

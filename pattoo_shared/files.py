@@ -486,7 +486,7 @@ def get_agent_id(agent_name, config):
     # Return
     return agent_id
 
-def get_gnupg(agent_name, config, agent_email):
+def set_gnupg(agent_name, config, agent_email):
     """Generate key pair and store credentials
 
     Args:
