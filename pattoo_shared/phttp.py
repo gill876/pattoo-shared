@@ -76,6 +76,9 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         """
         # Initialize key variables
         purge(self._url, self._identifier)
+    
+    def key_exchange(self, gpg):
+        key_exchange(gpg)
 
 
 class PostAgent(Post):
@@ -253,8 +256,9 @@ Data for identifier "{}" failed to post to server {}\
     return success
 
 
-def key_exchange():
-    pass
+def key_exchange(gpg):
+    print("Key exchange")
+    print("GPG: ", gpg.fingerprint)
 
 
 def purge(url, identifier):
