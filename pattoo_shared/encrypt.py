@@ -261,6 +261,7 @@ class Pgpier:
 
         Returns:
             str: String of ASCII armored public key
+            None: If keyid is not set
         """
         ascii_armored_public_keys = None
         keyid = self.keyid
@@ -535,6 +536,28 @@ class Pgpier:
                               + string.punctuation
         return ''.join(random.choice(password_characters)
                        for i in range(stringLength))
+
+    def del_pub_key(self, fingerprint):
+        """Deletes public key from keyring
+
+        Args:
+            fingerprint: Fingerprint of public key to be deleted
+
+        Returns:
+            (bool): True if the public key was deleted
+                    False if the public key was not deleted
+        """
+
+        output = False
+        gpg = self.gpg
+
+        # Deletes public key
+        result = gpg.delete_keys(fingerprint)
+
+        if str(result) == 'ok':
+            output = True
+
+        return output
 
     def set_email(self):
         """Retrieve email from keyring and set the correponding email address from
