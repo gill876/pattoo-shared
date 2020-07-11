@@ -36,4 +36,9 @@ setuptools.setup(
 
     # Set up the version
     version='0.0.84',
+
+    # Dependencies
+    install_requires=[
+        'PyYaml'
+    ]
 )

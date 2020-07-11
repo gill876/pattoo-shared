@@ -5,11 +5,12 @@ import subprocess
 import traceback
 
 
-def _run_script(cli_string, die=True):
+def run_script(cli_string, verbose, die=True):
     """Run the cli_string UNIX CLI command and record output.
 
     Args:
         cli_string: String of command to run
+        verbose: A boolean value to toggle the script's verbose mode
         die: Exit with error if True
 
     Returns:
@@ -22,6 +23,10 @@ def _run_script(cli_string, die=True):
     stdoutdata = ''.encode()
     stderrdata = ''.encode()
     returncode = 1
+
+    # Enable verbose mode if True
+    if verbose is True:
+        print('Running Command: "{}"'.format(cli_string))
 
     # Run update_targets script
     do_command_list = list(cli_string.split(' '))
@@ -61,10 +66,11 @@ Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
             )
 
         # Log message
-        print("messages: {})".format(messages))
         if messages != []:
-            for log_message in messages:
-                print(log_message)
+            # Enable verbose mode if true
+            if verbose is True:
+                for log_message in messages:
+                    print(log_message)
 
             if bool(die) is True:
                 # All done
@@ -72,4 +78,3 @@ Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
 
     # Return
     return (returncode, stdoutdata, stderrdata)
-

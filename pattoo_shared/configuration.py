@@ -3,14 +3,11 @@
 
 # Standard imports
 import os
-import pwd
-import grp
 
 # Import project libraries
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared import url
-from pattoo_shared import shared
 from pattoo_shared.constants import (
     PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
 from pattoo_shared.variables import PollingPoint
@@ -64,39 +61,6 @@ class BaseConfig():
         # Return
         result = log.check_environment()
         return result
-
-    def group_exists(self, group_name):
-        """Check if the group already exists.
-
-        Args:
-            group_name: The name of the group
-
-        Returns
-            True if the group exists and False if it does not
-        """
-        try:
-            # Gets group name
-            grp.getgrnam(group_name)
-            return True
-        except KeyError:
-            return False
-
-    def user_exists(self, user_name):
-        """Check if the user already exists.
-
-        Args:
-            user_name: The name of the user
-
-        Returns
-            True if the user exists and False if it does not
-
-        """
-        try:
-            # Gets user name
-            pwd.getpwnam(user_name)
-            return True
-        except KeyError:
-            return False
 
     def log_directory(self):
         """Get log_directory.
@@ -430,42 +394,6 @@ class Config(BaseConfig):
                 self.agent_api_ip_bind_port(),
                 self.agent_api_uri(), agent_id))
         return result
-
-    def create_user(self, user_name, directory, shell):
-        """Create user and their respective group.
-
-        Args:
-            user_name: The name and group of the user being created
-            directory: The home directory of the user
-            shell: The shell of the user
-
-        Returns:
-            None
-        """
-        # If the group specified does not exist, it gets created
-        if not self.group_exists(user_name):
-            shared._run_script('groupadd {0}'.format(user_name))
-        # If the user specified does not exist, they get created
-        if not self.user_exists(user_name):
-            shared._run_script(
-                'useradd -d {1} -s {2} -g {0} {0}'.format(
-                    user_name, directory, shell))
-
-    def initialize_ownership(self, user, group,  dir_path):
-        """Recursively change the ownership of the directory.
-
-        Args:
-            user: The name of the user
-            group: The name of the group
-            dir_path: The name of the directory
-
-        Returns:
-            None
-        """
-        # Set ownership of file specified at dir_path
-        if self.group_exists and self.user_exists:
-            shared._run_script(
-                'chown -R {0}:{1} {2}'.format(user, group, dir_path))
 
     def web_api_ip_address(self):
         """Get web_api_ip_address.
