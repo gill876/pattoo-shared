@@ -150,7 +150,7 @@ class Configure():
             if 'directory' in key:
                 if os.sep not in value:
                     log.log2die_safe(
-                        51010, '{} is an invalid directory'.format(value))
+                        5101, '{} is an invalid directory'.format(value))
 
                 # Attempt to create directory
                 full_directory = os.path.expanduser(value)

@@ -55,7 +55,7 @@ def check_pip3(verbose, pip3_dir, requirements_file):
     # Read pip_requirements file
     print('??: Checking pip3 packages')
     if os.path.isfile(requirements_file) is False:
-        log.log2die_safe(51011, 'Cannot find PIP3 requirements file {}'.format(
+        log.log2die_safe(5101, 'Cannot find PIP3 requirements file {}'.format(
                                                         requirements_file))
 
     # Opens pip_requirements file for reading
