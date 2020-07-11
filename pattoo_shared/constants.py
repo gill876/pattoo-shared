@@ -46,9 +46,7 @@ PattooDBrecord = collections.namedtuple(
 # pattoo_shared.constants.PostingDataPoints
 CACHE_KEYS = (
     'pattoo_agent_id', 'pattoo_datapoints', 'pattoo_agent_polling_interval',
-    'pattoo_agent_timestamp', 'pattoo_agent_email',
-    'pattoo_encrypted_datapoints', 'pattoo_agent_public_key'
-    )
+    'pattoo_agent_timestamp')
 
 ###############################################################################
 # Constants for pattoo Agent API
