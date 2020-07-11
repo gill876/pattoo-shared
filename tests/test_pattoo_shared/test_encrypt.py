@@ -429,8 +429,11 @@ class TestEncrypt(unittest.TestCase):
         pub_key2 = self.gpg2.exp_pub_key()
 
         # Import public keys
-        self.gpg1.imp_pub_key(pub_key2)
-        self.gpg2.imp_pub_key(pub_key1)
+        result_1 = self.gpg1.imp_pub_key(pub_key2)
+        result_2 = self.gpg2.imp_pub_key(pub_key1)
+
+        print('Result 1: {}\nResult 2: {}'
+              .format(result_1, result_2))
 
         # Retrieves new list of public keys
         keys_lst1 = self.gpg1.list_pub_keys()

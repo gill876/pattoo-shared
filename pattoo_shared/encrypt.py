@@ -280,11 +280,17 @@ class Pgpier:
             key_data (str): String of public key armored ASCII
 
         Returns:
-            None
+            result (dict): The number of imported keys and the
+                           the number of keys not imported
         """
         gpg = self.gpg
 
-        gpg.import_keys(key_data)
+        import_result = gpg.import_keys(key_data)
+
+        # Returns the amount of: imported, not imported
+        result = {"imported": import_result.imported,
+                  "not_imported": import_result.not_imported}
+        return result
 
     def pub_file(self):
         """Method to export the armored ASCII public key into an asc file
