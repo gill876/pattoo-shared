@@ -88,6 +88,7 @@ class _Directory():
         mkdir(value)
         return value
 
+
 class _File():
     """A class for creating the names of hidden files."""
 
@@ -498,7 +499,10 @@ def set_gnupg(agent_name, config, agent_email):
     Returns:
         gpg (obj): Pgpier object
     """
+    # Uses agent name as wrapper
     wrapper = '({})'.format(agent_name)
+
+    # Retrieves key directory
     d_obj = _Directory(config)
     key_dir = d_obj.keyring()
 
@@ -510,29 +514,36 @@ def set_gnupg(agent_name, config, agent_email):
     if set_values is not True:
         gpg.key_pair(agent_email, agent_name, agent_comment)
         gpg.exp_main(wrapper)
-        
+
     gpg.set_keyid()
     return gpg
 
 
 def get_gnupg(agent_name, config):
-    """Retrieve an already created Pgpier object based the key directory 
+    """Retrieve an already created Pgpier object based the key directory
 
     Args:
         agent_name (str): Agent name
         config (obj): Config object
 
     Returns:
-        gpg (obj): Pgpier object if key pair was already generated for <agent_name> 
+        gpg (obj): Pgpier object if key pair was already generated
+                   for <agent_name>
         None: If a key pair was not generated for <agent_name>
     """
+
+    # Uses agent name as wrapper
     wrapper = '({})'.format(agent_name)
+
+    # Retrieves key directory
     d_obj = _Directory(config)
     key_dir = d_obj.keyring()
 
     gpg = encrypt.Pgpier(key_dir)
     set_values = gpg.set_from_imp(wrapper)
 
+    # Checks if the Pgpier object of that specific agent was
+    # generated
     if set_values is True:
         return gpg
     else:
