@@ -208,7 +208,7 @@ class Configure():
                 log_message = ('''\
 Configuration file's "{}" section does not have a "{}" sub-section. \
 Please fix.'''.format(primary, key))
-                log.log2die_safe(51009, log_message)
+                log.log2die_safe(5101, log_message)
 
     def check_config(self):
         """Ensure agent configuration exists.
@@ -237,7 +237,7 @@ Please fix.'''.format(primary, key))
                 log_message = ('''\
 Section "{}" not found in configuration file {} in directory {}. Please fix.\
     '''.format(key, config_file, config_directory))
-                log.log2die_safe(51008, log_message)
+                log.log2die_safe(5101, log_message)
 
         # Check secondary keys
         secondaries = [
