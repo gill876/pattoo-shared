@@ -11,6 +11,7 @@ import time
 from pattoo_shared import log
 from pattoo_shared.constants import GRACEFUL_TIMEOUT
 
+
 class Daemon():
     """A generic daemon class.
 
@@ -298,7 +299,7 @@ class GracefulDaemon(Daemon):
 
         return running
 
-    def graceful_shutdown(self, fn):
+    def graceful_shutdown(self, callback):
         """Wrapper class that handles graceful_shutdown prior to using
         callaback function `fn`
 
@@ -321,13 +322,14 @@ class GracefulDaemon(Daemon):
             timeout_counter = time.time()
             while True:
                 # Updating timeout duration
-                current_duration = time.time() - timeout_counter
+                current_duration = time.time() - timeout_counter - 1
+                time.sleep(1)
 
                 if not self.__daemon_running() is True:
                     log_message = 'Process {} no longer processing'.format(self.name)
                     log.log2info(1101, log_message)
 
-                    fn(self)
+                    callback(self)
                     break
                 elif current_duration >= GRACEFUL_TIMEOUT:
                     log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(self.name)

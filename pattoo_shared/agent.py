@@ -79,6 +79,7 @@ class Agent():
         # Do nothing
         pass
 
+
 class AgentDaemonRunMixin(Daemon):
     """Class that defines basic run function for AgentDaemons"""
 
@@ -95,6 +96,7 @@ class AgentDaemonRunMixin(Daemon):
         # Start polling. (Poller decides frequency)
         while True:
             self.agent.query()
+
 
 class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
     """Class that manages base agent daemonization"""
@@ -114,6 +116,7 @@ class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
 
         # Instantiate daemon superclass
         Daemon.__init__(self, agent)
+
 
 class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
     """Class that manages graceful agent daemonization"""
