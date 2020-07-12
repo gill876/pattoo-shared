@@ -314,9 +314,17 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
     send_data = {'pattoo_agent_email': email_addr,
                  'pattoo_agent_key': public_key}
 
+    # Convert dict to str
+    send_data = json.dumps(send_data)
+
     try:
         # Send over data
         xch_resp = req_session.post(exchange_url, json=send_data)
+        addtional_info = None
+        try:
+            addtional_info = xch_resp.status_code
+        except Exception as ei:
+            addtional_info = 'failed before {}'.format(ei)
 
         # Checks that sent data was accepted
         general_response = xch_resp.status_code
@@ -365,6 +373,9 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
             validation_data = {'encrypted_nonce': encrypted_nonce,
                                'encrypted_sym_key': encrypted_sym_key}
 
+            # Convert dict to str
+            validation_data = json.dumps(validation_data)
+
             # POST data to API
             validation_resp = req_session.post(validation_url,
                                                json=validation_data)
@@ -385,7 +396,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                          .format(general_response)
             raise Exception(except_msg)
     except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<'.format(e)
+        log_msg = 'Error encountered: >>>{}<<<--->{}<---'.format(e, addtional_info)
         log.log2warning(20600, log_msg)
 
     return general_result
