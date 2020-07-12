@@ -320,11 +320,11 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
     try:
         # Send over data
         xch_resp = req_session.post(exchange_url, json=send_data)
-        addtional_info = None
-        try:
-            addtional_info = xch_resp.status_code
-        except Exception as ei:
-            addtional_info = 'failed before {}'.format(ei)
+        # addtional_info = None
+        # try:
+        #    addtional_info = xch_resp.status_code
+        # except Exception as ei:
+        #    addtional_info = 'failed before {}'.format(ei)
 
         # Checks that sent data was accepted
         general_response = xch_resp.status_code
@@ -336,9 +336,6 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
             general_response = post_resp.status_code
             if general_response == 200:
                 api_dict = post_resp.json()
-                # api_dict = json.loads(api_data)
-
-                # addtional_info = api_dict
 
                 api_email = api_dict['data']['api_email']
                 api_key = api_dict['data']['api_key']
@@ -348,7 +345,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                 import_msg = gpg.imp_pub_key(api_key)
                 api_fingerprint = gpg.email_to_key(api_email)
                 gpg.trust_key(api_fingerprint)
-                log.log2warning(20601, 'Import: {}'.format(import_msg))
+                log.log2info(20601, 'Import: {}'.format(import_msg))
 
                 # Decrypt nonce
                 passphrase = gpg.passphrase
@@ -356,6 +353,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                                                    passphrase)
 
                 # Further processing happens out of this nesting
+
             else:
                 except_msg = 'Could not retrieve GET information.'\
                              'Status: {}'.format(general_response)
@@ -393,12 +391,18 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                              'Status: {}'.format(general_response)
                 raise Exception(except_msg)
 
+        # Check if a symmetric key was already set at the API
+        elif general_response == 208:
+            general_result = True
+            msg = 'Symmetric key already set'
+            log.log2info(77710, msg)
+
         else:
             except_msg = 'Could not send POST information. Status: {}'\
                          .format(general_response)
             raise Exception(except_msg)
     except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<--->{}<---'.format(e, addtional_info)
+        log_msg = 'Error encountered: >>>{}<<<'.format(e)
         log.log2warning(20600, log_msg)
 
     return general_result
