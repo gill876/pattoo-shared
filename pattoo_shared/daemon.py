@@ -295,7 +295,8 @@ class GracefulDaemon(Daemon):
         except AttributeError as err:
             # Sets default GracefulDaemon shutdown timeout if not defined by the
             # agent configuration
-            log_message = 'Graceful Timeout configuration not set, {}\n Default setting to 10s'.format(err)
+            log_message = '''Graceful Timeout configuration not set, {}\n
+            Default setting to 10s'''.format(err)
             log.log2info(1100, log_message)
 
             self.graceful_timeout = 10
@@ -335,7 +336,8 @@ class GracefulDaemon(Daemon):
         def wrapper():
             """Wrapper function"""
             if self.__daemon_running():
-                log_message = '{} Lock file exists, Process still running'.format(self.name)
+                log_message = '''{} Lock file exists, Process still
+                running'''.format(self.name)
                 log.log2info(1101, log_message)
 
             # Continually checks if daemon is still running exits loop once
@@ -347,14 +349,18 @@ class GracefulDaemon(Daemon):
                 time.sleep(1)
 
                 if not self.__daemon_running() is True:
-                    log_message = 'Process {} no longer processing'.format(self.name)
+                    log_message = '''Process {} no longer
+                    processing'''.format(self.name)
                     log.log2info(1103, log_message)
                     break
-                elif current_duration >= self.graceful_timeout:
-                    log_message = 'Process {} failed to shutdown, DUE TO TIMEOUT'.format(self.name)
+
+                if current_duration >= self.graceful_timeout:
+                    log_message = '''Process {} failed to shutdown, DUE TO
+                    TIMEOUT'''.format(self.name)
                     log.log2info(1104, log_message)
 
-                    log_message = '{}, hard shutdown in progress'.format(self.name)
+                    log_message = '''{}, hard shutdown in
+                    progress'''.format(self.name)
                     log.log2info(1105, log_message)
                     break
             callback()
@@ -373,8 +379,8 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        graceful_stop = self.graceful_shutdown(super(GracefulDaemon, self).stop)
-        graceful_stop()
+        wrapper = self.graceful_shutdown(super(GracefulDaemon, self).stop)
+        wrapper()
 
     def restart(self):
         """Restarts the daemon gracefully.
@@ -389,5 +395,5 @@ class GracefulDaemon(Daemon):
             None
 
         """
-        graceful_restart = self.graceful_shutdown(super(GracefulDaemon, self).restart)
-        graceful_restart()
+        wrapper = self.graceful_shutdown(super(GracefulDaemon, self).restart)
+        wrapper()
