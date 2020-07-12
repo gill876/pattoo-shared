@@ -40,8 +40,8 @@ class Post():
         self._url = config.agent_api_server_url(identifier)
 
         # Get URLs for encryption
-        self._exchange_key = config.agent_api_key_url
-        self._validate_key = config.agent_api_validation_url
+        self._exchange_key = config.agent_api_key_url()
+        self._validate_key = config.agent_api_validation_url()
 
         # Get requirements for key exchange
         self._session = requests.Session()
