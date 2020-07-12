@@ -16,7 +16,6 @@ DATA_COUNT64 = 64
 DATA_COUNT = 32
 DATA_STRING = 2
 DATA_NONE = None
-GRACEFUL_TIMEOUT=10
 
 ###############################################################################
 # Constants for data DB ingestion
