@@ -335,12 +335,14 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
             # Checks that the API sent over information
             general_response = post_resp.status_code
             if general_response == 200:
-                api_data = post_resp.json()
-                api_dict = json.loads(api_data)
+                api_dict = post_resp.json()
+                # api_dict = json.loads(api_data)
 
-                api_email = api_dict['api_email']
-                api_key = api_dict['api_key']
-                encrypted_nonce = api_dict['encrypted_nonce']
+                # addtional_info = api_dict
+
+                api_email = api_dict['data']['api_email']
+                api_key = api_dict['data']['api_key']
+                encrypted_nonce = api_dict['data']['encrypted_nonce']
 
                 # Import API public key
                 import_msg = gpg.imp_pub_key(api_key)
