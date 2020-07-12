@@ -388,6 +388,18 @@ class Config(BaseConfig):
         url = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
         return url
 
+    def agent_api_validation(self):
+        """Get URL to validate encryption status.
+
+        Args:
+            None
+
+        Returns:
+            url (str): URL of the validation point
+        """
+        url = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
+        return url
+
     def agent_api_server_url(self, agent_id):
         """Get pattoo server's remote URL.
 
@@ -412,7 +424,7 @@ class Config(BaseConfig):
 
         Args:
             None
-        
+
         Returns:
             link (str): Link of the key exchange point
         """
@@ -423,6 +435,27 @@ class Config(BaseConfig):
                 _ip,
                 self.agent_api_ip_bind_port(),
                 self.agent_api_key()
+                )
+            )
+
+        return link
+
+    def agent_api_validation_url(self):
+        """Validation point for encryption
+
+        Args:
+            None
+
+        Returns:
+            link (str): Link of the validation point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_validation()
                 )
             )
 
