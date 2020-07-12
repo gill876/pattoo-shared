@@ -39,6 +39,16 @@ class Post():
         self._identifier = identifier
         self._url = config.agent_api_server_url(identifier)
 
+        # Get URLs for encryption
+        self._exchange_key = config.agent_api_key_url
+        self._validate_key = config.agent_api_validation_url
+
+        # Get requirements for key exchange
+        self._session = requests.Session()
+
+        # Encryption requirements
+        self._symmetric_key = None
+
     def post(self):
         """Post data to central server.
 
@@ -76,9 +86,25 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         """
         # Initialize key variables
         purge(self._url, self._identifier)
-    
-    def key_exchange(self, gpg):
-        key_exchange(gpg)
+
+    def set_encryption(self, gpg):
+        """ Set up encryption by exchanging public keys and
+        setting a symmetric key for encryption
+
+        Args:
+            gpg (obj): Pgpier object to facilitate encryption
+
+        Returns:
+            (bool): True if the exchange was successful
+                    False if the exchange failed
+        """
+
+        # Generate symmetric key
+        self._symmetric_key = gpg.gen_symm_key(20)  # Random str of len 20
+        result = key_exchange(gpg, self._session, self._exchange_key,
+                              self._validate_key, self._symmetric_key)
+
+        return result
 
 
 class PostAgent(Post):
@@ -237,7 +263,8 @@ def post(url, data, identifier, save=True):
 HTTP {} error for identifier "{}" posted to server {}\
 '''.format(result.status_code, identifier, url))
             log.log2warning(1017, log_message)
-            # Save data to cache, remote webserver isn't working properly
+            # Save data to cache, remote webserver isn't 
+            # working properly
             _save_data(data, identifier)
 
     # Log message
@@ -256,9 +283,112 @@ Data for identifier "{}" failed to post to server {}\
     return success
 
 
-def key_exchange(gpg):
-    print("Key exchange")
-    print("GPG: ", gpg.fingerprint)
+def key_exchange(gpg, req_session, exchange_url, validation_url,
+                 symmetric_key):
+    """Exchange point for API and Agent public keys
+
+    Args:
+        gpg (obj): Pgpier object
+        req_session (obj): Request Session object
+
+    Returns:
+        True: If key exchange was successful
+        False: If the key exchange failed
+    """
+
+    # Predefine failure response
+    general_response = 409
+    general_result = False
+
+    # Set Pgpier key ID
+    gpg.set_keyid()
+
+    # Export public key to ASCII to send over
+    public_key = gpg.exp_pub_key()
+
+    # Retrieve email address from Pgpier object
+    gpg.set_email()
+    email_addr = gpg.email_addr
+
+    # Data for POST
+    send_data = {'pattoo_agent_email': email_addr,
+                 'pattoo_agent_key': public_key}
+
+    try:
+        # Send over data
+        xch_resp = req_session.post(exchange_url, json=send_data)
+
+        # Checks that sent data was accepted
+        general_response = xch_resp.status_code
+        if general_response == 202:
+            # Get API information
+            post_resp = req_session.get(exchange_url)
+
+            # Checks that the API sent over information
+            general_response = post_resp.status_code
+            if general_response == 200:
+                api_data = post_resp.json()
+                api_dict = json.loads(api_data)
+
+                api_email = api_dict['api_email']
+                api_key = api_dict['api_key']
+                encrypted_nonce = api_dict['encrypted_nonce']
+
+                # Import API public key
+                import_msg = gpg.imp_pub_key(api_key)
+                api_fingerprint = gpg.email_to_key(api_email)
+                gpg.trust_key(api_fingerprint)
+                log.log2warning(20601, 'Import: {}'.format(import_msg))
+
+                # Decrypt nonce
+                passphrase = gpg.passphrase
+                decrypted_nonce = gpg.decrypt_data(encrypted_nonce,
+                                                   passphrase)
+
+                # Further processing happens out of this nesting
+            else:
+                except_msg = 'Could not retrieve GET information.'\
+                             'Status: {}'.format(general_response)
+                raise Exception(except_msg)
+
+            # Futher processing continues here
+
+            # Symmetrically encrypt nonce
+            encrypted_nonce = gpg.symmetric_encrypt(decrypted_nonce,
+                                                    symmetric_key)
+
+            # Encrypt symmetric key
+            encrypted_sym_key = gpg.encrypt_data(symmetric_key,
+                                                 api_fingerprint)
+
+            # Prepare data to send to API
+            validation_data = {'encrypted_nonce': encrypted_nonce,
+                               'encrypted_sym_key': encrypted_sym_key}
+
+            # POST data to API
+            validation_resp = req_session.post(validation_url,
+                                               json=validation_data)
+
+            # Check that the transaction was validated
+            general_response = validation_resp.status_code
+            if general_response == 200:
+
+                # The exchange and validation has been successful
+                general_result = True
+            else:
+                except_msg = 'Could not validate information.'\
+                             'Status: {}'.format(general_response)
+                raise Exception(except_msg)
+
+        else:
+            except_msg = 'Could not send POST information. Status: {}'\
+                         .format(general_response)
+            raise Exception(except_msg)
+    except Exception as e:
+        log_msg = 'Error encountered: >>>{}<<<'.format(e)
+        log.log2warning(20600, log_msg)
+
+    return general_result
 
 
 def purge(url, identifier):
