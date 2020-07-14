@@ -28,6 +28,8 @@ from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
 from tests.libraries.configuration import UnittestConfig
 
+# Test Daemon importation
+from tests.test_pattoo_shared.test_daemon import  TestDaemon, TestGracefulDaemon, AGENT_NAME
 
 class TestAgent(unittest.TestCase):
     """Checks all functions and methods."""
@@ -78,21 +80,47 @@ class TestAgent(unittest.TestCase):
         pass
 
 
-class TestAgentDaemon(unittest.TestCase):
+class TestBaseAgentDaemon(TestDaemon):
     """Checks all functions and methods."""
 
     #########################################################################
     # General object setup
     #########################################################################
 
-    def test___init__(self):
-        """Testing method or function named __init__."""
-        pass
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._config = Config()
+        self._agent = agent.Agent(parent=AGENT_NAME, config=self._config)
+
+        # Instantiation of test daemon
+        self._daemon = agent.BaseAgentDaemon(self._agent)
 
     def test_run(self):
         """Testing method or function named run."""
         pass
 
+class TestGracefulAgentDaemon(TestGracefulDaemon):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._config = Config()
+        self._agent = agent.Agent(parent=AGENT_NAME, config=self._config)
+
+        # Instantiation of test daemon
+        self._daemon = agent.GracefulAgentDaemon(self._agent)
+
+    def test_run(self):
+        """Testing method or function named run."""
+        pass
 
 class TestAgentCLI(unittest.TestCase):
     """Checks all functions and methods."""
