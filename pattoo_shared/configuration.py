@@ -411,7 +411,7 @@ class Config(BaseConfig):
 
         """
         # Return
-        result = '{}/receive/encrypted'.format(PATTOO_API_AGENT_PREFIX)
+        result = '{}/encrypted'.format(PATTOO_API_AGENT_PREFIX)
         return result
 
     def agent_api_server_url(self, agent_id):
