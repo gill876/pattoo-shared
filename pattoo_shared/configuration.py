@@ -400,6 +400,20 @@ class Config(BaseConfig):
         url = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
         return url
 
+    def agent_api_encrypted(self):
+        """Get URL to receive encrypted data
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Return
+        result = '{}/receive/encrypted'.format(PATTOO_API_AGENT_PREFIX)
+        return result
+
     def agent_api_server_url(self, agent_id):
         """Get pattoo server's remote URL.
 
@@ -456,6 +470,27 @@ class Config(BaseConfig):
                 _ip,
                 self.agent_api_ip_bind_port(),
                 self.agent_api_validation()
+                )
+            )
+
+        return link
+
+    def agent_api_encrypted_url(self):
+        """Encrypted data reception point
+
+        Args:
+            None
+
+        Returns:
+            link (str): Link of encrypted data receive point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_encrypted()
                 )
             )
 
