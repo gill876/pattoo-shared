@@ -465,6 +465,7 @@ def encrypted_post(gpg, symmetric_key, req_session,
     prep_data = json.dumps(raw_data)
     encrypted_data = gpg.symmetric_encrypt(prep_data, symmetric_key)
     post_data = {"encrypted_data": encrypted_data}
+    post_data = json.dumps(post_data)
 
     # Post data save to cache if this fails
     response_code = None
