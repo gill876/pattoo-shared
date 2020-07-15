@@ -42,6 +42,7 @@ class Post():
         # Get URLs for encryption
         self._exchange_key = config.agent_api_key_url()
         self._validate_key = config.agent_api_validation_url()
+        self._encryption = config.agent_api_encrypted_url()
 
         # Get requirements for key exchange
         self._session = requests.Session()
@@ -88,7 +89,7 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         purge(self._url, self._identifier)
 
     def set_encryption(self, gpg):
-        """ Set up encryption by exchanging public keys and
+        """Set up encryption by exchanging public keys and
         setting a symmetric key for encryption
 
         Args:
@@ -103,6 +104,31 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         self._symmetric_key = gpg.gen_symm_key(20)  # Random str of len 20
         result = key_exchange(gpg, self._session, self._exchange_key,
                               self._validate_key, self._symmetric_key)
+
+        return result
+
+    def encrypted_post(self, gpg):
+        """Send encrypted data to the API server
+
+        Args:
+            gpg (obj): Pgpier object to facilitate encryption
+
+        Returns (bool): True if data was posted successfully
+                        False if data failed to post
+
+        """
+        # Predefine variables
+        result = False
+
+        # Post data
+        if bool(self._data) is True:
+            result = encrypted_post(gpg, self._symmetric_key,
+                                    self._session, self._encryption,
+                                    self._data, self._identifier)
+        else:
+            log_message = ('Blank data. No data to post from '
+                           'identifier {}.'.format(self._identifier))
+            log.log2warning(88024, log_message)
 
         return result
 
@@ -462,7 +488,7 @@ def encrypted_post(gpg, symmetric_key, req_session,
                        'from URL: "{}"'
                        .format(response_code, url)
                        )
-        log.log2debug(206126, log_message)
+        log.log2debug(20612, log_message)
         general_result = True
     else:
         log_message = ('Error posting. Response "{}".'
