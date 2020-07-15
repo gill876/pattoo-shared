@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
 """Pattoo .Agent class.
 
 Description:
 
-    This script:
+    This module:
         1) Processes a variety of information from agents
         2) Posts the data using HTTP to a server listed
            in the configuration file
