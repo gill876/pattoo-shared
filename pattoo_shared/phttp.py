@@ -53,7 +53,7 @@ class Post():
         """Post data to central server.
 
         Args:
-            save: When True, save data to cache directory if postinf fails
+            save: When True, save data to cache directory if posting fails
             data: Data to post. If None, then uses self._post_data (
                 Used for testing and cache purging)
 
@@ -404,6 +404,72 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
         log.log2warning(20600, log_msg)
+
+    return general_result
+
+
+def encrypted_post(gpg, symmetric_key, req_session,
+                   url, data, identifier, save=True):
+    """Post encrypted data to the API server
+
+    Args:
+        gpg (obj): Pgpier object to accommodate encryption
+        symmetric_key (str): Symmetric key used to encrypt data
+        req_session (obj): Request session used to remember the session
+                           used to communicate with the API server
+        url (str): API URL to post the data to
+        data (dict): Data to be posted to the API server
+        identifier (str): The agent identification
+        save (bool): True to save data to cache directory if
+                     posting fails
+
+    Returns:
+        general_result (bool)
+
+    """
+    # Initialize key variables
+    general_result = False
+
+    # Fail if nothing to post
+    if isinstance(data, dict) is False or bool(data) is False:
+        return general_result
+
+    # Prepare and encrypt data
+    raw_data = {"data": data, "source": identifier}
+    prep_data = json.dumps(raw_data)
+    encrypted_data = gpg.symmetric_encrypt(prep_data, symmetric_key)
+    post_data = {"encrypted_data": encrypted_data}
+
+    # Post data save to cache if this fails
+    response_code = None
+    try:
+        response = req_session.post(url, json=post_data)
+        response_code = response.status_code
+    except Exception as e:
+        log_msg = 'Error encountered: >>>{}<<<'.format(e)
+        log.log2warning(20611, log_msg)
+        if save is True:
+            # Save data to cache
+            _save_data(data, identifier)
+        else:
+            # Proceed normally if there is a failure.
+            # This will be logged later
+            pass
+
+    # Checks if data was posted successfully
+    if response_code == 202:
+        log_message = ('Posted to API. Response "{}".'
+                       'from URL: "{}"'
+                       .format(response_code, url)
+                       )
+        log.log2debug(206126, log_message)
+        general_result = True
+    else:
+        log_message = ('Error posting. Response "{}".'
+                       'from URL: "{}"'
+                       .format(response_code, url)
+                       )
+        log.log2warning(20613, log_message)
 
     return general_result
 
