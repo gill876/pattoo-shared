@@ -212,16 +212,7 @@ file and directory permissions.'''.format(daemon_log_file)
 
         # Try killing the daemon process
         try:
-            while 1:
-                if self.lockfile is None:
-                    os.kill(pid, signal.SIGTERM)
-                else:
-                    time.sleep(0.3)
-                    if os.path.exists(self.lockfile) is True:
-                        continue
-                    else:
-                        os.kill(pid, signal.SIGTERM)
-                time.sleep(0.3)
+            os.kill(pid, signal.SIGTERM)
         except OSError as err:
             error = str(err.args)
             if error.find("No such process") > 0:
@@ -285,3 +276,132 @@ file and directory permissions.'''.format(daemon_log_file)
         """
         # Simple comment to pass linter
         pass
+
+
+class GracefulDaemon(Daemon):
+    """Daemon that allows for graceful shutdown
+
+    This daemon should allow for stop/restart commands to perform graceful
+    shutdown of a given process. A graceful shutdown involves checking that
+    whether a current process is running and only ending the process once the
+    current process has completed its currently running task.
+
+    """
+
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: Agent object
+
+        Returns:
+            None
+
+        """
+        try:
+            self.graceful_timeout = agent.config.graceful_timeout()
+        except AttributeError as err:
+            # Sets default GracefulDaemon shutdown timeout if not defined by the
+            # agent configuration
+            log_message = '''Graceful Timeout configuration not set, {}\n
+            Default setting to 10s'''.format(err)
+            log.log2info(1100, log_message)
+
+            self.graceful_timeout = 10
+
+        Daemon.__init__(self, agent)
+
+    def __daemon_running(self):
+        """Determines if daemon is running
+
+        Daemon is running based on whether it has an associated lockfile
+
+        Args:
+            None
+
+        Return:
+            running: True if daemon is currently running or conducing a process
+
+        """
+        running = False
+        if self.lockfile is not None:
+            if os.path.exists(self.lockfile) is True:
+                running = True
+
+        return running
+
+    def graceful_shutdown(self, callback):
+        """Wrapper class that handles graceful_shutdown prior to using
+        callaback function `fn`
+
+        Args:
+            fn: callback method
+
+        Return:
+            wrapper
+
+        """
+        def wrapper():
+            """Wrapper function"""
+            if self.__daemon_running():
+                log_message = '''{} Lock file exists, Process still
+                running'''.format(self.name)
+                log.log2info(1101, log_message)
+
+            # Continually checks if daemon is still running exits loop once
+            # instance graceful_timeout limit reached
+            timeout_counter = time.time()
+            while True:
+                # Updating timeout duration
+                current_duration = time.time() - timeout_counter - 1
+                time.sleep(1)
+
+                if not self.__daemon_running() is True:
+                    log_message = '''Process {} no longer
+                    processing'''.format(self.name)
+                    log.log2info(1103, log_message)
+                    break
+
+                if current_duration >= self.graceful_timeout:
+                    log_message = '''Process {} failed to shutdown, DUE TO
+                    TIMEOUT'''.format(self.name)
+                    log.log2info(1104, log_message)
+
+                    log_message = '''{}, hard shutdown in
+                    progress'''.format(self.name)
+                    log.log2info(1105, log_message)
+                    break
+            callback()
+        return wrapper
+
+    def stop(self):
+        """Stops the daemon gracefully.
+
+        Uses parent class stop method after checking that daemon is no longer
+        processing data or making use of a resource.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        wrapper = self.graceful_shutdown(super(GracefulDaemon, self).stop)
+        wrapper()
+
+    def restart(self):
+        """Restarts the daemon gracefully.
+
+        Uses parent class restart method after checking that daemon is no longer
+        processing data or making use of a resource.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        wrapper = self.graceful_shutdown(super(GracefulDaemon, self).restart)
+        wrapper()
