@@ -82,11 +82,28 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
             None
 
         Returns:
-            success: "True: if successful
+            None
 
         """
         # Initialize key variables
         purge(self._url, self._identifier)
+
+    def encrypted_purge(self, gpg):
+        """Purge data from cache by posting encrypted data
+        to the API server.
+
+        Args:
+            gpg (obj): Pgpier object to facilitate encryption
+
+        Returns:
+            None
+
+        """
+
+        # Purge data, encrypt and send to API
+        encrypted_purge(gpg, self._symmetric_key, self._session,
+                        self._encryption, self._data,
+                        self._identifier)
 
     def set_encryption(self, gpg):
         """Set up encryption by exchanging public keys and
@@ -568,6 +585,78 @@ Deleting corrupted cache file {} for identifier {}.\
     Purging cache file {} after successfully contacting server {}\
     '''.format(filepath, url))
                 log.log2info(1007, log_message)
+
+
+def encrypted_purge(gpg, symmetric_key, req_session,
+                    url, data, identifier):
+    """Purge data from cache by posting ecrypted data to API server.
+
+    Args:
+        url: URL to receive posted data
+        identifier: Identifier to use for posting
+
+    Returns:
+        None
+
+    """
+    # Initialize key variables
+    config = Config()
+    cache_dir = config.agent_cache_directory(identifier)
+
+    # Add files in cache directory to list only if they match the
+    # cache suffix
+    all_filenames = [filename for filename in os.listdir(
+        cache_dir) if os.path.isfile(
+            os.path.join(cache_dir, filename))]
+    filenames = [
+        filename for filename in all_filenames if filename.endswith(
+            '.json')]
+
+    # Read cache file
+    for filename in filenames:
+        # Only post files for our own UID value
+        if identifier not in filename:
+            continue
+
+        # Get the full filepath for the cache file and post
+        filepath = os.path.join(cache_dir, filename)
+        with open(filepath, 'r') as f_handle:
+            try:
+                data = json.load(f_handle)
+            except Exception as e:
+                # Log removal
+                log_message = ('Error reading previously cached '
+                               'agent data file {} for identifier'
+                               ' {}. May be corrupted. Exception: "{}"'
+                               .format(filepath, identifier, e))
+                log.log2warning(1100, log_message)
+
+                # Delete file
+                if os.path.isfile(filepath) is True:
+                    os.remove(filepath)
+
+                    log_message = ('Deleting corrupted cache file '
+                                   '{} for identifier {}. Exception:'
+                                   ' "{}"'.format(filepath, identifier, e))
+                    log.log2warning(1101, log_message)
+
+                # Go to the next file.
+                continue
+
+        # Post file
+        success = encrypted_post(gpg, symmetric_key, req_session,
+                                 url, data, identifier, False)
+
+        # Delete file if successful
+        if success is True:
+            if os.path.exists(filepath) is True:
+                os.remove(filepath)
+
+                # Log removal
+                log_message = ('Purging cache file {} after'
+                               'successfully contacting server {}'
+                               .format(filepath, url))
+                log.log2info(1102, log_message)
 
 
 def _save_data(data, identifier):
