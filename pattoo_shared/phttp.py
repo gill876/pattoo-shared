@@ -17,7 +17,52 @@ from pattoo_shared.configuration import Config
 from pattoo_shared import converter
 
 
-class Post():
+class _Post():
+    """Abstract class to prepare data for posting to remote pattoo server."""
+    def __init__(self, identifier, data):
+        """Initialize the class.
+
+        Args:
+            identifier: Agent identifier
+            data: Data from agent
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self.config = Config()
+
+        # Get data and identifier
+        self._data = data
+        self._identifier = identifier
+
+    def post(self):
+        """Post data to API server.
+
+        Args:
+            None
+
+        Returns:
+            success (bool): True: if successful
+
+        """
+        pass
+
+    def purge(self):
+        """Delete cached data and post to API server
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        pass
+
+
+class Post(_Post):
     """Class to prepare data for posting to remote pattoo server."""
 
     def __init__(self, identifier, data):
@@ -31,32 +76,16 @@ class Post():
             None
 
         """
-        # Initialize key variables
-        config = Config()
 
-        # Get posting URL
-        self._data = data
-        self._identifier = identifier
-        self._url = config.agent_api_server_url(identifier)
-
-        # Get URLs for encryption
-        self._exchange_key = config.agent_api_key_url()
-        self._validate_key = config.agent_api_validation_url()
-        self._encryption = config.agent_api_encrypted_url()
-
-        # Get requirements for key exchange
-        self._session = requests.Session()
-
-        # Encryption requirements
-        self._symmetric_key = None
+        _Post.__init__(identifier, data)
+        # URL to post to API server
+        self._url = self.config.agent_api_server_url(identifier)
 
     def post(self):
         """Post data to central server.
 
         Args:
-            save: When True, save data to cache directory if posting fails
-            data: Data to post. If None, then uses self._post_data (
-                Used for testing and cache purging)
+            None
 
         Returns:
             success: True: if successful
@@ -88,7 +117,39 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         # Initialize key variables
         purge(self._url, self._identifier)
 
-    def encrypted_purge(self, gpg):
+
+class EncryptedPost(_Post):
+    """Class to exchange public keys, set symmetric key and
+    post symmetrically encrypted data to the API server
+    """
+
+    def __init__(self, identifier, data, gpg):
+        """Initialize the class
+
+        Args:
+            gpg (obj): Pgpier object to accommodate encryption
+
+        Returns:
+            None
+        """
+
+        _Post.__init__(identifier, data)
+
+        # Set Pgpier object
+        self._gpg = gpg
+
+        # Get URLs for encryption
+        self._exchange_key = self.config.agent_api_key_url()
+        self._validate_key = self.config.agent_api_validation_url()
+        self._encryption = self.config.agent_api_encrypted_url()
+
+        # Get requirements for key exchange
+        self._session = requests.Session()
+
+        # Encryption requirements
+        self._symmetric_key = None
+
+    def purge(self):
         """Purge data from cache by posting encrypted data
         to the API server.
 
@@ -99,32 +160,22 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
             None
 
         """
+        result = False
+
+        # Check if key was exchanged and if a symmetric was set
+        if self._symmetric_key is None:
+            exchanged = self.set_encryption()
+
+            # If the key exchanged failed, return result
+            if exchanged is False:
+                return result
 
         # Purge data, encrypt and send to API
-        encrypted_purge(gpg, self._symmetric_key, self._session,
+        encrypted_purge(self._gpg, self._symmetric_key, self._session,
                         self._encryption, self._data,
                         self._identifier)
 
-    def set_encryption(self, gpg):
-        """Set up encryption by exchanging public keys and
-        setting a symmetric key for encryption
-
-        Args:
-            gpg (obj): Pgpier object to facilitate encryption
-
-        Returns:
-            (bool): True if the exchange was successful
-                    False if the exchange failed
-        """
-
-        # Generate symmetric key
-        self._symmetric_key = gpg.gen_symm_key(20)  # Random str of len 20
-        result = key_exchange(gpg, self._session, self._exchange_key,
-                              self._validate_key, self._symmetric_key)
-
-        return result
-
-    def encrypted_post(self, gpg):
+    def post(self):
         """Send encrypted data to the API server
 
         Args:
@@ -137,15 +188,45 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
         # Predefine variables
         result = False
 
+        # Check if key was exchanged and if a symmetric was set
+        if self._symmetric_key is None:
+            exchanged = self.set_encryption()
+
+            # If the key exchanged failed, return result
+            if exchanged is False:
+                return result
+
         # Post data
         if bool(self._data) is True:
-            result = encrypted_post(gpg, self._symmetric_key,
+            result = encrypted_post(self._gpg, self._symmetric_key,
                                     self._session, self._encryption,
                                     self._data, self._identifier)
         else:
             log_message = ('Blank data. No data to post from '
                            'identifier {}.'.format(self._identifier))
             log.log2warning(88024, log_message)
+
+        return result
+
+    def set_encryption(self):
+        """Set up encryption by exchanging public keys and
+        setting a symmetric key for encryption
+
+        Args:
+            gpg (obj): Pgpier object to facilitate encryption
+
+        Returns:
+            (bool): True if the exchange was successful
+                    False if the exchange failed
+        """
+
+        result = key_exchange(self._gpg, self._session, self._exchange_key,
+                              self._validate_key, self._symmetric_key)
+
+        if result is True:
+            # Generate symmetric key if key exchange was successful
+            # Random str of len 20
+            self._symmetric_key = self._gpg.gen_symm_key(20)
 
         return result
 
