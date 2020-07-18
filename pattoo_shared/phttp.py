@@ -77,7 +77,7 @@ class Post(_Post):
 
         """
 
-        _Post.__init__(identifier, data)
+        _Post.__init__(self, identifier, data)
         # URL to post to API server
         self._url = self.config.agent_api_server_url(identifier)
 
@@ -133,7 +133,7 @@ class EncryptedPost(_Post):
             None
         """
 
-        _Post.__init__(identifier, data)
+        _Post.__init__(self, identifier, data)
 
         # Set Pgpier object
         self._gpg = gpg
