@@ -260,6 +260,36 @@ class PostAgent(Post):
         Post.__init__(self, identifier, data)
 
 
+class EncryptedPostAgent(EncryptedPost):
+    """Class to prepare data for posting encrypted
+    data to remote pattoo server."""
+
+    def __init__(self, agentdata, gpg):
+        """Initialize the class.
+
+        Args:
+            agentdata: Agent data
+
+        Returns:
+            None
+
+        """
+        # Get extracted data
+        identifier = agentdata.agent_id
+        _data = converter.agentdata_to_post(agentdata)
+        data = converter.posting_data_points(_data)
+
+        # Log message that ties the identifier to an agent_program
+        _log(agentdata.agent_program, identifier)
+
+        # Don't post if agent data is invalid
+        if agentdata.valid is False:
+            data = None
+
+        # Initialize key variables
+        EncryptedPost.__init__(self, identifier, data, gpg)
+
+
 class PassiveAgent():
     """Class to handle data from passive Pattoo Agents."""
 
