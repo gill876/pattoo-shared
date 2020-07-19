@@ -147,7 +147,8 @@ class EncryptedPost(_Post):
         self._session = requests.Session()
 
         # Encryption requirements
-        self._symmetric_key = None
+        # Random str of len 20
+        self._symmetric_key = self._gpg.gen_symm_key(20)
 
     def purge(self):
         """Purge data from cache by posting encrypted data
@@ -162,13 +163,12 @@ class EncryptedPost(_Post):
         """
         result = False
 
-        # Check if key was exchanged and if a symmetric was set
-        if self._symmetric_key is None:
-            exchanged = self.set_encryption()
+        # Check if key was exchanged
+        exchanged = self.set_encryption()
 
-            # If the key exchanged failed, return result
-            if exchanged is False:
-                return result
+        # If the key exchanged failed, return result
+        if exchanged is False:
+            return result
 
         # Purge data, encrypt and send to API
         encrypted_purge(self._gpg, self._symmetric_key, self._session,
@@ -188,13 +188,12 @@ class EncryptedPost(_Post):
         # Predefine variables
         result = False
 
-        # Check if key was exchanged and if a symmetric was set
-        if self._symmetric_key is None:
-            exchanged = self.set_encryption()
+        # Check if key was exchanged
+        exchanged = self.set_encryption()
 
-            # If the key exchanged failed, return result
-            if exchanged is False:
-                return result
+        # If the key exchanged failed, return result
+        if exchanged is False:
+            return result
 
         # Post data
         if bool(self._data) is True:
@@ -222,11 +221,6 @@ class EncryptedPost(_Post):
 
         result = key_exchange(self._gpg, self._session, self._exchange_key,
                               self._validate_key, self._symmetric_key)
-
-        if result is True:
-            # Generate symmetric key if key exchange was successful
-            # Random str of len 20
-            self._symmetric_key = self._gpg.gen_symm_key(20)
 
         return result
 
