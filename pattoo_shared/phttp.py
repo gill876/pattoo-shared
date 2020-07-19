@@ -735,7 +735,7 @@ def encrypted_purge(gpg, symmetric_key, req_session,
                                'agent data file {} for identifier'
                                ' {}. May be corrupted. Exception: "{}"'
                                .format(filepath, identifier, e))
-                log.log2warning(1100, log_message)
+                log.log2warning(1061, log_message)
 
                 # Delete file
                 if os.path.isfile(filepath) is True:
@@ -744,7 +744,7 @@ def encrypted_purge(gpg, symmetric_key, req_session,
                     log_message = ('Deleting corrupted cache file '
                                    '{} for identifier {}. Exception:'
                                    ' "{}"'.format(filepath, identifier, e))
-                    log.log2warning(1101, log_message)
+                    log.log2warning(1062, log_message)
 
                 # Go to the next file.
                 continue
