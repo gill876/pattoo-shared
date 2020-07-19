@@ -362,6 +362,56 @@ class Config(BaseConfig):
             result = int(intermediate)
         return result
 
+    def api_email_address(self):
+        """GET API email address from yaml file
+
+        Args:
+            None
+
+        Returns:
+            email (str): Email address of API
+        """
+
+        # Initialize key variables
+        key = 'encryption'
+        sub_key = 'api_email'
+
+        # Get result
+        result = search(
+            key, sub_key, self._base_yaml_configuration, die=True)
+        if result is None:
+            result = 'palisadoes-test@palisadoes.org'
+        
+        # Log current email
+        log_message = ('API email address: {}'.format(result))
+        log.log2info(1081, log_message)
+        return result
+
+    def agent_email_address(self):
+        """GET agent email address from yaml file
+
+        Args:
+            None
+
+        Returns:
+            email (str): Email address of agent
+        """
+
+        # Initialize key variables
+        key = 'encryption'
+        sub_key = 'agent_email'
+
+        # Get result
+        result = search(
+            key, sub_key, self._base_yaml_configuration, die=True)
+        if result is None:
+            result = 'calico-test@palisadoes.org'
+
+        # Log current email
+        log_message = ('Agent email address: {}'.format(result))
+        log.log2info(1082, log_message)
+        return result
+
     def agent_api_uri(self):
         """Get agent_api_uri.
 
