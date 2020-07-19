@@ -543,7 +543,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
         elif general_response == 208:
             general_result = True
             msg = 'Symmetric key already set'
-            log.log2info(77710, msg)
+            log.log2info(1701, msg)
 
         else:
             except_msg = 'Could not send POST information. Status: {}'\
