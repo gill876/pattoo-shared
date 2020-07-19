@@ -307,6 +307,11 @@ class AgentAPI(Agent):
             ip_bind_port=_config.ip_bind_port(),
             ip_listen_address=_config.ip_listen_address())
 
+        # Add email address to Agent subclass
+        econfig = Config()
+        email_addr = econfig.api_email_address()
+        self.set_email(email_addr)
+
     def query(self):
         """Query all remote targets for data.
 
