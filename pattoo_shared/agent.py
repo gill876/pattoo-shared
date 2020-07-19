@@ -311,6 +311,11 @@ class AgentAPI(Agent):
         econfig = Config()
         email_addr = econfig.api_email_address()
         self.set_email(email_addr)
+        # Email address must be same in the created Pgpier
+        # object for the API as the one in the yaml file
+        # or else an error might be encounter. To use a
+        # different email address, delete the contents of the
+        # key folder
 
     def query(self):
         """Query all remote targets for data.
