@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
 """Pattoo .Agent class.
 
 Description:
 
-    This script:
+    This module:
         1) Processes a variety of information from agents
         2) Posts the data using HTTP to a server listed
            in the configuration file
@@ -23,7 +22,7 @@ from datetime import datetime
 from gunicorn.app.base import BaseApplication
 
 # Pattoo libraries
-from pattoo_shared.daemon import Daemon
+from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
@@ -109,8 +108,26 @@ class Agent():
         return gpg
 
 
-class AgentDaemon(Daemon):
-    """Class that manages agent deamonization."""
+class AgentDaemonRunMixin(Daemon):
+    """Class that defines basic run function for AgentDaemons"""
+
+    def run(self):
+        """Start Polling
+
+        Args:
+            None
+
+        Return:
+            None
+
+        """
+        # Start polling. (Poller decides frequency)
+        while True:
+            self.agent.query()
+
+
+class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
+    """Class that manages base agent daemonization"""
 
     def __init__(self, agent):
         """Initialize the class.
@@ -125,23 +142,27 @@ class AgentDaemon(Daemon):
         # Initialize variables to be used by daemon
         self.agent = agent
 
-        # Call up the base daemon
+        # Instantiate daemon superclass
         Daemon.__init__(self, agent)
 
-    def run(self):
-        """Start polling.
+
+class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
+    """Class that manages graceful agent daemonization"""
+    def __init__(self, agent):
+        """Initialize the class.
 
         Args:
-            None
+            agent: agent object
 
         Returns:
             None
 
         """
-        # Start polling. (Poller decides frequency)
-        while True:
-            self.agent.query()
+        # Initialize variables to be used by daemon
+        self.agent = agent
 
+        # Instantiate daemon superclass
+        GracefulDaemon.__init__(self, agent)
 
 class AgentCLI():
     """Class that manages the agent CLI.
@@ -233,7 +254,7 @@ class AgentCLI():
         # Get the parser value
         self.parser = parser
 
-    def control(self, agent):
+    def control(self, agent, graceful=False):
         """Control the pattoo agent from the CLI.
 
         Args:
@@ -248,8 +269,13 @@ class AgentCLI():
         parser = self.parser
         args = parser.parse_args()
 
+        # Instantiate agent daemon
+        if graceful is False:
+            _daemon = BaseAgentDaemon(agent)
+        else:
+            _daemon = GracefulAgentDaemon(agent)
+
         # Run daemon
-        _daemon = AgentDaemon(agent)
         if args.start is True:
             _daemon.start()
         elif args.stop is True:

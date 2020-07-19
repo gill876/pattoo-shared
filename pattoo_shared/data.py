@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-"""Pattoo helper for the Linux _data.
+"""Pattoo helper for data handling."""
 
-Description:
-
-    Uses Python2 to be compatible with most Linux systems
-
-
-"""
 # Standard libraries
 import hashlib
 
