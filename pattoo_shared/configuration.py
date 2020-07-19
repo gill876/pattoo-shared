@@ -381,7 +381,7 @@ class Config(BaseConfig):
             key, sub_key, self._base_yaml_configuration, die=True)
         if result is None:
             result = 'palisadoes-test@palisadoes.org'
-        
+
         # Log current email
         log_message = ('API email address: {}'.format(result))
         log.log2info(1081, log_message)
