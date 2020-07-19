@@ -493,7 +493,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                 import_msg = gpg.imp_pub_key(api_key)
                 api_fingerprint = gpg.email_to_key(api_email)
                 gpg.trust_key(api_fingerprint)
-                log.log2info(20601, 'Import: {}'.format(import_msg))
+                log.log2info(1703, 'Import: {}'.format(import_msg))
 
                 # Decrypt nonce
                 passphrase = gpg.passphrase
@@ -551,7 +551,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
             raise Exception(except_msg)
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(20600, log_msg)
+        log.log2warning(1704, log_msg)
 
     return general_result
 
@@ -596,7 +596,7 @@ def encrypted_post(gpg, symmetric_key, req_session,
         response_code = response.status_code
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(20611, log_msg)
+        log.log2warning(1705, log_msg)
         if save is True:
             # Save data to cache
             _save_data(data, identifier)
@@ -611,14 +611,14 @@ def encrypted_post(gpg, symmetric_key, req_session,
                        'from URL: "{}"'
                        .format(response_code, url)
                        )
-        log.log2debug(20612, log_message)
+        log.log2debug(1706, log_message)
         general_result = True
     else:
         log_message = ('Error posting. Response "{}".'
                        'from URL: "{}"'
                        .format(response_code, url)
                        )
-        log.log2warning(20613, log_message)
+        log.log2warning(1702, log_message)
 
     return general_result
 
