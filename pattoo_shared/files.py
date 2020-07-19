@@ -334,7 +334,7 @@ Error reading file {}. Ignoring.'''.format(filepath))
         log_message = (
             'No valid JSON files found in directory "{}" with ".json" '
             'extension.'.format(_directory))
-        log.log2die_safe(1102, log_message)
+        log.log2die_safe(1054, log_message)
 
     # Return
     result.sort()
