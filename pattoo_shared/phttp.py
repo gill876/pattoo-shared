@@ -203,7 +203,7 @@ class EncryptedPost(_Post):
         else:
             log_message = ('Blank data. No data to post from '
                            'identifier {}.'.format(self._identifier))
-            log.log2warning(88024, log_message)
+            log.log2warning(1700, log_message)
 
         return result
 
