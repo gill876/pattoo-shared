@@ -9,12 +9,16 @@ import string
 
 
 class Pgpier:
-    """A class that handles encryption and decryption
+    """Pgpier class.
+
+    A class that handles encryption and decryption
     using the python-gnupg module
     """
 
     def __init__(self, working_dir):
-        """The Pgpier class will instantiate with the working directory
+        """Instantiation of the class.
+
+        The Pgpier class will instantiate with the working directory
         that also has a parent directory
 
         Args:
@@ -43,7 +47,7 @@ class Pgpier:
     def key_pair(self, _name_email, _name_real,
                  _name_comment="auto generated using gnupg.py",
                  _key_type="RSA", _key_length=4096):
-        """The generation of the private public key pairs
+        """The generation of the private public key pairs.
 
         Args:
             _name_email (str): Email of the user
@@ -71,7 +75,7 @@ class Pgpier:
         self.fingerprint = key.fingerprint  # store fingerprint in class
 
     def set_passphrase(self, passphrase):
-        """Method to set the passphrase in the class
+        """Method to set the passphrase in the class.
 
         Args:
             passphrase (str): Passphrase to store in class
@@ -82,7 +86,7 @@ class Pgpier:
         self.passphrase = passphrase
 
     def set_fingerprint(self, fingerprint):
-        """Method to set fingerprint in the class
+        """Method to set fingerprint in the class.
 
         Args:
             fingerprint (str): Fingerprint of the public private key pair
@@ -93,7 +97,9 @@ class Pgpier:
         self.fingerprint = fingerprint
 
     def set_keyid(self):
-        """Method to set keyid by retrieving all keys stored
+        """Set keyid in object.
+
+        Method to set keyid by retrieving all keys stored
         in the GnuPG keyring and retrieve
         the keyid associated with the main public private key pair
 
@@ -116,7 +122,7 @@ class Pgpier:
             pass
 
     def list_pub_keys(self):
-        """Method to list all the public keys stored in the GnuPG keyring
+        """Method to list all the public keys stored in the GnuPG keyring.
 
         Args:
             None
@@ -128,7 +134,9 @@ class Pgpier:
         return public_keys
 
     def exp_main(self, _wrapper='(main)'):
-        """Method to store the passphrase for future retrieval
+        """Export pertinent information.
+
+        Method to store the passphrase for future retrieval
         and name the file by the fingerprint of the
         class. The method also adds a wrapper to the
         name of the file so that when the Pgpier class is looking
@@ -174,7 +182,9 @@ class Pgpier:
             f.write(_contents)
 
     def imp_main(self, _wrapper='(main)'):
-        """Method to import the fingerprint and passphrase of the owned
+        """Import pertinent information.
+
+        Method to import the fingerprint and passphrase of the owned
         public private key pair of the
         user. The method also looks for a wrapper on the file to
         distinguish the public private key
@@ -230,7 +240,9 @@ class Pgpier:
             return None
 
     def set_from_imp(self, wrapper='(main)'):
-        """Method to get the fingerprint and passphrase the user
+        """Set object variables from import.
+
+        Method to get the fingerprint and passphrase the user
         currently owns and then assign those values inside
         the class to utilize the user's public private key pair
 
@@ -255,7 +267,7 @@ class Pgpier:
         return success
 
     def exp_pub_key(self):
-        """Method to export the user's public key into ASCII
+        """Method to export the user's public key into ASCII.
 
         Args:
             None
@@ -275,7 +287,9 @@ class Pgpier:
             return ascii_armored_public_keys
 
     def imp_pub_key(self, key_data):
-        """Method to import the ASCII public of a user
+        """Import public key.
+
+        Method to import the ASCII public of a user
          into the current user's GnuPG keyring
 
         Args:
@@ -295,7 +309,7 @@ class Pgpier:
         return result
 
     def pub_file(self):
-        """Method to export the armored ASCII public key into an asc file
+        """Method to export the armored ASCII public key into an asc file.
 
         Args:
             None
@@ -317,7 +331,7 @@ class Pgpier:
 
     def sym_encrypt_files(self, symmetric_key, file_path, output,
                           delaf=False, algorithm='AES256', armor=True):
-        """Method to encrypt files using a symmetric key
+        """Method to encrypt files using a symmetric key.
 
         Args:
             symmetric_key (str): String of passphrase to be
@@ -362,7 +376,9 @@ class Pgpier:
                           files_dir[files_dir.index(x)]))
 
     def encrypt_data(self, data, recipients):
-        """Method to encrypt data using the imported recipient's public
+        """Encrypt data.
+
+        Method to encrypt data using the imported recipient's public
         key from user's GnuPG keyring
 
         Args:
@@ -380,7 +396,7 @@ class Pgpier:
         return ascii_str
 
     def sym_decrypt_files(self, symmetric_key, file_path, output, delaf=False):
-        """Method to decrypt files using a symmetric key
+        """Method to decrypt files using a symmetric key.
 
         Args:
             symmetric_key (str): String of passphrase to be used
@@ -428,7 +444,9 @@ class Pgpier:
                 os.remove('{}{}{}'.format(file_path, os.sep, x))
 
     def decrypt_data(self, data, passphrase):
-        """Method to decrypt data using the imported recipient's
+        """Decrypt data.
+
+        Method to decrypt data using the imported recipient's
         public key from user's GnuPG keyring
 
         Args:
@@ -447,7 +465,9 @@ class Pgpier:
         return data
 
     def email_to_key(self, email):
-        """Method to retrieve fingerprint of associated
+        """Email to fingerprint.
+
+        Method to retrieve fingerprint of associated
         email address from the GnuPG keyring
 
         Args:
@@ -476,7 +496,9 @@ class Pgpier:
         return result
 
     def trust_key(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
-        """Method to trust public key that was imported to have the
+        """Trust public key.
+
+        Method to trust public key that was imported to have the
         ability to encrypt data using
         that public key
 
@@ -493,7 +515,9 @@ class Pgpier:
 
     def symmetric_encrypt(self, data, passphrase,
                           algorithm='AES256', armor=True):
-        """Method to encrypt data using symmmetric key encryption
+        """Symmetric encrypt.
+
+        Method to encrypt data using symmmetric key encryption
         using a passphrase and encryption
         algorithm
 
@@ -517,7 +541,7 @@ class Pgpier:
         return str(crypt)
 
     def symmetric_decrypt(self, data, passphrase):
-        """Method to decrypt data that was encrypted using symmetric encryption
+        """Method to decrypt data that was encrypted using symmetric encryption.
 
         Args:
             data (str): Data in ASCII string to be decrypted
@@ -539,7 +563,7 @@ class Pgpier:
                        for i in range(stringLength))
 
     def del_pub_key(self, fingerprint):
-        """Deletes public key from keyring
+        """Deletes public key from keyring.
 
         Args:
             fingerprint: Fingerprint of public key to be deleted
@@ -561,7 +585,9 @@ class Pgpier:
         return output
 
     def set_email(self):
-        """Retrieve email from keyring and set the correponding email address from
+        """Set email.
+
+        Retrieve email from keyring and set the correponding email address from
         the set fingperprint
 
         Args:
