@@ -318,8 +318,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function __init__."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = config.daemon_directory()
+        expected = self.config.daemon_directory()
         result = directory._root
         self.assertEqual(result, expected)
 
@@ -327,8 +326,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function pid."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}pid'.format(config.system_daemon_directory(), os.sep)
+        expected = '{}{}pid'.format(self.config.system_daemon_directory(), os.sep)
         result = directory.pid()
         self.assertEqual(result, expected)
 
@@ -336,8 +334,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function lock."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}lock'.format(config.system_daemon_directory(), os.sep)
+        expected = '{}{}lock'.format(self.config.system_daemon_directory(), os.sep)
         result = directory.lock()
         self.assertEqual(result, expected)
 
@@ -345,8 +342,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function agent_id."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}agent_id'.format(config.daemon_directory(), os.sep)
+        expected = '{}{}agent_id'.format(self.config.daemon_directory(), os.sep)
         result = directory.agent_id()
         self.assertEqual(result, expected)
 
