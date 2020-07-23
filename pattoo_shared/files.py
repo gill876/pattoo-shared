@@ -76,12 +76,14 @@ class _Directory():
         return value
 
     def keyring(self):
-        """Define the hidden keyring directory
+        """Define the hidden keyring directory.
+
         Args:
             None
 
         Returns:
             value (str): keyring directory
+
         """
         # Return
         value = '{}{}keys{}{}'.format(self._root, os.sep, os.sep, '.gnupg')
