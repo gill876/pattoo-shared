@@ -28,12 +28,14 @@ import pattoo_shared.encrypt as pgp
 
 
 class TestEncrypt(unittest.TestCase):
-    """Test all methods of Pgpier class
+    """Test all methods of Pgpier class.
     """
 
     @classmethod
     def setUpClass(cls):
-        """Set up for the test class which generates the
+        """Class setup.
+
+        Set up for the test class which generates the
         key pairs for twp Pgpier classes. This is done to
         faciliate the testing of the key exchange and
         public key encryption
@@ -128,7 +130,9 @@ class TestEncrypt(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """This will remove all test data by deleting the main
+        """Class teardown.
+
+        This will remove all test data by deleting the main
         generated directory
         """
         print('teardownClass')
@@ -136,7 +140,7 @@ class TestEncrypt(unittest.TestCase):
         shutil.rmtree(cls.main_dir)
 
     def setUp(self):
-        """This will run each time before a test is performed
+        """This will run each time before a test is performed.
         """
         print('setUp')
 
@@ -158,12 +162,12 @@ class TestEncrypt(unittest.TestCase):
         self.email_2 = self.__class__.person2_email
 
     def tearDown(self):
-        """This is performed after each test run
+        """This is performed after each test run.
         """
         print('tearDown\n')
 
     def test_key_generation(self):
-        """Checks if both Pgpier instances generated their key pairs
+        """Checks if both Pgpier instances generated their key pairs.
         """
         print("***Key generation test***")
 
@@ -214,7 +218,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertTrue(key_gen2)
 
     def test_set_passphrase(self):
-        """Test if set passphrase method works
+        """Test if set passphrase method works.
         """
         print("***Set passphrase test***")
 
@@ -262,7 +266,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(set_passphrase2, prev_passphrase2)
 
     def test_set_keyid(self):
-        """Checks if set key ID methods works"""
+        """Checks if set key ID methods works."""
         print("***Set keyid test***")
 
         # Sets key ID's for each Pgpier object
@@ -309,7 +313,9 @@ class TestEncrypt(unittest.TestCase):
         self.assertTrue(is_keys_lst2)
 
     def test_exp_main(self):
-        """Checks that the file used to store the passphrase
+        """Export main test.
+
+        Checks that the file used to store the passphrase
         of the main public private key pair is created
         """
         print("***Export main test***")
@@ -372,7 +378,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertTrue(pass_result2)
 
     def test_set_from_imp(self):
-        """Tests if the setter for the export file work
+        """Tests if the setter for the export file work.
         """
         print("***Set from import and import main test***")
 
@@ -386,7 +392,9 @@ class TestEncrypt(unittest.TestCase):
         self.assertTrue(result2)
 
     def test_exp_pub_key(self):
-        """Tests that the main public key of the Pgpier
+        """Export public key test.
+
+        Tests that the main public key of the Pgpier
         class is exported
         """
         print("***Export public key test***")
@@ -408,7 +416,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertIsNotNone(pub_key2)
 
     def test_imp_pub_key(self):
-        """Tests that the importation of public keys work
+        """Tests that the importation of public keys work.
         """
         print("**Import public key test***")
 
@@ -449,7 +457,9 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(len(keys_lst2), 2)
 
     def test_email_to_key(self):
-        """Test if the fingerprint is retrieved for a public key
+        """Email to fingerprint test.
+
+        Test if the fingerprint is retrieved for a public key
         that has an assigned email address"""
 
         print("***Email to key test***")
@@ -472,7 +482,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertIsNotNone(fp2)
 
     def test_encrypt_decrypt_data(self):
-        """Test both public key encryption and decryption
+        """Test both public key encryption and decryption.
         """
 
         print("***Public key encryption and decryption test***")
@@ -521,7 +531,9 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(original_data, decrypted_data)
 
     def test_gen_symm_key(self):
-        """Checks the default length of random string
+        """Generate symmetric key test.
+
+        Checks the default length of random string
         generation"""
         print("**Generate symmetric key test***")
 
@@ -536,7 +548,7 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(type(string1), str)
 
     def test_symmetric_encrypt_decrypt(self):
-        """Tests both symmetric encryption and decryption
+        """Tests both symmetric encryption and decryption.
         """
         print("***Symmetric encryption and decryption test***")
 
@@ -558,7 +570,9 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(original_data, decrypted_data)
 
     def test_set_email(self):
-        """Tests that the email address in the Pgpier class is
+        """Set email test.
+
+        Tests that the email address in the Pgpier class is
         set from the key pair"""
         print("***Set email test***")
 
@@ -573,7 +587,8 @@ class TestEncrypt(unittest.TestCase):
         print('Test email1: {}\nTest email2: {}\nSet email1:'
               ' {}\nSet email2: {}'
               .format(self.email_1, self.email_2, set_email1,
-               set_email2))
+                      set_email2)
+              )
 
         # Checks that the assigned emails from the class set up
         # is the same as the ones stored in the Pgpier classes
