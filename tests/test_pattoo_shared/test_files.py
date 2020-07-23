@@ -342,8 +342,21 @@ class Test_Directory(unittest.TestCase):
         """Testing function agent_id."""
         # Test
         directory = files._Directory(self.config)
-        expected = '{}{}agent_id'.format(self.config.daemon_directory(), os.sep)
+        expected = '{}{}agent_id'\
+                   .format(self.config.daemon_directory(), os.sep)
         result = directory.agent_id()
+        self.assertEqual(result, expected)
+
+    def test_keyring(self):
+        """Test function keyring."""
+        # Test
+        directory = files._Directory(self.config)
+        expected = '{}{}keys{}{}'\
+                   .format(
+                       self.config.daemon_directory(),
+                       os.sep, os.sep, '.gnupg'
+                       )
+        result = directory.keyring()
         self.assertEqual(result, expected)
 
 
