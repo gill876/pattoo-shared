@@ -363,7 +363,7 @@ class Config(BaseConfig):
         return result
 
     def api_email_address(self):
-        """GET API email address from yaml file
+        """GET API email address from yaml file.
 
         Args:
             None
@@ -380,15 +380,11 @@ class Config(BaseConfig):
         result = search(
             key, sub_key, self._base_yaml_configuration, die=True)
         if result is None:
-            result = 'palisadoes-test@palisadoes.org'
-
-        # Log current email
-        log_message = ('API email address: {}'.format(result))
-        log.log2info(1081, log_message)
+            result = 'pattoo_api@example.org'
         return result
 
     def agent_email_address(self):
-        """GET agent email address from yaml file
+        """GET agent email address from yaml file.
 
         Args:
             None
@@ -405,11 +401,7 @@ class Config(BaseConfig):
         result = search(
             key, sub_key, self._base_yaml_configuration, die=True)
         if result is None:
-            result = 'calico-test@palisadoes.org'
-
-        # Log current email
-        log_message = ('Agent email address: {}'.format(result))
-        log.log2info(1082, log_message)
+            result = 'pattoo_agent@example.org'
         return result
 
     def agent_api_uri(self):
@@ -451,7 +443,7 @@ class Config(BaseConfig):
         return url
 
     def agent_api_encrypted(self):
-        """Get URL to receive encrypted data
+        """Get URL to receive encrypted data.
 
         Args:
             None
@@ -484,7 +476,7 @@ class Config(BaseConfig):
         return result
 
     def agent_api_key_url(self):
-        """Exchange point for public keys
+        """Exchange point for public keys.
 
         Args:
             None
@@ -505,7 +497,7 @@ class Config(BaseConfig):
         return link
 
     def agent_api_validation_url(self):
-        """Validation point for encryption
+        """Validation point for encryption.
 
         Args:
             None
@@ -526,7 +518,7 @@ class Config(BaseConfig):
         return link
 
     def agent_api_encrypted_url(self):
-        """Encrypted data reception point
+        """Encrypted data reception point.
 
         Args:
             None
