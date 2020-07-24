@@ -99,6 +99,22 @@ class TestConfig(unittest.TestCase):
         result = self.config.web_api_ip_bind_port()
         self.assertEqual(result, 30303)
 
+    def test_api_email_address(self):
+        """Test api email address retrieval"""
+        # Test from yaml file
+        result = self.config.api_email_address()
+        expected = 'test_api@example.org'
+
+        self.assertEqual(result, expected)
+
+    def test_agent_email_address(self):
+        """Test agent email address retrieval"""
+        # Test from yaml file
+        result = self.config.agent_email_address()
+        expected = 'test_agent@example.org'
+
+        self.assertEqual(result, expected)
+
     def test_web_api_server_url(self):
         """Testing method or function named web_api_server_url."""
         # Test
