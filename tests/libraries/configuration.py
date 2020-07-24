@@ -57,6 +57,10 @@ class UnittestConfig():
             'pattoo_web_api': {
                 'ip_address': '127.0.0.3',
                 'ip_bind_port': 30303,
+            },
+            'encryption': {
+                'api_email': 'test_api@example.org',
+                'agent_email': 'test_agent@example.org'
             }
         }
 
