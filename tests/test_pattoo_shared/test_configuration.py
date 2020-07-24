@@ -77,6 +77,30 @@ class TestConfig(unittest.TestCase):
         result = self.config.agent_api_uri()
         self.assertEqual(result, expected)
 
+    def test_agent_api_key(self):
+        """Test for key exchange."""
+        # Test
+        expected = '/pattoo/api/v1/agent/key'
+        result = self.config.agent_api_key()
+
+        self.assertEqual(result, expected)
+
+    def test_agent_api_validation(self):
+        """Test for key validation."""
+        # Test
+        expected = '/pattoo/api/v1/agent/validation'
+        result = self.config.agent_api_validation()
+
+        self.assertEqual(result, expected)
+
+    def test_agent_api_encrypted(self):
+        """Test for encrypted post route."""
+        # Test
+        expected = '/pattoo/api/v1/agent/encrypted'
+        result = self.config.agent_api_encrypted()
+
+        self.assertEqual(result, expected)
+
     def test_agent_api_server_url(self):
         """Testing function agent_api_server_url."""
         # Initialize key values
@@ -85,6 +109,33 @@ class TestConfig(unittest.TestCase):
 
         # Test
         result = self.config.agent_api_server_url(agent_id)
+        self.assertEqual(result, expected)
+
+    def test_agent_api_key_url(self):
+        """Test key exchange URL."""
+        # Test
+
+        expected = 'http://127.0.0.6:50505/pattoo/api/v1/agent/key'
+        result = self.config.agent_api_key_url()
+
+        self.assertEqual(result, expected)
+
+    def test_agent_api_validation_url(self):
+        """Test validation URL"""
+        # Test
+
+        expected = 'http://127.0.0.6:50505/pattoo/api/v1/agent/validation'
+        result = self.config.agent_api_validation_url()
+
+        self.assertEqual(result, expected)
+
+    def test_agent_api_encrypted_url(self):
+        """Test for encrypted post URL"""
+        # Test
+
+        expected = 'http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted'
+        result = self.config.agent_api_encrypted_url()
+
         self.assertEqual(result, expected)
 
     def test_web_api_ip_address(self):
