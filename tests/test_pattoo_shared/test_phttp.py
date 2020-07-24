@@ -26,6 +26,7 @@ else:
 from pattoo_shared import phttp
 from pattoo_shared import data
 from pattoo_shared import converter
+from pattoo_shared.files import set_gnupg, get_gnupg
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
 from tests.resources import test_agent as ta
@@ -135,6 +136,53 @@ class TestPost(unittest.TestCase):
 
             # Assert that the success is True
             self.assertTrue(success)
+
+
+class TestEncryptedPost(unittest.TestCase):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    # Create agent data
+    agentdata = ta.test_agent()
+
+    # Get agent variables
+    identifier = agentdata.agent_id
+    _data = converter.agentdata_to_post(agentdata)
+    data = converter.posting_data_points(_data)
+
+    def test___init__(self):
+        """Testing method or function named __init__."""
+
+        # Initialize
+        # Create Pgpier object
+        self.gpg = set_gnupg(
+            'test_agent0', Config(), 'test_agent0@example.org'
+                )
+        # Create EncryptedPost object
+        encrypted_post = phttp.EncryptedPost(self.identifier, self.data, self.gpg)
+
+        # Test variables
+        expected_exchange_key = 'http://127.0.0.6:50505/'\
+            'pattoo/api/v1/agent/key'
+        result_exchange_key = encrypted_post._exchange_key
+
+        expected_validate_key = 'http://127.0.0.6:50505/'\
+            'pattoo/api/v1/agent/validation'
+        result_validate_key = encrypted_post._validate_key
+
+        expected_encryption = 'http://127.0.0.6:50505/'\
+            'pattoo/api/v1/agent/encrypted'
+        result_encryption = encrypted_post._encryption
+
+        # Test URL's
+        self.assertEqual(result_exchange_key, expected_exchange_key)
+        self.assertEqual(result_validate_key, expected_validate_key)
+        self.assertEqual(result_encryption, expected_encryption)
+        # Test that Pgpier object is valid
+        self.assertIsInstance(encrypted_post._gpg.keyid, str)
 
 
 class TestPassiveAgent(unittest.TestCase):
