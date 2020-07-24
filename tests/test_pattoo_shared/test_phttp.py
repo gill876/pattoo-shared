@@ -88,7 +88,7 @@ class TestPost(unittest.TestCase):
         # Magically simulate post request
         with patch('pattoo_shared.phttp.requests.post') as mock_post:
 
-            # Magically assing post response values
+            # Magically assign post response values
             mock_post.return_value.ok = True
             mock_post.return_value.text = 'OK'
             mock_post.return_value.status_code = 200
@@ -110,7 +110,31 @@ class TestPost(unittest.TestCase):
 
     def test_purge(self):
         """Testing method or function named purge."""
-        pass
+        # Initialize
+        purge_test = phttp.Post(self.identifier, self.data)
+
+        # Magically simulate post request
+        with patch('pattoo_shared.phttp.requests.post') as mock_post:
+
+            # Magically assign post response values
+            mock_post.return_value.ok = True
+            mock_post.return_value.text = 'OK'
+            mock_post.return_value.status_code = 200
+
+            # Run post
+            success = purge_test.post()
+
+            # Check that the post request was to the right URL
+            # and that it contained the right data
+            mock_post.assert_called_with(
+                                    'http://127.0.0.6:50505/'
+                                    'pattoo/api/v1/agent/receive/{}'
+                                    .format(self.identifier),
+                                    json=self.data
+                                        )
+
+            # Assert that the success is True
+            self.assertTrue(success)
 
 
 class TestPassiveAgent(unittest.TestCase):
