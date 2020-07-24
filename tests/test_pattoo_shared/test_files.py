@@ -419,7 +419,7 @@ class Test_GnuPG(unittest.TestCase):
         self.assertIsInstance(result.keyid, str)
 
     def test_get_gnupg(self):
-        """Test retrieval of Pgpier object"""
+        """Test retrieval of Pgpier object."""
 
         # Create Pgpier object
         # Agent details
