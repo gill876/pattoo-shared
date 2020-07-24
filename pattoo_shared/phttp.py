@@ -50,7 +50,7 @@ class _Post():
         pass
 
     def purge(self):
-        """Delete cached data and post to API server
+        """Delete cached data and post to API server.
 
         Args:
             None
@@ -119,12 +119,14 @@ Blank data. No data to post from identifier {}.'''.format(self._identifier))
 
 
 class EncryptedPost(_Post):
-    """Class to exchange public keys, set symmetric key and
+    """Encrypted Post.
+
+    Class to exchange public keys, set symmetric key and
     post symmetrically encrypted data to the API server
     """
 
     def __init__(self, identifier, data, gpg):
-        """Initialize the class
+        """Initialize the class.
 
         Args:
             gpg (obj): Pgpier object to accommodate encryption
@@ -151,7 +153,9 @@ class EncryptedPost(_Post):
         self._symmetric_key = self._gpg.gen_symm_key(20)
 
     def purge(self):
-        """Purge data from cache by posting encrypted data
+        """Purge.
+
+        Purge data from cache by posting encrypted data
         to the API server.
 
         Args:
@@ -176,7 +180,7 @@ class EncryptedPost(_Post):
                         self._identifier)
 
     def post(self):
-        """Send encrypted data to the API server
+        """Send encrypted data to the API server.
 
         Args:
             gpg (obj): Pgpier object to facilitate encryption
@@ -208,8 +212,10 @@ class EncryptedPost(_Post):
         return result
 
     def set_encryption(self):
-        """Set up encryption by exchanging public keys and
-        setting a symmetric key for encryption
+        """Set up encryption.
+
+        Exchanges public keys and
+        sets a symmetric key for encryption
 
         Args:
             gpg (obj): Pgpier object to facilitate encryption
@@ -255,7 +261,9 @@ class PostAgent(Post):
 
 
 class EncryptedPostAgent(EncryptedPost):
-    """Class to prepare data for posting encrypted
+    """Encrypted Post Agent.
+
+    Class to prepare data for posting encrypted
     data to remote pattoo server."""
 
     def __init__(self, agentdata, gpg):
@@ -434,7 +442,7 @@ Data for identifier "{}" failed to post to server {}\
 
 def key_exchange(gpg, req_session, exchange_url, validation_url,
                  symmetric_key):
-    """Exchange point for API and Agent public keys
+    """Exchange point for API and Agent public keys.
 
     Args:
         gpg (obj): Pgpier object
@@ -559,7 +567,7 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
 
 def encrypted_post(gpg, symmetric_key, req_session,
                    url, data, identifier, save=True):
-    """Post encrypted data to the API server
+    """Post encrypted data to the API server.
 
     Args:
         gpg (obj): Pgpier object to accommodate encryption
