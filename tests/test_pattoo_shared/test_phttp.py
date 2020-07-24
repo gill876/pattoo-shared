@@ -162,27 +162,27 @@ class TestEncryptedPost(unittest.TestCase):
             'test_agent0', Config(), 'test_agent0@example.org'
                 )
         # Create EncryptedPost object
-        encrypted_post = phttp.EncryptedPost(self.identifier, self.data, self.gpg)
+        self.encrypted_post = phttp.EncryptedPost(self.identifier, self.data, self.gpg)
 
         # Test variables
         expected_exchange_key = 'http://127.0.0.6:50505/'\
             'pattoo/api/v1/agent/key'
-        result_exchange_key = encrypted_post._exchange_key
+        result_exchange_key = self.encrypted_post._exchange_key
 
         expected_validate_key = 'http://127.0.0.6:50505/'\
             'pattoo/api/v1/agent/validation'
-        result_validate_key = encrypted_post._validate_key
+        result_validate_key = self.encrypted_post._validate_key
 
         expected_encryption = 'http://127.0.0.6:50505/'\
             'pattoo/api/v1/agent/encrypted'
-        result_encryption = encrypted_post._encryption
+        result_encryption = self.encrypted_post._encryption
 
         # Test URL's
         self.assertEqual(result_exchange_key, expected_exchange_key)
         self.assertEqual(result_validate_key, expected_validate_key)
         self.assertEqual(result_encryption, expected_encryption)
         # Test that Pgpier object is valid
-        self.assertIsInstance(encrypted_post._gpg.keyid, str)
+        self.assertIsInstance(self.encrypted_post._gpg.keyid, str)
 
 
 class TestPassiveAgent(unittest.TestCase):
