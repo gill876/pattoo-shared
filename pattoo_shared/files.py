@@ -522,7 +522,7 @@ def set_gnupg(agent_name, config, agent_email):
 
 
 def get_gnupg(agent_name, config):
-    """Retrieve an already created Pgpier object based the key directory
+    """Retrieve an already created Pgpier object based the key directory.
 
     Args:
         agent_name (str): Agent name
