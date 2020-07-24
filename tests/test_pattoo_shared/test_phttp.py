@@ -3,6 +3,7 @@
 
 # Standard imports
 import unittest
+from unittest.mock import patch
 import os
 import sys
 from time import time
@@ -24,8 +25,31 @@ else:
 # Pattoo imports
 from pattoo_shared import phttp
 from pattoo_shared import data
+from pattoo_shared import converter
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
+from tests.resources import test_agent as ta
+
+
+class Test_Post(unittest.TestCase):
+    """Test _Post."""
+
+    # Create agent data
+    agentdata = ta.test_agent()
+
+    # Get agent variables
+    identifier = agentdata.agent_id
+    _data = converter.agentdata_to_post(agentdata)
+    data = converter.posting_data_points(_data)
+
+    def test___init__(self):
+        """Testing method or function named __init__."""
+
+        # Test
+        _post = phttp._Post(self.identifier, self.data)
+
+        self.assertEqual(_post._identifier, self.identifier)
+        self.assertEqual(_post._data, self.data)
 
 
 class TestPost(unittest.TestCase):
@@ -35,13 +59,54 @@ class TestPost(unittest.TestCase):
     # General object setup
     #########################################################################
 
+    # Create agent data
+    agentdata = ta.test_agent()
+
+    # Get agent variables
+    identifier = agentdata.agent_id
+    _data = converter.agentdata_to_post(agentdata)
+    data = converter.posting_data_points(_data)
+
     def test___init__(self):
         """Testing method or function named __init__."""
-        pass
+
+        # Initialize
+        post = phttp.Post(self.identifier, self.data)
+
+        # Test
+        expected_server_url = 'http://127.0.0.6:50505/'\
+            'pattoo/api/v1/agent/receive/{}'.format(self.identifier)
+        result_server_url = post._url
+
+        self.assertEqual(result_server_url, expected_server_url)
 
     def test_post(self):
         """Testing method or function named post."""
-        pass
+        # Initialize
+        post_test = phttp.Post(self.identifier, self.data)
+
+        # Magically simulate post request
+        with patch('pattoo_shared.phttp.requests.post') as mock_post:
+
+            # Magically assing post response values
+            mock_post.return_value.ok = True
+            mock_post.return_value.text = 'OK'
+            mock_post.return_value.status_code = 200
+
+            # Run post
+            success = post_test.post()
+
+            # Check that the post request was to the right URL
+            # and that it contained the right data
+            mock_post.assert_called_with(
+                                    'http://127.0.0.6:50505/'
+                                    'pattoo/api/v1/agent/receive/{}'
+                                    .format(self.identifier),
+                                    json=self.data
+                                        )
+
+            # Assert that the success is True
+            self.assertTrue(success)
 
     def test_purge(self):
         """Testing method or function named purge."""
