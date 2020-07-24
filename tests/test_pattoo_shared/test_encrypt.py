@@ -40,7 +40,6 @@ class TestEncrypt(unittest.TestCase):
         faciliate the testing of the key exchange and
         public key encryption
         """
-        print('setupClass\n\n')
 
         # #####################Essential######################
         main_dir = os.path.abspath(
@@ -83,12 +82,6 @@ class TestEncrypt(unittest.TestCase):
             gpg1.exp_main(wrapper1)
             cls.gpg1 = gpg1
 
-        print("***\nPerson1 Pgpier directory and key pair generated in: ",
-              person1,
-              "\nName: ", person1_name, "\nEmail: ", person1_email,
-              "\nComment: ", person1_comment, "\n***"
-              )
-
         ####################################################
 
         # #####################2nd Pgpier######################
@@ -121,11 +114,6 @@ class TestEncrypt(unittest.TestCase):
             gpg2.key_pair(person2_email, person2_name, person2_comment)
             gpg2.exp_main(wrapper2)
             cls.gpg2 = gpg2
-        print("***\nPerson2 Pgpier directory and key pair generated in: ",
-              person2,
-              "\nName: ", person2_name, "\nEmail: ", person2_email,
-              "\nComment: ", person2_comment, "\n***"
-              )
         ####################################################
 
     @classmethod
@@ -135,14 +123,12 @@ class TestEncrypt(unittest.TestCase):
         This will remove all test data by deleting the main
         generated directory
         """
-        print('teardownClass')
-        print('Removing Pgpier main directory: ', cls.main_dir)
+
         shutil.rmtree(cls.main_dir)
 
     def setUp(self):
         """This will run each time before a test is performed.
         """
-        print('setUp')
 
         # Retrieves Pgpier object for each test Pgpier class
         self.gpg1 = self.__class__.gpg1
@@ -164,12 +150,10 @@ class TestEncrypt(unittest.TestCase):
     def tearDown(self):
         """This is performed after each test run.
         """
-        print('tearDown\n')
 
     def test_key_generation(self):
         """Checks if both Pgpier instances generated their key pairs.
         """
-        print("***Key generation test***")
 
         # Gives initial False value
         # When unchanged, the test will fail
@@ -220,23 +204,14 @@ class TestEncrypt(unittest.TestCase):
     def test_set_passphrase(self):
         """Test if set passphrase method works.
         """
-        print("***Set passphrase test***")
 
         # Retrieves already set passphrases
         prev_passphrase1 = self.gpg1.passphrase
         prev_passphrase2 = self.gpg2.passphrase
 
-        print('Previous passphrase for 1st Pgpier: {}'
-              .format(prev_passphrase1))
-        print('Previous passphrase for 2nd Pgpier: {}'
-              .format(prev_passphrase2))
-
         # Values to be used for next passphrase
         next_passphrase1 = 'password-123'
         next_passphrase2 = 'password-abc'
-
-        print('Next passphrase for 1st Pgpier: {}'.format(next_passphrase1))
-        print('Next passphrase for 2nd Pgpier: {}'.format(next_passphrase2))
 
         # Assignment of new passphrases
         self.gpg1.set_passphrase(next_passphrase1)
@@ -246,16 +221,12 @@ class TestEncrypt(unittest.TestCase):
         set_passphrase1 = self.gpg1.passphrase
         set_passphrase2 = self.gpg2.passphrase
 
-        print('Set passphrase for 1st Pgpier: {}'.format(set_passphrase1))
-        print('Set passphrase for 2nd Pgpier: {}'.format(set_passphrase2))
-
         # Checks if new passphrases were assigned
         self.assertEqual(set_passphrase1, next_passphrase1)
         self.assertEqual(set_passphrase2, next_passphrase2)
 
         # Resets to previous passphrases and check it they
         # were changed back
-        print("Restoring previous passphrase...")
         self.gpg1.set_passphrase(prev_passphrase1)
         self.gpg2.set_passphrase(prev_passphrase2)
 
@@ -267,7 +238,6 @@ class TestEncrypt(unittest.TestCase):
 
     def test_set_keyid(self):
         """Checks if set key ID methods works."""
-        print("***Set keyid test***")
 
         # Sets key ID's for each Pgpier object
         self.gpg1.set_keyid()
@@ -276,9 +246,6 @@ class TestEncrypt(unittest.TestCase):
         keyid1 = self.gpg1.keyid
         keyid2 = self.gpg2.keyid
 
-        print('Key id for 1st Pgpier: {}'.format(keyid1))
-        print('Key id for 2nd Pgpier: {}'.format(keyid2))
-
         # Checks that the key ID's are not empty
         self.assertIsNotNone(keyid1)
         self.assertIsNotNone(keyid2)
@@ -286,7 +253,6 @@ class TestEncrypt(unittest.TestCase):
     def test_list_pub_keys(self):
         """Test that public keys are listed
         """
-        print("***List public keys test***")
 
         # List all public keys
         keys_lst1 = self.gpg1.list_pub_keys()
@@ -298,15 +264,9 @@ class TestEncrypt(unittest.TestCase):
 
         if keys_lst1 != []:
             is_keys_lst1 = True
-            print("Keys in 1st:\n")
-            for key in keys_lst1:
-                print('\n--->{}<---\n'.format(key))
 
         if keys_lst2 != []:
             is_keys_lst2 = True
-            print("Keys in 2nd:\n")
-            for key in keys_lst2:
-                print('\n--->{}<---\n'.format(key))
 
         # If the lists are not empty, the test will pass
         self.assertTrue(is_keys_lst1)
@@ -318,7 +278,6 @@ class TestEncrypt(unittest.TestCase):
         Checks that the file used to store the passphrase
         of the main public private key pair is created
         """
-        print("***Export main test***")
 
         # Used to determine if the test passes
         pass_result1 = False
@@ -351,15 +310,11 @@ class TestEncrypt(unittest.TestCase):
 
         # Checks that the files were found
         if files1 != [] and files2 != []:
-            print('\n1st file: {}\n2nd file: {}'.format(files1, files2))
 
             # Opens and checks contents of the files
             with open('{}{}{}'.format(self.test1_dir, os.sep, files1[0]),
                       '{}'.format('r')) as f1:
                 contents1 = f1.read()
-                print('\n\n1st fingerprint: {}'.format(fingerprint1))
-                print('1st contents: {}'.format(contents1))
-                print('1st passphrase: {}'.format(passphrase1))
                 if contents1 == passphrase1:
                     # Assigns passing value if intended contents were stored
                     pass_result1 = True
@@ -367,9 +322,6 @@ class TestEncrypt(unittest.TestCase):
             with open('{}{}{}'.format(self.test2_dir, os.sep, files2[0]),
                       '{}'.format('r')) as f2:
                 contents2 = f2.read()
-                print('\n\n2nd fingerprint: {}'.format(fingerprint2))
-                print('2nd contents: {}'.format(contents2))
-                print('2nd passphrase: {}'.format(passphrase2))
                 if contents2 == passphrase2:
                     pass_result2 = True
 
@@ -380,10 +332,6 @@ class TestEncrypt(unittest.TestCase):
     def test_set_from_imp(self):
         """Tests if the setter for the export file work.
         """
-        print("***Set from import and import main test***")
-
-        print('1st Pgpier wrapper: {}\n2nd Pgpier wrapper: {}'
-              .format(self.wrapper1, self.wrapper2))
         result1 = self.gpg1.set_from_imp(self.wrapper1)
         result2 = self.gpg2.set_from_imp(self.wrapper2)
 
@@ -397,7 +345,6 @@ class TestEncrypt(unittest.TestCase):
         Tests that the main public key of the Pgpier
         class is exported
         """
-        print("***Export public key test***")
 
         # Sets key ID used to export public keys
         self.gpg1.set_keyid()
@@ -407,10 +354,6 @@ class TestEncrypt(unittest.TestCase):
         pub_key1 = self.gpg1.exp_pub_key()
         pub_key2 = self.gpg2.exp_pub_key()
 
-        print('\n1st ASCII public key: --->{}<---\n'
-              '2nd ASCII public key: --->{}<---'
-              .format(pub_key1, pub_key2))
-
         # Test passes if the outputs are not None
         self.assertIsNotNone(pub_key1)
         self.assertIsNotNone(pub_key2)
@@ -418,7 +361,6 @@ class TestEncrypt(unittest.TestCase):
     def test_imp_pub_key(self):
         """Tests that the importation of public keys work.
         """
-        print("**Import public key test***")
 
         # Sets key ID's used to export public keys
         self.gpg1.set_keyid()
@@ -426,11 +368,6 @@ class TestEncrypt(unittest.TestCase):
 
         keys_lst1 = self.gpg1.list_pub_keys()
         keys_lst2 = self.gpg2.list_pub_keys()
-
-        # Shows public keys
-        print('First total # keys for 1st Pgpier: {}\n'
-              'First total # keys for 2nd Pgpier: {}'
-              .format(len(keys_lst1), len(keys_lst2)))
 
         # Export public keys
         pub_key1 = self.gpg1.exp_pub_key()
@@ -440,16 +377,9 @@ class TestEncrypt(unittest.TestCase):
         result_1 = self.gpg1.imp_pub_key(pub_key2)
         result_2 = self.gpg2.imp_pub_key(pub_key1)
 
-        print('Result 1: {}\nResult 2: {}'
-              .format(result_1, result_2))
-
         # Retrieves new list of public keys
         keys_lst1 = self.gpg1.list_pub_keys()
         keys_lst2 = self.gpg2.list_pub_keys()
-
-        print('Final total # keys for 1st Pgpier: {}\n'
-              'Final total # keys for 2nd Pgpier: {}'
-              .format(len(keys_lst1), len(keys_lst2)))
 
         # Checks that each Pgpier object retrieve the other's
         # public key
@@ -462,8 +392,6 @@ class TestEncrypt(unittest.TestCase):
         Test if the fingerprint is retrieved for a public key
         that has an assigned email address"""
 
-        print("***Email to key test***")
-
         # Retrieves email addresses from class set up
         email1 = self.__class__.person1_email
         email2 = self.__class__.person2_email
@@ -472,20 +400,12 @@ class TestEncrypt(unittest.TestCase):
         fp1 = self.gpg1.email_to_key(email1)
         fp2 = self.gpg2.email_to_key(email2)
 
-        print('1st Pgpier email --->{}<--- is associated '
-              'with fingerprint --->{}<---\n2nd Pgpier '
-              'email --->{}<--- is associated with '
-              'fingerprint --->{}<---'
-              .format(email1, fp1, email2, fp2))
-
         self.assertIsNotNone(fp1)
         self.assertIsNotNone(fp2)
 
     def test_encrypt_decrypt_data(self):
         """Test both public key encryption and decryption.
         """
-
-        print("***Public key encryption and decryption test***")
 
         original_data = 'HELLO WORLD!'
 
@@ -523,10 +443,6 @@ class TestEncrypt(unittest.TestCase):
         passphrase2 = self.gpg2.passphrase
         decrypted_data = self.gpg2.decrypt_data(encrypted_data, passphrase2)
 
-        print('Original data: --->{}<---\nEncrypted data:'
-              ' --->{}<---\nDecrypted data: --->{}<---'
-              .format(original_data, encrypted_data, decrypted_data))
-
         # Checks that the decrypted data is the same as the original
         self.assertEqual(original_data, decrypted_data)
 
@@ -535,12 +451,9 @@ class TestEncrypt(unittest.TestCase):
 
         Checks the default length of random string
         generation"""
-        print("**Generate symmetric key test***")
 
         string1 = self.gpg1.gen_symm_key()
         # string2 = self.gpg2.gen_symm_key()
-
-        print('Key: --->{}<---'.format(string1))
 
         # Checks that the length of the generated data is the same
         # as the default and that the data is a string
@@ -550,7 +463,6 @@ class TestEncrypt(unittest.TestCase):
     def test_symmetric_encrypt_decrypt(self):
         """Tests both symmetric encryption and decryption.
         """
-        print("***Symmetric encryption and decryption test***")
 
         original_data = 'HELLO WORLD!'
 
@@ -563,10 +475,6 @@ class TestEncrypt(unittest.TestCase):
         # Decrypts data
         decrypted_data = self.gpg2.symmetric_decrypt(encrypted_data, password)
 
-        print('Original data: --->{}<---\nEncrypted data: --->{}<---\n'
-              'Decrypted data: --->{}<---'
-              .format(original_data, encrypted_data, decrypted_data))
-
         self.assertEqual(original_data, decrypted_data)
 
     def test_set_email(self):
@@ -574,7 +482,6 @@ class TestEncrypt(unittest.TestCase):
 
         Tests that the email address in the Pgpier class is
         set from the key pair"""
-        print("***Set email test***")
 
         # Sets email addresses
         self.gpg1.set_email()
@@ -583,12 +490,6 @@ class TestEncrypt(unittest.TestCase):
         # Retrieves email addresses in Pgpier objects
         set_email1 = self.gpg1.email_addr
         set_email2 = self.gpg2.email_addr
-
-        print('Test email1: {}\nTest email2: {}\nSet email1:'
-              ' {}\nSet email2: {}'
-              .format(self.email_1, self.email_2, set_email1,
-                      set_email2)
-              )
 
         # Checks that the assigned emails from the class set up
         # is the same as the ones stored in the Pgpier classes
