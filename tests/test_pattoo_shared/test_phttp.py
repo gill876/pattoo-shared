@@ -3,6 +3,7 @@
 
 # Standard imports
 import unittest
+from requests import request
 from unittest.mock import patch
 import os
 import sys
@@ -180,6 +181,30 @@ class TestEncryptedPost(unittest.TestCase):
         self.assertEqual(result_encryption, expected_encryption)
         # Test that Pgpier object is valid
         self.assertIsInstance(self.encrypted_post._gpg.keyid, str)
+
+
+class TestKeyExchangeSuite(unittest.TestCase):
+    """Checks basic functions of the key exchange process."""
+
+    # Initialize
+    # Create Pgpier object
+    api_gpg = set_gnupg(
+        'api_server', Config(), 'api_server@example.org'
+            )
+
+    agent_gpg = set_gnupg(
+        'encrypted_agent', Config(), 'encrypted_agent@example.org'
+            )
+
+    req_session = request.Session()
+    exchange_url = \
+        '''http://127.0.0.6:50505/pattoo/api/v1/agent/key'''
+    validation_url = \
+        '''http://127.0.0.6:50505/pattoo/api/v1/agent/validation'''
+    symmetric_key = '''315602dcecc28d8bbb6af7c5'''
+
+    def test_basic_functions(self):
+        """Test functions in order"""
 
 
 class TestPassiveAgent(unittest.TestCase):
