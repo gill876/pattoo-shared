@@ -13,6 +13,35 @@ class Pgpier:
 
     A class that handles encryption and decryption
     using the python-gnupg module
+
+    gpg, GPG, Pgpier and GnuPG is used interchangeably as the Pgpier
+    class outside this file.
+
+    Resources:
+
+    Chapter 7. Kurose J., Ross K.. (April, 2016).
+    Computer Networking: A Top Down Approach.
+    Pearson/Addison Wesley. Retrieved from
+    http://www-net.cs.umass.edu/kurose-ross-ppt-7e/Chapter_8_V7.0.pptx
+
+    Secure email style of encryption was used. So first, the key pairs
+    are generated (public and private keys) so that it can be used to
+    encrypt a randomly generated nonce and symmetric key. The nonce is
+    used to provide a level of authentication. The symmetric key is
+    used to encrypt the data since it is computationally less expensive
+    than encrypting with a public key.
+
+    What makes this module special, is it's ability to have a
+    non-volatile approach to handle the passphrase, fingerprint
+    and other variables with ease. The python-gnupg module
+    provides most of the functionalities except keeping a track
+    of the passphrase, the fingerprint, who owns the
+    passphrase and fingerprint, etc. This module also simplifies
+    the python-gnupg module to it can be widely used.
+
+    The module uses one primary public private key pair to encrypt
+    data. However, the module can also store other public keys.
+
     """
 
     def __init__(self, working_dir):
@@ -37,6 +66,8 @@ class Pgpier:
             )  # gets the parent of the working directory
         self.gnupghome = working_dir
         # , options=['--pinentry-mode=loopback']
+        # the loopback option makes sure the passphrase can
+        # be entered via python and won't prompt the user
         self.gpg = gnupg.GPG(gnupghome=working_dir,
                              options=['--pinentry-mode=loopback'])
         self.gpg.encoding = 'utf-8'  # sets encoding
@@ -76,6 +107,9 @@ class Pgpier:
 
     def set_passphrase(self, passphrase):
         """Method to set the passphrase in the class.
+
+        The passphrase is needed to decrypt data encrypted
+        by a public key.
 
         Args:
             passphrase (str): Passphrase to store in class
@@ -140,7 +174,7 @@ class Pgpier:
         and name the file by the fingerprint of the
         class. The method also adds a wrapper to the
         name of the file so that when the Pgpier class is looking
-        for the public private key pair, it finds the pair it owns
+        for the public private key pair, it finds the pair it owns.
 
         Args:
             _wrapper (str): The name of the wrapper
