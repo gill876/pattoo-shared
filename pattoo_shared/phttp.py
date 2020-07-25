@@ -642,7 +642,7 @@ def receive_api_info(gpg, req_session, exchange_url):
             raise Exception(except_msg)
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1074, log_msg)
+        log.log2warning(1076, log_msg)
 
     return None
 
@@ -703,7 +703,7 @@ def api_agent_key_validation(gpg, req_session, validation_url,
             raise Exception(except_msg)
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1074, log_msg)
+        log.log2warning(1077, log_msg)
 
     return general_result
 
