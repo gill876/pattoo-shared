@@ -123,6 +123,33 @@ class EncryptedPost(_Post):
 
     Class to exchange public keys, set symmetric key and
     post symmetrically encrypted data to the API server
+
+    First, the agent's information is exchanged. That
+    information consists of the agent's email address
+    and public key in ASCII. That information is received
+    the the API server, the agent's public key is added to
+    the API server's keyring and the agent's email address
+    is stored in the API server's session to be used to
+    retrieve the public key later on. Cookies are used to
+    uniquely identity the agents. Secondly, the API
+    server then sends a nonce encrypted by the agent's
+    public key, the API sever's email address, and the
+    API server's public key in ASCII. Then, the agent
+    decrypts the nonce using its own private key. Having
+    the decrypted nonce, the agent generates a symmetric
+    key to symmetrically encrypt the nonce. The
+    symmetric key is then encrypted using the API server's
+    public key. Those two information are sent off to the
+    API server. Finally, the encrypted symmetric key is
+    decrypted using the API server's private key, then the
+    symmetric key is used to decrypt the nonce. Once the
+    nonce is verified to be the same that was sent off,
+    the symmetric is stored, and all other information the
+    API received is deleted. A response is sent to the
+    agent and the agent proceeds to send data encrypted by
+    the symmetric key. The data is decrypted once received
+    by the API server. See encrypt.py for more details on
+    the module.
     """
 
     def __init__(self, identifier, data, gpg):
