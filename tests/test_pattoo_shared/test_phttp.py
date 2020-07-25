@@ -75,8 +75,9 @@ class TestPost(unittest.TestCase):
         post = phttp.Post(self.identifier, self.data)
 
         # Test
-        expected_server_url = 'http://127.0.0.6:50505/'\
-            'pattoo/api/v1/agent/receive/{}'.format(self.identifier)
+        expected_server_url = \
+            '''http://127.0.0.6:50505/pattoo/api/v1/agent/receive/{}'''\
+            .format(self.identifier)
         result_server_url = post._url
 
         self.assertEqual(result_server_url, expected_server_url)
@@ -100,11 +101,9 @@ class TestPost(unittest.TestCase):
             # Check that the post request was to the right URL
             # and that it contained the right data
             mock_post.assert_called_with(
-                                    'http://127.0.0.6:50505/'
-                                    'pattoo/api/v1/agent/receive/{}'
-                                    .format(self.identifier),
-                                    json=self.data
-                                        )
+                '''http://127.0.0.6:50505/pattoo/api/v1/agent/receive/{}'''
+                .format(self.identifier), json=self.data
+                )
 
             # Assert that the success is True
             self.assertTrue(success)
@@ -128,11 +127,9 @@ class TestPost(unittest.TestCase):
             # Check that the post request was to the right URL
             # and that it contained the right data
             mock_post.assert_called_with(
-                                    'http://127.0.0.6:50505/'
-                                    'pattoo/api/v1/agent/receive/{}'
-                                    .format(self.identifier),
-                                    json=self.data
-                                        )
+                '''http://127.0.0.6:50505/pattoo/api/v1/agent/receive/{}'''
+                .format(self.identifier), json=self.data
+                )
 
             # Assert that the success is True
             self.assertTrue(success)
@@ -153,28 +150,28 @@ class TestEncryptedPost(unittest.TestCase):
     _data = converter.agentdata_to_post(agentdata)
     data = converter.posting_data_points(_data)
 
+    # Initialize
+    # Create Pgpier object
+    gpg = set_gnupg(
+        'test_agent0', Config(), 'test_agent0@example.org'
+            )
+    # Create EncryptedPost object
+    encrypted_post = phttp.EncryptedPost(identifier, data, gpg)
+
     def test___init__(self):
         """Testing method or function named __init__."""
 
-        # Initialize
-        # Create Pgpier object
-        self.gpg = set_gnupg(
-            'test_agent0', Config(), 'test_agent0@example.org'
-                )
-        # Create EncryptedPost object
-        self.encrypted_post = phttp.EncryptedPost(self.identifier, self.data, self.gpg)
-
         # Test variables
-        expected_exchange_key = 'http://127.0.0.6:50505/'\
-            'pattoo/api/v1/agent/key'
+        expected_exchange_key = \
+            '''http://127.0.0.6:50505/pattoo/api/v1/agent/key'''
         result_exchange_key = self.encrypted_post._exchange_key
 
-        expected_validate_key = 'http://127.0.0.6:50505/'\
-            'pattoo/api/v1/agent/validation'
+        expected_validate_key = \
+            '''http://127.0.0.6:50505/pattoo/api/v1/agent/validation'''
         result_validate_key = self.encrypted_post._validate_key
 
-        expected_encryption = 'http://127.0.0.6:50505/'\
-            'pattoo/api/v1/agent/encrypted'
+        expected_encryption = \
+            '''http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted'''
         result_encryption = self.encrypted_post._encryption
 
         # Test URL's
