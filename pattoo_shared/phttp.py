@@ -596,6 +596,16 @@ def encrypted_post(gpg, symmetric_key, req_session,
                    url, data, identifier, save=True):
     """Post encrypted data to the API server.
 
+    First, the data is checked for its validity. Sencondly,
+    the data and agent ID is stored in a dictionary with
+    the key value pairs. The dictionary is converted to a
+    string so that is can be encrypted. The encrypted data
+    is then paired with a key, as a dictionary, distinguishing
+    the data as encrypted. The dictionary is then converted
+    to a string so it can be added to the request method
+    as json. A response from the API server tells if the data
+    was received and decrypted successfully.
+
     Args:
         gpg (obj): Pgpier object to accommodate encryption
         symmetric_key (str): Symmetric key used to encrypt data
@@ -620,7 +630,9 @@ def encrypted_post(gpg, symmetric_key, req_session,
 
     # Prepare and encrypt data
     raw_data = {"data": data, "source": identifier}
+    # Convert dictionary to string for encryption
     prep_data = json.dumps(raw_data)
+    # Symmetrically encrypt data
     encrypted_data = gpg.symmetric_encrypt(prep_data, symmetric_key)
     post_data = {"encrypted_data": encrypted_data}
     post_data = json.dumps(post_data)
@@ -648,6 +660,7 @@ def encrypted_post(gpg, symmetric_key, req_session,
                        .format(response_code, url)
                        )
         log.log2debug(1059, log_message)
+        # The data was accepted successfully
         general_result = True
     else:
         log_message = ('Error posting. Response "{}".'
