@@ -3,7 +3,8 @@
 
 # Standard imports
 import unittest
-from requests import request
+import requests
+import requests_mock
 from unittest.mock import patch
 import os
 import sys
@@ -187,24 +188,29 @@ class TestKeyExchangeSuite(unittest.TestCase):
     """Checks basic functions of the key exchange process."""
 
     # Initialize
-    # Create Pgpier object
+    # Create Pgpier object for test API
     api_gpg = set_gnupg(
         'api_server', Config(), 'api_server@example.org'
             )
-
+    # Create Pgpier object for test agent
     agent_gpg = set_gnupg(
         'encrypted_agent', Config(), 'encrypted_agent@example.org'
             )
-
-    req_session = request.Session()
+    # Create test request session
+    req_session = requests.Session()
+    # Exchange URL
     exchange_url = \
         '''http://127.0.0.6:50505/pattoo/api/v1/agent/key'''
+    # Validation URL
     validation_url = \
         '''http://127.0.0.6:50505/pattoo/api/v1/agent/validation'''
+    # Short symmetric key
     symmetric_key = '''315602dcecc28d8bbb6af7c5'''
 
     def test_basic_functions(self):
         """Test functions in order"""
+
+
 
 
 class TestPassiveAgent(unittest.TestCase):
