@@ -7,6 +7,7 @@ import requests_mock
 from unittest.mock import patch
 import json
 import hashlib
+import uuid
 import os
 import sys
 from time import time
@@ -157,6 +158,7 @@ class TestEncryptedPost(unittest.TestCase):
     agent_publickey = None
     agent_email = None
     symmetric_key = None
+    nonce = None
 
     # Initialize
     # Create Pgpier objects
@@ -197,9 +199,9 @@ class TestEncryptedPost(unittest.TestCase):
 
         # Define callback functions
 
-        # Key exchange callback to process key exchange
+        # Key exchange callback for post request to process key exchange
         def exchange_post_callback(request, context):
-            """Exchange callback for request mock"""
+            """Exchange callback for post request mock"""
             # Retrieve agent info from received request object
             json_data = request.json()
             json_dict = json.loads(json_data)
@@ -216,6 +218,11 @@ class TestEncryptedPost(unittest.TestCase):
             # Send accepted response
             context.status_code = 202
             return "Noted"
+
+        # Key exchange callback for post request to process key exchange
+        def exchange_get_callback(request, context):
+            """Exchange callback for post request mock"""
+            self.nonce = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
 
         # Validation callback to respond to agent validation post request
         def validation_callback(request, context):
