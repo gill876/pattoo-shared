@@ -3,9 +3,10 @@
 
 # Standard imports
 import unittest
-import requests
 import requests_mock
 from unittest.mock import patch
+import json
+import hashlib
 import os
 import sys
 from time import time
@@ -152,13 +153,19 @@ class TestEncryptedPost(unittest.TestCase):
     _data = converter.agentdata_to_post(agentdata)
     data = converter.posting_data_points(_data)
 
+    # Variables that will be modified by callback functions
+    symmetric_key = None
+
     # Initialize
-    # Create Pgpier object
-    gpg = set_gnupg(
+    # Create Pgpier objects
+    agent_gpg = set_gnupg(
         'test_agent0', Config(), 'test_agent0@example.org'
             )
+    api_gpg = set_gnupg(
+        'test_api0', Config(), 'test_api0@example.org'
+            )
     # Create EncryptedPost object
-    encrypted_post = phttp.EncryptedPost(identifier, data, gpg)
+    encrypted_post = phttp.EncryptedPost(identifier, data, agent_gpg)
 
     def test___init__(self):
         """Testing method or function named __init__."""
@@ -183,34 +190,117 @@ class TestEncryptedPost(unittest.TestCase):
         # Test that Pgpier object is valid
         self.assertIsInstance(self.encrypted_post._gpg.keyid, str)
 
+    def test_post(self):
+        """Test EncryptedPost's post"""
 
-class TestKeyExchangeSuite(unittest.TestCase):
-    """Checks basic functions of the key exchange process."""
+        # Define callback functions
 
-    # Initialize
-    # Create Pgpier object for test API
-    api_gpg = set_gnupg(
-        'api_server', Config(), 'api_server@example.org'
+        # Validation callback to respond to agent validation post request
+        def validation_callback(request, context):
+            """Validation callback for request mock"""
+            # Retrieve agent info from received request object
+            json_data = request.json()
+            json_dict = json.loads(json_data)
+            encrypted_nonce = json_dict['encrypted_nonce']
+            encrypted_sym_key = json_dict['encrypted_sym_key']
+
+            # Validate by decrypting the encrypted symmetric key
+            # then using the symmetric key to decrypt the nonce
+            # and check if it is the same as the one that was sent
+            passphrase = self.api_gpg.passphrase
+            symmetric_key = self.api_gpg.decrypt_data(
+                encrypted_sym_key, passphrase)
+            nonce = self.api_gpg.symmetric_decrypt(
+                encrypted_nonce, symmetric_key)
+
+            if nonce == NONCE:
+                self.symmetric_key = symmetric_key
+                context.status_code = 200
+            else:
+                context.status_code = 409
+
+            return 'Result'
+
+        # Encrypted post callback to respond to agent encrypted data
+        def encrypted_callback(request, context):
+            """Encrypted post callback for request mock"""
+            # Retrieve encrypted data from received request object
+            json_data = request.json()
+            json_dict = json.loads(json_data)
+            encrypted_data = json_dict['encrypted_data']
+            # Decrypt data
+            decrypted_data = self.api_gpg.symmetric_decrypt(
+                encrypted_data, self.symmetric_key)
+            # Unload
+            data_dict = json.loads(decrypted_data)
+            recv_data = data_dict['data']
+
+            # Check that decrypted data is the same as the received
+            # The two dictionaries are hashed then the values are compared
+            agent_data = self.data
+            if (hashlib.sha256(str(
+                json.dumps(agent_data)).encode()).hexdigest()) == \
+                    (hashlib.sha256(str(
+                        json.dumps(recv_data)).encode()).hexdigest()):
+                # Data received and decrypted successfully
+                context.status_code = 202
+            else:
+                # Decryption failed
+                context.status_code = 409
+
+            return "Noted"
+
+        # Initialize local variables from class
+        api_gpg = self.api_gpg
+        agent_gpg = self.agent_gpg
+
+        # Have PREDEFINE variables for mock agent api exchange #
+        api_publickey = api_gpg.exp_pub_key()
+        agent_publickey = agent_gpg.exp_pub_key()
+
+        # #Import public keys
+        api_gpg.imp_pub_key(agent_publickey)
+        agent_gpg.imp_pub_key(api_publickey)
+        # #Trust public keys to enable encryption with traded keys
+        api_gpg.trust_key(agent_gpg.fingerprint)
+        agent_gpg.trust_key(api_gpg.fingerprint)
+        # # # PREDEFINE encrypted nonce # # #
+        NONCE = '315602dcecc28d8bbb6af7c555cf1cbeca' +\
+            '902983a701b665517fc1752e72dbf2'
+        ENCRYPTED_NONCE = api_gpg.encrypt_data(
+            NONCE, agent_gpg.fingerprint)
+
+        # Mock each requests
+        with requests_mock.Mocker() as m:
+            # Mock agent sending info to API server
+            m.post(
+                'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
+                status_code=202)
+            # Mock agent receiving API info
+            m.get(
+                'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
+                status_code=200, json={'data': {
+                    'api_email': 'test_api0@example.org',
+                    'api_key': api_publickey,
+                    'encrypted_nonce': ENCRYPTED_NONCE
+                }}
             )
-    # Create Pgpier object for test agent
-    agent_gpg = set_gnupg(
-        'encrypted_agent', Config(), 'encrypted_agent@example.org'
+            # Mock agent validation
+            m.post(
+                'http://127.0.0.6:50505/pattoo/api/v1/agent/validation',
+                text=validation_callback
             )
-    # Create test request session
-    req_session = requests.Session()
-    # Exchange URL
-    exchange_url = \
-        '''http://127.0.0.6:50505/pattoo/api/v1/agent/key'''
-    # Validation URL
-    validation_url = \
-        '''http://127.0.0.6:50505/pattoo/api/v1/agent/validation'''
-    # Short symmetric key
-    symmetric_key = '''315602dcecc28d8bbb6af7c5'''
 
-    def test_basic_functions(self):
-        """Test functions in order"""
+            m.post(
+                'http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted',
+                text=encrypted_callback
+            )
 
+            # Run function
+            success = self.encrypted_post.post()
 
+            # Test
+            self.assertTrue(success)
 
 
 class TestPassiveAgent(unittest.TestCase):
