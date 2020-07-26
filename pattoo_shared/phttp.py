@@ -506,11 +506,6 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
     try:
         # Send over data
         xch_resp = req_session.post(exchange_url, json=send_data)
-        # addtional_info = None
-        # try:
-        #    addtional_info = xch_resp.status_code
-        # except Exception as ei:
-        #    addtional_info = 'failed before {}'.format(ei)
 
         # Checks that sent data was accepted
         general_response = xch_resp.status_code
