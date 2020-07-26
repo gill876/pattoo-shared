@@ -154,6 +154,8 @@ class TestEncryptedPost(unittest.TestCase):
     data = converter.posting_data_points(_data)
 
     # Variables that will be modified by callback functions
+    agent_publickey = None
+    agent_email = None
     symmetric_key = None
 
     # Initialize
@@ -194,6 +196,26 @@ class TestEncryptedPost(unittest.TestCase):
         """Test EncryptedPost's post"""
 
         # Define callback functions
+
+        # Key exchange callback to process key exchange
+        def exchange_post_callback(request, context):
+            """Exchange callback for request mock"""
+            # Retrieve agent info from received request object
+            json_data = request.json()
+            json_dict = json.loads(json_data)
+
+            self.agent_publickey = json_dict['pattoo_agent_key']
+            self.agent_email = json_dict['pattoo_agent_email']
+
+            # Import agent public key
+            self.api_gpg.imp_pub_key(self.agent_publickey)
+            # Trust public keys to enable encryption with traded keys
+            agent_fp = self.api_gpg.email_to_key(self.agent_email)
+            self.api_gpg.trust_key(agent_fp)
+
+            # Send accepted response
+            context.status_code = 202
+            return "Noted"
 
         # Validation callback to respond to agent validation post request
         def validation_callback(request, context):
@@ -253,17 +275,8 @@ class TestEncryptedPost(unittest.TestCase):
         # Initialize local variables from class
         api_gpg = self.api_gpg
         agent_gpg = self.agent_gpg
-
-        # Have PREDEFINE variables for mock agent api exchange #
         api_publickey = api_gpg.exp_pub_key()
-        agent_publickey = agent_gpg.exp_pub_key()
 
-        # #Import public keys
-        api_gpg.imp_pub_key(agent_publickey)
-        agent_gpg.imp_pub_key(api_publickey)
-        # #Trust public keys to enable encryption with traded keys
-        api_gpg.trust_key(agent_gpg.fingerprint)
-        agent_gpg.trust_key(api_gpg.fingerprint)
         # # # PREDEFINE encrypted nonce # # #
         NONCE = '315602dcecc28d8bbb6af7c555cf1cbeca' +\
             '902983a701b665517fc1752e72dbf2'
@@ -275,7 +288,7 @@ class TestEncryptedPost(unittest.TestCase):
             # Mock agent sending info to API server
             m.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
-                status_code=202)
+                text=exchange_post_callback)
             # Mock agent receiving API info
             m.get(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
