@@ -222,7 +222,28 @@ class TestEncryptedPost(unittest.TestCase):
         # Key exchange callback for post request to process key exchange
         def exchange_get_callback(request, context):
             """Exchange callback for post request mock"""
+            # Status is OK
+            context.status_code = 200
+            # Generate nonce
             self.nonce = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
+
+            # Prepare API info to send to agent
+            api_publickey = self.api_gpg.exp_pub_key()
+            self.api_gpg.set_email()
+            api_email_addr = self.api_gpg.email_addr
+
+            # Encrypt nonce
+            encrypted_nonce = self.api_gpg.encrypt_data(
+                self.nonce, self.agent_gpg.fingerprint)
+
+            json_response = {'data': {
+                    'api_email': api_email_addr,
+                    'api_key': api_publickey,
+                    'encrypted_nonce': encrypted_nonce
+                }}
+
+            # Send data
+            return json_response
 
         # Validation callback to respond to agent validation post request
         def validation_callback(request, context):
@@ -242,7 +263,7 @@ class TestEncryptedPost(unittest.TestCase):
             nonce = self.api_gpg.symmetric_decrypt(
                 encrypted_nonce, symmetric_key)
 
-            if nonce == NONCE:
+            if nonce == self.nonce:
                 self.symmetric_key = symmetric_key
                 context.status_code = 200
             else:
@@ -279,17 +300,6 @@ class TestEncryptedPost(unittest.TestCase):
 
             return "Noted"
 
-        # Initialize local variables from class
-        api_gpg = self.api_gpg
-        agent_gpg = self.agent_gpg
-        api_publickey = api_gpg.exp_pub_key()
-
-        # # # PREDEFINE encrypted nonce # # #
-        NONCE = '315602dcecc28d8bbb6af7c555cf1cbeca' +\
-            '902983a701b665517fc1752e72dbf2'
-        ENCRYPTED_NONCE = api_gpg.encrypt_data(
-            NONCE, agent_gpg.fingerprint)
-
         # Mock each requests
         with requests_mock.Mocker() as m:
             # Mock agent sending info to API server
@@ -299,12 +309,7 @@ class TestEncryptedPost(unittest.TestCase):
             # Mock agent receiving API info
             m.get(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
-                status_code=200, json={'data': {
-                    'api_email': 'test_api0@example.org',
-                    'api_key': api_publickey,
-                    'encrypted_nonce': ENCRYPTED_NONCE
-                }}
-            )
+                json=exchange_get_callback)
             # Mock agent validation
             m.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/validation',
