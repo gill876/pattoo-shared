@@ -473,79 +473,13 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                  symmetric_key):
     """Exchange point for API and Agent public keys.
 
-    Check <class EncryptedPost> for a summary of how this process
-    works
-
     Args:
         gpg (obj): Pgpier object
         req_session (obj): Request Session object
-        exchange_url (str): URL for key exchange
-        validation_url (str): URL for key validation
-        symmetric_key (str): Proposed symmetric key to be used
-                             to encrypt future data
 
     Returns:
         True: If key exchange was successful
         False: If the key exchange failed
-    """
-
-    # Initialize variable
-    general_result = False
-
-    # Send agent information
-    send_result = send_agent_info(gpg, req_session, exchange_url)
-    # The information was sent successfully
-    if send_result is True:
-        # Receive API information
-        receive_result = receive_api_info(gpg, req_session, exchange_url)
-        # Check if successful and check if the right
-        # result type is correct
-        if isinstance(receive_result, tuple):
-            # Get variables
-            decrypted_nonce, api_fingerprint = \
-                receive_result[0], receive_result[1]
-
-            # Validate the exchange process
-            validation_result = \
-                api_agent_key_validation(
-                    gpg, req_session, validation_url,
-                    decrypted_nonce, symmetric_key, api_fingerprint)
-
-            # The key exchange is complete
-            if validation_result is True:
-                general_result = True
-            else:
-                pass
-        # The receive failed
-        elif receive_result is None:
-            pass
-        else:
-            pass
-    # The symmetric key was already set
-    elif send_result is None:
-        general_result = True
-    # The sending of the information failed
-    else:
-        pass
-
-    return general_result
-
-
-def send_agent_info(gpg, req_session, exchange_url):
-    """Helper method.
-
-    Used to send over agent email address and public key.
-
-    Args:
-        gpg (obj): Pgpier object
-        req_session (obj): Request Session object
-        exchange_url (str): URL for key exchange
-
-    Returns:
-        True: If successful
-        False: If failed
-        None: If symmetric key is already set
-
     """
 
     # Predefine failure response
@@ -572,136 +506,86 @@ def send_agent_info(gpg, req_session, exchange_url):
     try:
         # Send over data
         xch_resp = req_session.post(exchange_url, json=send_data)
+        # addtional_info = None
+        # try:
+        #    addtional_info = xch_resp.status_code
+        # except Exception as ei:
+        #    addtional_info = 'failed before {}'.format(ei)
+
         # Checks that sent data was accepted
         general_response = xch_resp.status_code
         if general_response == 202:
-            general_result = True
+            # Get API information
+            post_resp = req_session.get(exchange_url)
 
+            # Checks that the API sent over information
+            general_response = post_resp.status_code
+            if general_response == 200:
+                api_dict = post_resp.json()
+
+                api_email = api_dict['data']['api_email']
+                api_key = api_dict['data']['api_key']
+                encrypted_nonce = api_dict['data']['encrypted_nonce']
+
+                # Import API public key
+                import_msg = gpg.imp_pub_key(api_key)
+                api_fingerprint = gpg.email_to_key(api_email)
+                gpg.trust_key(api_fingerprint)
+                log.log2info(1069, 'Import: {}'.format(import_msg))
+
+                # Decrypt nonce
+                passphrase = gpg.passphrase
+                decrypted_nonce = gpg.decrypt_data(encrypted_nonce,
+                                                   passphrase)
+
+                # Further processing happens out of this nesting
+
+            else:
+                except_msg = 'Could not retrieve GET information.'\
+                             'Status: {}'.format(general_response)
+                raise Exception(except_msg)
+
+            # Futher processing continues here
+
+            # Symmetrically encrypt nonce
+            encrypted_nonce = gpg.symmetric_encrypt(decrypted_nonce,
+                                                    symmetric_key)
+
+            # Encrypt symmetric key
+            encrypted_sym_key = gpg.encrypt_data(symmetric_key,
+                                                 api_fingerprint)
+
+            # Prepare data to send to API
+            validation_data = {'encrypted_nonce': encrypted_nonce,
+                               'encrypted_sym_key': encrypted_sym_key}
+
+            # Convert dict to str
+            validation_data = json.dumps(validation_data)
+
+            # POST data to API
+            validation_resp = req_session.post(validation_url,
+                                               json=validation_data)
+
+            # Check that the transaction was validated
+            general_response = validation_resp.status_code
+            if general_response == 200:
+
+                # The exchange and validation has been successful
+                general_result = True
+            else:
+                except_msg = 'Could not validate information.'\
+                             'Status: {}'.format(general_response)
+                raise Exception(except_msg)
+
+        # Check if a symmetric key was already set at the API
         elif general_response == 208:
-            general_result = None
+            general_result = True
             msg = 'Symmetric key already set'
             log.log2info(1057, msg)
-    except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1074, log_msg)
-
-    return general_result
-
-
-def receive_api_info(gpg, req_session, exchange_url):
-    """Helper method.
-
-    Used to receive and process API information.
-
-    Args:
-        gpg (obj): Pgpier object
-        req_session (obj): Request Session object
-        exchange_url (str): URL for key exchange
-
-    Returns:
-        (decrypted_nonce, api_fingerprint)
-        (tuple): If successful
-        None: If failed
-
-    """
-
-    # Predefine failure response
-    general_response = 409
-
-    # Set Pgpier key ID
-    gpg.set_keyid()
-
-    try:
-        # Get API information
-        post_resp = req_session.get(exchange_url)
-
-        # Checks that the API sent over information
-        general_response = post_resp.status_code
-        if general_response == 200:
-            api_dict = post_resp.json()
-
-            api_email = api_dict['data']['api_email']
-            api_key = api_dict['data']['api_key']
-            encrypted_nonce = api_dict['data']['encrypted_nonce']
-
-            # Import API public key
-            import_msg = gpg.imp_pub_key(api_key)
-            api_fingerprint = gpg.email_to_key(api_email)
-            gpg.trust_key(api_fingerprint)
-            log.log2info(1069, 'Import: {}'.format(import_msg))
-
-            # Decrypt nonce
-            passphrase = gpg.passphrase
-            decrypted_nonce = gpg.decrypt_data(
-                encrypted_nonce, passphrase)
-
-            # Return decrypted nonce and API fingerprint
-            return decrypted_nonce, api_fingerprint
 
         else:
-            except_msg = 'Could not retrieve GET information.'\
-                            'Status: {}'.format(general_response)
-            raise Exception(except_msg)
-    except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1076, log_msg)
-
-    return None
-
-
-def api_agent_key_validation(gpg, req_session, validation_url,
-                             decrypted_nonce, symmetric_key,
-                             api_fingerprint):
-    """Helper method.
-
-    Used to validate information.
-
-    Args:
-        gpg (obj): Pgpier object
-        exchange_url (str): URL for key exchange
-        validation_url (str): URL for key validation
-
-    Returns:
-        True: If successful
-        False: If failed
-
-    """
-
-    # Predefine failure response
-    general_response = 409
-
-    # Set Pgpier key ID
-    gpg.set_keyid()
-
-    try:
-        # Symmetrically encrypt nonce
-        encrypted_nonce = gpg.symmetric_encrypt(decrypted_nonce,
-                                                symmetric_key)
-
-        # Encrypt symmetric key
-        encrypted_sym_key = gpg.encrypt_data(symmetric_key,
-                                             api_fingerprint)
-
-        # Prepare data to send to API
-        validation_data = {'encrypted_nonce': encrypted_nonce,
-                           'encrypted_sym_key': encrypted_sym_key}
-
-        # Convert dict to str
-        validation_data = json.dumps(validation_data)
-
-        # POST data to API
-        validation_resp = req_session.post(validation_url,
-                                           json=validation_data)
-
-        # Check that the transaction was validated
-        general_response = validation_resp.status_code
-        if general_response == 200:
-
-            # The exchange and validation has been successful
-            general_result = True
-        else:
-            except_msg = 'Could not validate information.'\
-                            'Status: {}'.format(general_response)
+            except_msg = 'Could not send POST information. Status: {}'\
+                         .format(general_response)
             raise Exception(except_msg)
     except Exception as e:
         log_msg = 'Error encountered: >>>{}<<<'.format(e)
