@@ -174,6 +174,8 @@ class EncryptedPost(_Post):
 
         # Get requirements for key exchange
         self._session = requests.Session()
+        # Turn off HTTP Persistent connection
+        self._session.keep_alive = False
 
         # Encryption requirements
         # Random str of len 20
