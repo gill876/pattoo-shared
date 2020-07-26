@@ -46,12 +46,14 @@ Minimum value {} is greater than {}. Please fix.\
         'log2die_safe(', 'log2warning(',
         'log2exception(', 'log2exception_die(',
         'log2debug(', 'log2live(', 'log2warn(', 'log2die(', 'log2quiet(',
-        'log2info(', 'log2screen(', 'log2see(', r'.db_modify(', r'.db_query(',
+        'log2info(', 'log2screen(', 'log2see(', r'.modify(', r'.query(',
+        r'.replace(', '.add_all(', r'.db_modify(', r'.db_query(',
         r'.db_commit(', r'.db_replace(', r'.db_add(', '.db_add_all(',
         r'.db_modify(', r'.db_query(')
     error_codes = []
     available_codes = []
     entries = 5
+    status = {}
 
     # Get ready to ignore this script
     this_script = os.path.abspath(inspect.getfile(inspect.currentframe()))
@@ -65,7 +67,18 @@ Minimum value {} is greater than {}. Please fix.\
 
     # Read each file to find error codes
     for python_file in python_files:
-        error_codes.extend(_codes(python_file, to_find))
+        metadata = _codes(python_file, to_find)
+        error_codes.extend([x.code for x in metadata])
+        for item in metadata:
+            line = ['''\
+    file: {}
+    line: {}
+    text: {}'''.format(item.filename, item.number, item.line)]
+            value = status.get(item.code)
+            if value is None:
+                status[item.code] = line
+            else:
+                status[item.code].extend(line)
 
     # Get duplicate codes
     _duplicates = [
@@ -113,19 +126,24 @@ Pattoo Logging Error Code Summary Report
 Starting Code              : {}
 Ending Code                : {}
 Duplicate Codes to Resolve : {}
-Available Codes            : {}\
+Available Codes            : {}
+Status                     : {}\
 '''.format(min(error_codes),
            max(error_codes),
            duplicates,
-           available_codes[0:entries]))
+           available_codes[0:entries],
+           'OK' if bool(duplicates) is False else 'Error'
+           ))
 
     # Exit with error if duplicate codes found
-    if bool(duplicates) is True:
-        print('''
-
-ERROR: Duplicate error codes found. Please resolve.
-
-''')
+    if bool(_duplicates) is True:
+        for next_duplicate in _duplicates:
+            print('''
+-----------------------------------
+Duplicates for code        : {}
+'''.format(next_duplicate))
+            for item in status[next_duplicate]:
+                print('{}'.format(item))
         sys.exit(1)
 
     # Exit with error if code values are out of range
@@ -136,7 +154,6 @@ ERROR: Error codes values out of range {} to {}. Please resolve.
 
 '''.format(minimum, maximum))
         sys.exit(1)
-
 
 
 def _codes(filename, to_find):
@@ -152,12 +169,18 @@ def _codes(filename, to_find):
     """
     # Initalize key variables
     digits = re.compile(r'^.*?(\d+).*?$')
-    error_codes = []
+    metadata = []
+    Metadata = collections.namedtuple(
+        'Metadata', 'filename, line, number, code')
 
     # Process file for codes
     with open(filename, 'r') as lines:
         # Read each line of the file
+        count = 0
         for line in lines:
+            # Increment count
+            count += 1
+
             # Ignore lines without a '(' in it
             if '(' not in line:
                 continue
@@ -174,21 +197,13 @@ def _codes(filename, to_find):
                 arguments = ' '.join(components[1:])
                 found = digits.match(arguments)
                 if bool(found) is True:
-                    # print('boo -', line)
-                    error_codes.append(int(found.group(1)))
-
-    # Exit with error if error codes are non numeric
-    for _code in error_codes:
-        if isinstance(_code, int) is False:
-            print('''
-
-ERROR: Non integer error code found. Please resolve.
-
-'''.format(_code))
-            sys.exit(1)
+                    code_value = int(found.group(1))
+                    metadata.append(
+                        Metadata(filename=filename, line=line,
+                                 number=count, code=code_value))
 
     # Return
-    return error_codes
+    return metadata
 
 
 def _wordlist_to_regex(words):

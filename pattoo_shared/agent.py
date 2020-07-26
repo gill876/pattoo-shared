@@ -164,6 +164,7 @@ class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
         # Instantiate daemon superclass
         GracefulDaemon.__init__(self, agent)
 
+
 class AgentCLI():
     """Class that manages the agent CLI.
 
