@@ -85,14 +85,21 @@ class Configure():
         Returns:
             None
         """
-        # If the group specified does not exist, it gets created
-        if not self.group_exists(user_name):
-            shared.run_script('groupadd {0}'.format(user_name), verbose)
-        # If the user specified does not exist, they get created
-        if not self.user_exists(user_name):
-            shared.run_script(
-                'useradd -d {1} -s {2} -g {0} {0}'.format(
-                    user_name, directory, shell), verbose)
+        # Ensure user has sudo privileges
+        if getpass.getuser() == 'root':
+
+            # If the group specified does not exist, it gets created
+            if not self.group_exists(user_name):
+                shared.run_script('groupadd {0}'.format(user_name), verbose)
+
+            # If the user specified does not exist, they get created
+            if not self.user_exists(user_name):
+                shared.run_script(
+                    'useradd -d {1} -s {2} -g {0} {0}'.format(
+                        user_name, directory, shell), verbose)
+        else:
+            # Die if not root
+            shared.log('You are currently not running the script as root')
 
     def group_exists(self, group_name):
         """Check if the group already exists.
@@ -164,7 +171,7 @@ class Configure():
                 if 'directory' in key:
                     if os.sep not in value:
                         log.log2die_safe(
-                            5101, '{} is an invalid directory'.format(value))
+                            1019, '{} is an invalid directory'.format(value))
 
                     # Attempt to create directory
                     full_directory = os.path.expanduser(value)
@@ -222,7 +229,7 @@ class Configure():
                 log_message = ('''\
 Configuration file's "{}" section does not have a "{}" sub-section. \
 Please fix.'''.format(primary, key))
-                log.log2die_safe(5101, log_message)
+                log.log2die_safe(1057, log_message)
 
     def check_config(self):
         """Ensure agent configuration exists.
@@ -251,7 +258,7 @@ Please fix.'''.format(primary, key))
                 log_message = ('''\
 Section "{}" not found in configuration file {} in directory {}. Please fix.\
     '''.format(key, config_file, config_directory))
-                log.log2die_safe(5101, log_message)
+                log.log2die_safe(1055, log_message)
 
         # Check secondary keys
         secondaries = [
