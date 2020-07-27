@@ -6,6 +6,7 @@ import os
 import sys
 import json
 import urllib
+import collections
 from time import time
 
 # pip3 libraries
@@ -15,6 +16,11 @@ import requests
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared import converter
+
+# Save items needed for encrypted purging inside a named tuple
+EncryptionSuite = collections.namedtuple(
+    'EncryptionSuite',
+    'post gpg symmetric_key session')
 
 
 class _Post():
@@ -203,10 +209,13 @@ class EncryptedPost(_Post):
         if exchanged is False:
             return result
 
+        # Add data to named tuple for encrypted_post
+        suite = EncryptionSuite(
+            encrypted_post, self._gpg,
+            self._symmetric_key, self._session)
+
         # Purge data, encrypt and send to API
-        encrypted_purge(self._gpg, self._symmetric_key, self._session,
-                        self._encryption, self._data,
-                        self._identifier)
+        purge(self._encryption, self._identifier, suite)
 
     def post(self):
         """Send encrypted data to the API server.
@@ -669,12 +678,16 @@ def encrypted_post(gpg, symmetric_key, req_session,
     return general_result
 
 
-def purge(url, identifier):
+def purge(url, identifier, suite=post):
     """Purge data from cache by posting to central server.
 
     Args:
         url: URL to receive posted data
         identifier: Unique identifier for the source of the data. (AgentID)
+        suite (function)/ (EncryptionSuite): If function, this will
+        proceed to use the normal post function for unencrypted posting.
+        If EncryptionSuite, the necessary variables from the named tuple will
+        be used along with the encrypted_post function for encrypted posting
 
     Returns:
         None
@@ -724,7 +737,14 @@ Deleting corrupted cache file {} for identifier {}.\
                 continue
 
         # Post file
-        success = post(url, data, identifier, save=False)
+        if callable(suite):  # Is it a function?
+            # Post unencrypted data
+            success = suite(url, data, identifier, save=False)
+        elif isinstance(suite, EncryptionSuite):  # Is it EncryptionSuite?
+            # Post encrypted data
+            success = suite.post(
+                suite.gpg, suite.symmetric_key, suite.session,
+                url, data, identifier, save=False)
 
         # Delete file if successful
         if success is True:
@@ -736,78 +756,6 @@ Deleting corrupted cache file {} for identifier {}.\
     Purging cache file {} after successfully contacting server {}\
     '''.format(filepath, url))
                 log.log2info(1007, log_message)
-
-
-def encrypted_purge(gpg, symmetric_key, req_session,
-                    url, data, identifier):
-    """Purge data from cache by posting ecrypted data to API server.
-
-    Args:
-        url: URL to receive posted data
-        identifier: Identifier to use for posting
-
-    Returns:
-        None
-
-    """
-    # Initialize key variables
-    config = Config()
-    cache_dir = config.agent_cache_directory(identifier)
-
-    # Add files in cache directory to list only if they match the
-    # cache suffix
-    all_filenames = [filename for filename in os.listdir(
-        cache_dir) if os.path.isfile(
-            os.path.join(cache_dir, filename))]
-    filenames = [
-        filename for filename in all_filenames if filename.endswith(
-            '.json')]
-
-    # Read cache file
-    for filename in filenames:
-        # Only post files for our own UID value
-        if identifier not in filename:
-            continue
-
-        # Get the full filepath for the cache file and post
-        filepath = os.path.join(cache_dir, filename)
-        with open(filepath, 'r') as f_handle:
-            try:
-                data = json.load(f_handle)
-            except Exception as e:
-                # Log removal
-                log_message = ('Error reading previously cached '
-                               'agent data file {} for identifier'
-                               ' {}. May be corrupted. Exception: "{}"'
-                               .format(filepath, identifier, e))
-                log.log2warning(1061, log_message)
-
-                # Delete file
-                if os.path.isfile(filepath) is True:
-                    os.remove(filepath)
-
-                    log_message = ('Deleting corrupted cache file '
-                                   '{} for identifier {}. Exception:'
-                                   ' "{}"'.format(filepath, identifier, e))
-                    log.log2warning(1062, log_message)
-
-                # Go to the next file.
-                continue
-
-        # Post file
-        success = encrypted_post(gpg, symmetric_key, req_session,
-                                 url, data, identifier, False)
-
-        # Delete file if successful
-        if success is True:
-            if os.path.exists(filepath) is True:
-                os.remove(filepath)
-
-                # Log removal
-                log_message = ('Purging cache file {} after'
-                               'successfully contacting server {}'
-                               .format(filepath, url))
-                log.log2info(1055, log_message)
 
 
 def _save_data(data, identifier):
