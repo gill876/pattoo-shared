@@ -72,6 +72,10 @@ class TestPost(unittest.TestCase):
     _data = converter.agentdata_to_post(agentdata)
     data = converter.posting_data_points(_data)
 
+    # Change tuple to list in the data
+    _mod_data = json.dumps(data)
+    mod_data = json.loads(_mod_data)
+
     def test___init__(self):
         """Testing method or function named __init__."""
 
@@ -125,18 +129,18 @@ class TestPost(unittest.TestCase):
             mock_post.return_value.text = 'OK'
             mock_post.return_value.status_code = 200
 
+            # Save data to cache
+            phttp._save_data(self.data, self.identifier)
+
             # Run post
-            success = purge_test.post()
+            purge_test.purge()
 
             # Check that the post request was to the right URL
             # and that it contained the right data
             mock_post.assert_called_with(
                 '''http://127.0.0.6:50505/pattoo/api/v1/agent/receive/{}'''
-                .format(self.identifier), json=self.data
+                .format(self.identifier), json=self.mod_data
                 )
-
-            # Assert that the success is True
-            self.assertTrue(success)
 
 
 class TestEncryptedPost(unittest.TestCase):
