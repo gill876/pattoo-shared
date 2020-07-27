@@ -32,11 +32,9 @@ def install_missing_pip3(package, pip_dir, verbose=True):
 python3 -m pip install {0} -t {1} -U --force-reinstall'''.format(package,
                                                                   pip_dir),
                                                                   verbose=verbose)
-    elif username == 'travis':
+    else:
         shared.run_script(
             'python3 -m pip install {0}'.format(package), verbose=verbose)
-    else:
-        shared.log('Installation user is not "root" or "travis"')
 
 
 def install(requirements_dir, installation_directory=None, verbose=True):

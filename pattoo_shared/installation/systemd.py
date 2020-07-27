@@ -51,11 +51,6 @@ def copy_service_files(target_directory, template_dir):
     src_dst = {}
     destination_filepaths = []
 
-    # Determine the directory with the service files
-   # source_directory = '{1}{0}systemd{0}system'.format(
-       #         os.sep,
-           #     os.path.abspath(os.path.join(exec_dir, os.pardir)))
-
     # Get source and destination file paths
     source_filepaths = _filepaths(template_dir)
     for filepath in source_filepaths:

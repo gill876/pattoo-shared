@@ -135,11 +135,12 @@ class Configure():
             return False
 
     def pattoo_config(
-            self, config_directory, file_name, config_dict=None, server=False):
+            self, config_directory, config_dict=None, server=False):
         """Create configuration file.
 
         Args:
             config_directory: Configuration directory
+            file_name
             config_dict: A dictionary containing the configuration values.
             by default its value is set to None.
             server: A boolean value to allow for the pattoo.
@@ -150,20 +151,23 @@ class Configure():
 
         """
         # Initialize key variables
-        filepath = os.path.join(config_directory, file_name)
+        if server is False:
+            config_file = os.path.join(config_directory, 'pattoo.yaml')
+        else:
+            config_file = os.path.join(config_directory, 'pattoo_server.yaml')
 
         # Set config_dict if None has been passed in
         if config_dict is None:
             if server is False:
-                pattoo_config = self.default_config
+                config_dict = self.default_config
             else:
-                pattoo_config = self.default_server_config
+                config_dict = self.default_server_config
 
         # Say what we are doing
-        print('\nConfiguring {} file.\n'.format(filepath))
+        print('\nConfiguring {} file.\n'.format(config_file))
 
         # Get configuration
-        config = self.read_config(filepath, pattoo_config)
+        config = self.read_config(config_file, config_dict)
 
         if server is False:
             # Check validity of directories
@@ -183,7 +187,7 @@ class Configure():
                         shared.chown(full_directory)
 
         # Write file
-        with open(filepath, 'w') as f_handle:
+        with open(config_file, 'w') as f_handle:
             yaml.dump(config, f_handle, default_flow_style=False)
 
     def read_config(self, filepath, default_config):
@@ -294,13 +298,10 @@ Section "{}" not found in configuration file {} in directory {}. Please fix.\
         files.mkdir(config_directory)
 
         # Create the pattoo user and group
-        username = getpass.getuser()
-        if username == 'root':
-            self.create_user('pattoo', '/nonexistent', ' /bin/false', True)
+        self.create_user('pattoo', '/nonexistent', ' /bin/false', True)
 
         # Attempt to change the ownership of the configuration directory
-        if username == 'root':
-            shared.chown(config_directory)
+        shared.chown(config_directory)
 
         # Create configuration
         self.pattoo_config(config_directory, pattoo_dict)

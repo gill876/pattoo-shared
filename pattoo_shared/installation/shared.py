@@ -5,6 +5,7 @@ import os
 import subprocess
 import traceback
 import shutil
+import getpass
 
 
 def run_script(cli_string, die=True, verbose=True):
@@ -112,6 +113,10 @@ def chown(directory):
     # Initialize key variables
     username = 'pattoo'
     group = 'pattoo'
+
+    if getpass.getuser() != 'root':
+        log('''\
+Current user is not root, please execute script as root to continue''')
 
     # Change ownership
     if '{}pattoo'.format(os.sep) in directory:
