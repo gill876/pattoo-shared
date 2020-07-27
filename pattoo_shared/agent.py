@@ -78,6 +78,35 @@ class Agent():
         # Do nothing
         pass
 
+    def set_email(self, email):
+        """Set email address of the agent
+
+        Args:
+            email (str): Agent email address
+
+        Returns:
+            None
+        """
+        self.email = email
+
+    def set_gnupg(self):
+        """Get Pgpier class of the agent
+
+        Args:
+            None
+
+        Returns:
+            gpg (obj): Pgpier object
+        """
+        agent_name = self.parent
+        agent_config = self.config
+        agent_email = self.email
+
+        gpg = files.set_gnupg(agent_name, agent_config, agent_email)
+        self.gpg = gpg
+
+        return gpg
+
 
 class AgentDaemonRunMixin(Daemon):
     """Class that defines basic run function for AgentDaemons"""
@@ -304,6 +333,16 @@ class AgentAPI(Agent):
         self._agent_api_variable = AgentAPIVariable(
             ip_bind_port=_config.ip_bind_port(),
             ip_listen_address=_config.ip_listen_address())
+
+        # Add email address to Agent subclass
+        econfig = Config()
+        email_addr = econfig.api_email_address()
+        self.set_email(email_addr)
+        # Email address must be same in the created Pgpier
+        # object for the API as the one in the yaml file
+        # or else an error might be encounter. To use a
+        # different email address, delete the contents of the
+        # key folder
 
     def query(self):
         """Query all remote targets for data.

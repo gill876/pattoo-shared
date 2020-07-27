@@ -318,8 +318,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function __init__."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = config.daemon_directory()
+        expected = self.config.daemon_directory()
         result = directory._root
         self.assertEqual(result, expected)
 
@@ -327,8 +326,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function pid."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}pid'.format(config.system_daemon_directory(), os.sep)
+        expected = '{}{}pid'.format(self.config.system_daemon_directory(), os.sep)
         result = directory.pid()
         self.assertEqual(result, expected)
 
@@ -336,8 +334,7 @@ class Test_Directory(unittest.TestCase):
         """Testing function lock."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}lock'.format(config.system_daemon_directory(), os.sep)
+        expected = '{}{}lock'.format(self.config.system_daemon_directory(), os.sep)
         result = directory.lock()
         self.assertEqual(result, expected)
 
@@ -345,9 +342,21 @@ class Test_Directory(unittest.TestCase):
         """Testing function agent_id."""
         # Test
         directory = files._Directory(self.config)
-        config = Config()
-        expected = '{}{}agent_id'.format(config.daemon_directory(), os.sep)
+        expected = '{}{}agent_id'\
+                   .format(self.config.daemon_directory(), os.sep)
         result = directory.agent_id()
+        self.assertEqual(result, expected)
+
+    def test_keyring(self):
+        """Test function keyring."""
+        # Test
+        directory = files._Directory(self.config)
+        expected = '{}{}keys{}{}'\
+                   .format(
+                       self.config.daemon_directory(),
+                       os.sep, os.sep, '.gnupg'
+                       )
+        result = directory.keyring()
         self.assertEqual(result, expected)
 
 
@@ -385,6 +394,48 @@ class Test_File(unittest.TestCase):
         filename = files._File(self.config)
         result = filename.agent_id(self.prefix)
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
+
+
+class Test_GnuPG(unittest.TestCase):
+    """Test Pgpier integration."""
+    # Initialize config object
+    config = Config()
+
+    def test_set_gnupg(self):
+        """Set Pgpier object test for agent."""
+
+        # Agent details
+        agent_name = 'test_agent1'
+        agent_email = 'test_agent1@example.org'
+
+        # Result
+        result = files.set_gnupg(
+                    agent_name, self.config, agent_email
+                                )
+
+        # If a Pgpier object was created, a key ID would
+        # be set of type str
+        self.assertIsNotNone(result.keyid)
+        self.assertIsInstance(result.keyid, str)
+
+    def test_get_gnupg(self):
+        """Test retrieval of Pgpier object."""
+
+        # Create Pgpier object
+        # Agent details
+        agent_name = 'test_agent2'
+        agent_email = 'test_agent2@example.org'
+
+        # Result
+        files.set_gnupg(
+                    agent_name, self.config, agent_email
+                        )
+
+        # Retrieve Pgpier object
+        result = files.get_gnupg(agent_name, self.config)
+
+        # Test if the Pgpier object was retrieved
+        self.assertIsNotNone(result)
 
 
 if __name__ == '__main__':

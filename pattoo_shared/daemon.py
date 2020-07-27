@@ -66,7 +66,7 @@ file and directory permissions.'''.format(daemon_log_file)
         except OSError as err:
             log_message = 'Daemon fork #1 failed: {}'.format(err)
             log_message = '{} - PID file: {}'.format(log_message, self.pidfile)
-            log.log2die(1060, log_message)
+            log.log2die(1067, log_message)
 
         # Decouple from parent environment
         os.chdir('{}'.format(os.sep))
@@ -83,7 +83,7 @@ file and directory permissions.'''.format(daemon_log_file)
         except OSError as err:
             log_message = 'Daemon fork #2 failed: {}'.format(err)
             log_message = '{} - PID file: {}'.format(log_message, self.pidfile)
-            log.log2die(1061, log_message)
+            log.log2die(1072, log_message)
 
         # Redirect standard file descriptors, but first make sure that the
         sys.stdout.flush()
@@ -157,7 +157,7 @@ file and directory permissions.'''.format(daemon_log_file)
             log_message = (
                 'PID file: {} already exists. Daemon already running?'
                 ''.format(self.pidfile))
-            log.log2die(1062, log_message)
+            log.log2die(1073, log_message)
 
         # Start the daemon
         self._daemonize()
