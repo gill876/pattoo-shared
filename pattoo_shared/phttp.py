@@ -482,6 +482,19 @@ def key_exchange(gpg, req_session, exchange_url, validation_url,
                  symmetric_key):
     """Exchange point for API and Agent public keys.
 
+    First, post the agent information to the API to process and
+    store the agent's email address and ASCII public key. Secondly,
+    the API server sends the agent it's email address, ASCII pubic
+    key and a nonce encrypted by the agent's public key. The agent
+    decrypts the nonce and encrypts the nonce with a randomly
+    generated symmetric key. The symmetric key is then encrypted by
+    the API server's public key. The encrypted nonce and encrypted
+    symmetric key are sent to the API server. The API server decrypts
+    the two data and checks if nonce that was sent is the same as the
+    nonce decrypted. If both nonces match, the server sends an OK
+    signal to the agent. Lastly, the symmetric key is then used to
+    encrypt data that is going to be sent to the API server.
+
     Args:
         gpg (obj): Pgpier object
         req_session (obj): Request Session object
