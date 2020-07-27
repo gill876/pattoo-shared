@@ -1,16 +1,17 @@
 """Functions utilized by the pattoo installation."""
 # Main python libraries
 import sys
+import os
 import subprocess
 import traceback
+import shutil
 
 
-def run_script(cli_string, verbose, die=True):
+def run_script(cli_string, die=True, verbose=True):
     """Run the cli_string UNIX CLI command and record output.
 
     Args:
         cli_string: String of command to run
-        verbose: A boolean value to toggle the script's verbose mode
         die: Exit with error if True
 
     Returns:
@@ -66,10 +67,11 @@ Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
             )
 
         # Log message
-        if messages != []:
-            # Enable verbose mode if true
-            if verbose is True:
-                for log_message in messages:
+        if verbose is True:
+            print('messages: {}'.format(messages))
+        if bool(messages) is True:
+            for log_message in messages:
+                if verbose is True:
                     print(log_message)
 
             if bool(die) is True:
@@ -78,3 +80,49 @@ Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
 
     # Return
     return (returncode, stdoutdata, stderrdata)
+
+
+def log(message):
+    """Log messages and exit abnormally.
+
+    Args:
+        message: Message to print
+
+    Returns:
+        None
+
+    """
+    # exit
+    print('\nPATTOO Error: {}'.format(message))
+    sys.exit(3)
+
+
+def chown(directory):
+    """Recursively change the ownership of files in a directory.
+
+    The directory must have the string '/pattoo/' in it
+
+    Args:
+        directory: Directory to create
+
+    Returns:
+        None
+
+    """
+    # Initialize key variables
+    username = 'pattoo'
+    group = 'pattoo'
+
+    # Change ownership
+    if '{}pattoo'.format(os.sep) in directory:
+        # Change the parent directory
+        shutil.chown(directory, user=username, group=group)
+
+        # Recursively change the sub-directories and files
+        for root, dirs, files_ in os.walk(directory):
+            for dir_ in dirs:
+                shutil.chown(
+                    os.path.join(root, dir_), user=username, group=group)
+            for file_ in files_:
+                shutil.chown(
+                    os.path.join(root, file_), user=username, group=group)

@@ -5,13 +5,13 @@ import getpass
 
 # Pattoo libraries
 
-import shared
+
 sys.path.append(os.pardir)
-from pattoo_shared import configuration
-from pattoo_shared import log
+from pattoo_shared import files
+from pattoo_shared.installation import shared
 
 
-def install_missing(package, pip_dir, verbose):
+def install_missing_pip3(package, pip_dir, verbose=True):
     """Automatically Install missing pip3 packages.
 
     Args:
@@ -22,44 +22,56 @@ def install_missing(package, pip_dir, verbose):
         True: if the package could be successfully installed
 
     """
+    # Validate pip directory
+    if not os.path.isdir(pip_dir):
+        shared.log('Pip directory is invalid')
     # Installs to the directory specified as pip_dir if the user is not travis
-    if getpass.getuser() != 'travis':
+    username = getpass.getuser()
+    if username == 'root':
+        shared.run_script('''\
+python3 -m pip install {0} -t {1} -U --force-reinstall'''.format(package,
+                                                                  pip_dir),
+                                                                  verbose=verbose)
+    elif username == 'travis':
         shared.run_script(
-            'python3 -m pip install {0} -t {1}'.format(package, pip_dir),
-            verbose)
+            'python3 -m pip install {0}'.format(package), verbose=verbose)
     else:
-        shared.run_script(
-            'python3 -m pip install {0}'.format(package), verbose)
-    return True
+        shared.log('Installation user is not "root" or "travis"')
 
 
-def check_pip3(verbose, pip3_dir, requirements_file):
+def install(requirements_dir, installation_directory=None, verbose=True):
     """Ensure PIP3 packages are installed correctly.
 
     Args:
-        prompt_value: A boolean value to toggle the script's verbose mode and
-                      enable the pip3 directory to be manually set.
-        requirements_file: The filepath to the pip_requirements file.
+        requirements_dir: The directory with the pip_requirements file.
+        installation_directory: Directory where packages must be installed.
+        verbose: Print status messages if True
 
     Returns:
-        True if pip3 packages are installed successfully.
+        True if pip3 packages are installed successfully
 
     """
     # Initialize key variables
     lines = []
-    config_obj = configuration.Config()
+    if bool(installation_directory) is False:
+        installation_directory = '/opt/pattoo-daemon/.python'
 
+    # Create directory if it doesn't exist
+    if os.path.isdir(installation_directory) is False:
+        files.mkdir(installation_directory)
     # Appends pip3 dir to python path
-    sys.path.append(pip3_dir)
+    sys.path.append(installation_directory)
 
     # Read pip_requirements file
-    print('??: Checking pip3 packages')
-    if os.path.isfile(requirements_file) is False:
-        log.log2die_safe(5101, 'Cannot find PIP3 requirements file {}'.format(
-                                                        requirements_file))
+    filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
+
+    # Say what we are doing
+    print('Checking pip3 packages')
+    if os.path.isfile(filepath) is False:
+        shared.log('Cannot find PIP3 requirements file {}'.format(filepath))
 
     # Opens pip_requirements file for reading
-    with open(requirements_file, 'r') as _fp:
+    with open(filepath, 'r') as _fp:
         line = _fp.readline()
         while line:
             # Strip line
@@ -70,28 +82,29 @@ def check_pip3(verbose, pip3_dir, requirements_file):
             else:
                 lines.append(_line)
             line = _fp.readline()
-    for line in lines:
 
+    # Process each line of the file
+    for line in lines:
         # Determine the package
         package = line.split('=', 1)[0]
         package = package.split('>', 1)[0]
 
         # If verbose is true, the package being checked is shown
         if verbose:
-            print('??: Checking package {}'.format(package))
+            print('Installing package {}'.format(package))
         command = 'python3 -m pip show {}'.format(package)
-        (returncode, _, _) = shared.run_script(command, verbose, die=False)
+        (returncode, _, _) = shared.run_script(
+            command, verbose=verbose, die=False)
+
+        # Install any missing pip3 package
         if bool(returncode) is True:
+            install_missing_pip3(
+                package, installation_directory, verbose=verbose)
 
-            # Installs missing pip3 package
-            install_missing(package, pip3_dir, verbose)
+    # Set ownership of any newly installed python packages to pattoo user
+    if getpass.getuser() == 'root':
+        if os.path.isdir(installation_directory) is True:
+            shared.run_script('chown -R pattoo:pattoo {}'.format(
+                installation_directory), verbose=verbose)
 
-        # If the verbose is True, the package will be shown
-        if verbose:
-            print('OK: package {}'.format(line))
-
-    # Set ownership of python packages to pattoo user
-    if getpass.getuser() != 'travis' and getpass.getuser() == 'root':
-        config_obj.initialize_ownership('pattoo', 'pattoo', pip3_dir)
-    print('OK: pip3 packages successfully installed')
-    return True
+    print('pip3 packages successfully installed')

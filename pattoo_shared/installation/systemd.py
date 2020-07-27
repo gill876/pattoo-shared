@@ -1,32 +1,15 @@
 # Importing python packages
 from __future__ import print_function
-import sys
 import os
 import shutil
 import re
-import argparse
+import getpass
 from subprocess import check_output, call
 from pathlib import Path
 import yaml
 
 # Importing installation libraries
-import shared
-
-
-def log(msg):
-    """Log messages to STDIO and exit.
-
-    Args:
-        msg: String to print
-
-    Returns:
-        None
-
-    """
-    # Die!
-    message = 'ERROR: {}'.format(msg)
-    print(message)
-    sys.exit(0)
+from pattoo_shared.installation import shared
 
 
 def _filepaths(directory, full_paths=True):
@@ -53,11 +36,12 @@ def _filepaths(directory, full_paths=True):
     return result
 
 
-def _copy_service_files(target_directory):
+def copy_service_files(target_directory, template_dir):
     """Copy service files to target directory.
 
     Args:
         target_directory: Target directory
+        exec_dir: The directory the script is being executed in
 
     Returns:
         destination_filepaths: List of destination filepaths
@@ -68,13 +52,12 @@ def _copy_service_files(target_directory):
     destination_filepaths = []
 
     # Determine the directory with the service files
-    exectuable_directory = os.path.dirname(os.path.realpath(__file__))
-    source_directory = '{1}{0}systemd{0}system'.format(
-                os.sep,
-                os.path.abspath(os.path.join(exectuable_directory, os.pardir)))
+   # source_directory = '{1}{0}systemd{0}system'.format(
+       #         os.sep,
+           #     os.path.abspath(os.path.join(exec_dir, os.pardir)))
 
     # Get source and destination file paths
-    source_filepaths = _filepaths(source_directory)
+    source_filepaths = _filepaths(template_dir)
     for filepath in source_filepaths:
         src_dst[filepath] = '{}/{}'.format(
             target_directory, os.path.basename(filepath))
@@ -86,13 +69,14 @@ def _copy_service_files(target_directory):
 
     # Make systemd aware of the new services
     activation_command = 'systemctl daemon-reload'
-    call(activation_command.split())
+    if getpass.getuser() == 'root':
+        call(activation_command.split())
 
     # Return
     return destination_filepaths
 
 
-def _symlink_dir(directory):
+def symlink_dir(directory):
     """Get directory in which the symlinked files are located.
 
     Args:
@@ -104,7 +88,7 @@ def _symlink_dir(directory):
     """
     # Initialize key variables
     data_dictionary = {}
-
+    result = None
     # Get all the filenames in the directory
     filenames = _filepaths(directory)
 
@@ -122,16 +106,21 @@ def _symlink_dir(directory):
             continue
         result = os.path.dirname(str(key))
         break
+    # Die if there are no symlinks
+    if bool(result) is False:
+        shared.log(
+            'No symlinks found in the directory: "{}"'.format(directory))
     return result
 
 
 def update_environment_strings(
-        filepaths, config_dir, username, group):
+        filepaths, config_dir, pip_dir, username, group):
     """Update the environment variables in the filepaths files.
 
     Args:
         filepaths: List of filepaths
         config_dir: Directory where configurations will be stored
+        pip_dir: The directory where the pip packages will be installed
         username: Username to run daemon
         group: Group of user to run daemon
 
@@ -140,7 +129,8 @@ def update_environment_strings(
 
     """
     # Initialize key variables
-    env_path = '^Environment="PATTOO_CONFIGDIR=(.*?)"$'
+    env_config_path = '^Environment="PATTOO_CONFIGDIR=(.*?)"$'
+    env_pip_path = '^Environment="PYTHONPATH=(.*?)"$'
     env_user = '^User=(.*?)$'
     env_group = '^Group=(.*?)$'
     env_run = '^RuntimeDirectory=(.*?)$'
@@ -165,17 +155,22 @@ def update_environment_strings(
                 _line = _line.replace('INSTALLATION_DIRECTORY', install_dir)
 
                 # Test PATTOO_CONFIGDIR
-                if bool(re.search(env_path, line)) is True:
+                if bool(re.search(env_config_path, line)) is True:
                     _line = 'Environment="PATTOO_CONFIGDIR={}"'.format(
                         config_dir)
+
+                # Add Python path
+                if bool(re.search(env_pip_path, line)) is True:
+                    _line = 'Environment="PYTHONPATH={}"'.format(pip_dir)
 
                 # Add RuntimeDirectory and create
                 if bool(re.search(env_run, line)) is True:
                     (run_path,
-                     relative_run_path) = get_runtime_directory(config_dir)
+                     relative_run_path) = _get_runtime_directory(config_dir)
                     _line = 'RuntimeDirectory={}'.format(relative_run_path)
-                    os.makedirs(run_path, 0o750, exist_ok=True)
-                    shutil.chown(run_path, user=username, group=group)
+                    if getpass.getuser == 'root':
+                        os.makedirs(run_path, 0o750, exist_ok=True)
+                        shutil.chown(run_path, user=username, group=group)
 
                 # Add user
                 if bool(re.search(env_user, line)) is True:
@@ -193,7 +188,7 @@ def update_environment_strings(
             _fp.writelines('{}\n'.format(line) for line in lines)
 
 
-def get_runtime_directory(config_directory):
+def _get_runtime_directory(config_directory):
     """Get the RuntimeDirectory.
 
     Args:
@@ -204,7 +199,9 @@ def get_runtime_directory(config_directory):
 
     """
     result = None
-    filepath = '{}{}pattoo.yaml'.format(config_directory, os.sep)
+    filepath = os.path.join(config_directory, 'pattoo.yaml')
+    if os.path.isfile(filepath) is False:
+        shared.log('{} does not exist'.format(filepath))
     with open(filepath, 'r') as file_handle:
         yaml_from_file = file_handle.read()
     config = yaml.safe_load(yaml_from_file)
@@ -212,7 +209,7 @@ def get_runtime_directory(config_directory):
     if bool(pattoo) is True:
         result = pattoo.get('system_daemon_directory')
     if result is None:
-        log('''\
+        shared.log('''\
 "system_daemon_directory" parameter not found in the {} configuration file\
 '''.format(filepath))
     _result = result.replace('/var/run/', '')
@@ -233,23 +230,50 @@ def preflight(config_dir, etc_dir):
     """
     # Make sure config_dir exists
     if os.path.isdir(config_dir) is False:
-        log('''\
+        shared.log('''\
 Expected configuration directory "{}" does not exist.'''.format(config_dir))
 
     # Verify whether the script is being run by root or sudo user
     if bool(os.getuid()) is True:
-        log('This script must be run as the "root" user '
+        shared.log('This script must be run as the "root" user '
             'or with "sudo" privileges')
 
     # Check to see whether this is a systemd system
     try:
         check_output(['pidof', 'systemd'])
     except:
-        log('This is not a "systemd" system. This script should not be run.')
+        shared.log('This is not a "systemd" system. This script should not be run.')
 
     # Check existence of /etc/systemd/system/multi-user.target.wants directory
     if os.path.isdir(etc_dir) is False:
-        log('Expected systemd directory "{}" does not exist.'.format(etc_dir))
+        shared.log('Expected systemd directory "{}" does not exist.'.format(etc_dir))
+
+
+def _check_symlinks(etc_dir, daemons):
+    """Ensure the files in the etc dir are symlinks.
+
+    Args:
+        etc_dir: The directory that the symlinks are located in
+        symlink_dir: The directory that the symlinks point to
+        daemons: The list of system daemons
+
+    Returns:
+        None
+
+    """
+    for daemon in daemons:
+        # Initialize key variables
+        symlink_path = os.path.join(etc_dir, daemon)
+
+        # Say what we are doing
+        print('Checking if the {}.service file is a symlink '.format(daemon))
+        link = os.path.islink('{0}.service'.format(symlink_path))
+        if link is False:
+            if getpass.getuser() != 'root':
+                shared.log('Current user is not root')
+            print('Creating symlink for {}'.format(daemon))
+            # Create symlink if it doesn't exist
+            shared.run_script('systemctl enable {}'.format(daemon))
 
 
 def start_daemon(daemon_name):
@@ -268,11 +292,12 @@ def start_daemon(daemon_name):
     shared.run_script('systemctl start {}'.format(daemon_name))
 
 
-def install_daemons(daemon_list):
+def install_daemons(daemon_list, template_dir):
     """Installs and runs all daemons entered.
 
     Args:
         daemon_list: A list of the daemons to be run and installed
+        template_dir: The directory the tempalte files are located in
 
     Returns:
         None
@@ -281,21 +306,23 @@ def install_daemons(daemon_list):
     # Initialize key variables
     etc_dir = '/etc/systemd/system/multi-user.target.wants'
     config_dir = '/etc/pattoo'
+    pip_dir = '/opt/pattoo-daemon/.python'
 
     # Make sure this system supports systemd and that
     # the required directories exist
     preflight(config_dir, etc_dir)
 
     # Check symlink location of files in that directory
-    target_directory = _symlink_dir(etc_dir)
+    target_directory = symlink_dir(etc_dir)
 
     # Copy files
-    destination_filepaths = _copy_service_files(target_directory)
+    destination_filepaths = copy_service_files(target_directory, template_dir)
 
     # Update the environment strings
     update_environment_strings(
         destination_filepaths,
         config_dir,
+        pip_dir,
         'pattoo',
         'pattoo')
 
@@ -305,3 +332,6 @@ def install_daemons(daemon_list):
     # Loop through daemon list and start daemons
     for daemon in daemon_list:
         start_daemon(daemon)
+
+    # Check if symlinks got created
+    _check_symlinks(etc_dir, daemon_list)

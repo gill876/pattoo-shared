@@ -3,13 +3,14 @@
 import os
 import grp
 import pwd
+import getpass
 
 # Dependendices
 import yaml
 
 # Import project libraries
 from pattoo_shared import files, configuration, log
-import shared
+from pattoo_shared.installation import shared
 
 
 class Configure():
@@ -44,6 +45,30 @@ class Configure():
             'pattoo_web_api': {
                 'ip_address': '127.0.0.1',
                 'ip_bind_port': 20202,
+            }
+        }
+
+        self.default_server_config = {
+            'pattoo_db': {
+                'db_pool_size': 10,
+                'db_max_overflow': 20,
+                'db_hostname': 'localhost',
+                'db_username': 'pattoo',
+                'db_password': 'password',
+                'db_name': 'pattoo'
+            },
+            'pattoo_api_agentd': {
+                'ip_listen_address': '0.0.0.0',
+                'ip_bind_port': 20201,
+            },
+            'pattoo_apid': {
+                'ip_listen_address': '0.0.0.0',
+                'ip_bind_port': 20202,
+            },
+            'pattoo_ingesterd': {
+                'ingester_interval': 3600,
+                'batch_size': 500,
+                'graceful_timeout': 10
             }
         }
 
@@ -102,42 +127,30 @@ class Configure():
         except KeyError:
             return False
 
-    def initialize_ownership(self, user, group,  dir_path, verbose):
-        """Recursively change the ownership of the directory.
-
-        Args:
-            user: The name of the user
-            group: The name of the group
-            dir_name: The name of the directory
-            verbose: A boolean value that a allows the script to run in verbose
-            mode
-
-        Returns:
-            None
-        """
-        # Set ownership of file specified at dir_path
-        shared.run_script(
-            'chown -R {0}:{1} {2}'.format(user, group, dir_path), verbose)
-
-    def pattoo_config(self, config_directory, config_dict=None):
-        """Create pattoo.yaml file.
+    def pattoo_config(
+            self, config_directory, file_name, config_dict=None, server=False):
+        """Create configuration file.
 
         Args:
             config_directory: Configuration directory
-            config_dict: A dictionary containing the configuration values
+            config_dict: A dictionary containing the configuration values.
             by default its value is set to None.
+            server: A boolean value to allow for the pattoo.
+            server to be configured
 
         Returns:
             None
 
         """
         # Initialize key variables
-        filepath = '{}{}pattoo.yaml'.format(config_directory, os.sep)
-        config_obj = configuration.Config()
+        filepath = os.path.join(config_directory, file_name)
 
         # Set config_dict if None has been passed in
         if config_dict is None:
-            pattoo_config = self.default_config
+            if server is False:
+                pattoo_config = self.default_config
+            else:
+                pattoo_config = self.default_server_config
 
         # Say what we are doing
         print('\nConfiguring {} file.\n'.format(filepath))
@@ -145,21 +158,22 @@ class Configure():
         # Get configuration
         config = self.read_config(filepath, pattoo_config)
 
-        # Check validity of directories
-        for key, value in sorted(config['pattoo'].items()):
-            if 'directory' in key:
-                if os.sep not in value:
-                    log.log2die_safe(
-                        5101, '{} is an invalid directory'.format(value))
+        if server is False:
+            # Check validity of directories
+            for key, value in sorted(config['pattoo'].items()):
+                if 'directory' in key:
+                    if os.sep not in value:
+                        log.log2die_safe(
+                            5101, '{} is an invalid directory'.format(value))
 
-                # Attempt to create directory
-                full_directory = os.path.expanduser(value)
-                if os.path.isdir(full_directory) is False:
-                    files.mkdir(full_directory)
+                    # Attempt to create directory
+                    full_directory = os.path.expanduser(value)
+                    if os.path.isdir(full_directory) is False:
+                        files.mkdir(full_directory)
 
-                    # Recursively set file ownership to pattoo user and group
-                    config_obj.initialize_ownership(
-                            'pattoo', 'pattoo', full_directory)
+                        # Recursively set file ownership to pattoo user
+                        # and group
+                        shared.chown(full_directory)
 
         # Write file
         with open(filepath, 'w') as f_handle:
@@ -249,3 +263,43 @@ Section "{}" not found in configuration file {} in directory {}. Please fix.\
 
         # Print Status
         print('OK: Configuration parameter check passed.')
+
+    def run_configure(
+            self, pattoo_dict=None, server_dict=None, server_config=False):
+        """Start configuration process.
+
+        Args:
+            pattoo_dict: A dictionary containing the configuration values
+            server_dict: A dictionary containinng configuration for the server
+            server_config: A boolean value that enables the pattoo server to
+                            be configured
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        if os.environ.get('PATTOO_CONFIGDIR') is None:
+            os.environ['PATTOO_CONFIGDIR'] = '{0}etc{0}pattoo'.format(os.sep)
+        config_directory = os.environ.get('PATTOO_CONFIGDIR')
+
+        # Attempt to create configuration directory
+        files.mkdir(config_directory)
+
+        # Create the pattoo user and group
+        username = getpass.getuser()
+        if username == 'root':
+            self.create_user('pattoo', '/nonexistent', ' /bin/false', True)
+
+        # Attempt to change the ownership of the configuration directory
+        if username == 'root':
+            shared.chown(config_directory)
+
+        # Create configuration
+        self.pattoo_config(config_directory, pattoo_dict)
+
+        if server_config is True:
+            self.pattoo_server_config(
+                    config_directory, server_dict, server=True)
+        # Check configuration
+        self.check_config()
