@@ -39,7 +39,7 @@ class BaseConfig():
         """Initialize the class.
 
         Args:
-            filename: Name of file to read
+            None
 
         Returns:
             None
@@ -362,6 +362,48 @@ class Config(BaseConfig):
             result = int(intermediate)
         return result
 
+    def api_email_address(self):
+        """GET API email address from yaml file.
+
+        Args:
+            None
+
+        Returns:
+            email (str): Email address of API
+        """
+
+        # Initialize key variables
+        key = 'encryption'
+        sub_key = 'api_email'
+
+        # Get result
+        result = search(
+            key, sub_key, self._base_yaml_configuration, die=True)
+        if result is None:
+            result = 'pattoo_api@example.org'
+        return result
+
+    def agent_email_address(self):
+        """GET agent email address from yaml file.
+
+        Args:
+            None
+
+        Returns:
+            email (str): Email address of agent
+        """
+
+        # Initialize key variables
+        key = 'encryption'
+        sub_key = 'agent_email'
+
+        # Get result
+        result = search(
+            key, sub_key, self._base_yaml_configuration, die=True)
+        if result is None:
+            result = 'pattoo_agent@example.org'
+        return result
+
     def agent_api_uri(self):
         """Get agent_api_uri.
 
@@ -374,6 +416,44 @@ class Config(BaseConfig):
         """
         # Return
         result = '{}/receive'.format(PATTOO_API_AGENT_PREFIX)
+        return result
+
+    def agent_api_key(self):
+        """Get URL for key exchange.
+
+        Args:
+            None
+
+        Returns:
+            url (str): URL of the key exchange point
+        """
+        url = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
+        return url
+
+    def agent_api_validation(self):
+        """Get URL to validate encryption status.
+
+        Args:
+            None
+
+        Returns:
+            url (str): URL of the validation point
+        """
+        url = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
+        return url
+
+    def agent_api_encrypted(self):
+        """Get URL to receive encrypted data.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Return
+        result = '{}/encrypted'.format(PATTOO_API_AGENT_PREFIX)
         return result
 
     def agent_api_server_url(self, agent_id):
@@ -394,6 +474,69 @@ class Config(BaseConfig):
                 self.agent_api_ip_bind_port(),
                 self.agent_api_uri(), agent_id))
         return result
+
+    def agent_api_key_url(self):
+        """Exchange point for public keys.
+
+        Args:
+            None
+
+        Returns:
+            link (str): Link of the key exchange point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_key()
+                )
+            )
+
+        return link
+
+    def agent_api_validation_url(self):
+        """Validation point for encryption.
+
+        Args:
+            None
+
+        Returns:
+            link (str): Link of the validation point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_validation()
+                )
+            )
+
+        return link
+
+    def agent_api_encrypted_url(self):
+        """Encrypted data reception point.
+
+        Args:
+            None
+
+        Returns:
+            link (str): Link of encrypted data receive point
+        """
+
+        _ip = url.url_ip_address(self.agent_api_ip_address())
+        link = (
+            'http://{}:{}{}'.format(
+                _ip,
+                self.agent_api_ip_bind_port(),
+                self.agent_api_encrypted()
+                )
+            )
+
+        return link
 
     def web_api_ip_address(self):
         """Get web_api_ip_address.

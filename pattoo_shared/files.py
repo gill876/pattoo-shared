@@ -13,6 +13,7 @@ import yaml
 
 # Pattoo libraries
 from pattoo_shared import log, data
+from pattoo_shared import encrypt
 
 
 class _Directory():
@@ -72,6 +73,21 @@ class _Directory():
         """
         # Return
         value = '{}{}agent_id'.format(self._root, os.sep)
+        return value
+
+    def keyring(self):
+        """Define the hidden keyring directory.
+
+        Args:
+            None
+
+        Returns:
+            value (str): keyring directory
+
+        """
+        # Return
+        value = '{}{}keys{}{}'.format(self._root, os.sep, os.sep, '.gnupg')
+        mkdir(value)
         return value
 
 
@@ -320,7 +336,7 @@ Error reading file {}. Ignoring.'''.format(filepath))
         log_message = (
             'No valid JSON files found in directory "{}" with ".json" '
             'extension.'.format(_directory))
-        log.log2die_safe(1102, log_message)
+        log.log2die_safe(1060, log_message)
 
     # Return
     result.sort()
@@ -433,7 +449,6 @@ def agent_id_file(agent_name, config):
 
     Args:
         agent_name: Agent name
-        agent_hostname: Agent hostname
         config: Config object
 
 
@@ -452,7 +467,7 @@ def get_agent_id(agent_name, config):
 
     Args:
         agent_name: Agent name
-        agent_hostname: Agent hostname
+        config: Config object
 
     Returns:
         agent_id: UID for agent
@@ -473,6 +488,68 @@ def get_agent_id(agent_name, config):
 
     # Return
     return agent_id
+
+
+def set_gnupg(agent_name, config, agent_email):
+    """Generate key pair and store credentials
+
+    Args:
+        agent_name (str): Agent name
+        config (obj): Config object
+        agent_email (str): Agent email address
+
+    Returns:
+        gpg (obj): Pgpier object
+    """
+    # Uses agent name as wrapper
+    wrapper = '({})'.format(agent_name)
+
+    # Retrieves key directory
+    d_obj = _Directory(config)
+    key_dir = d_obj.keyring()
+
+    agent_comment = 'Key pair generated for {}'.format(agent_name)
+
+    gpg = encrypt.Pgpier(key_dir)
+    set_values = gpg.set_from_imp(wrapper)
+
+    if set_values is not True:
+        gpg.key_pair(agent_email, agent_name, agent_comment)
+        gpg.exp_main(wrapper)
+
+    gpg.set_keyid()
+    return gpg
+
+
+def get_gnupg(agent_name, config):
+    """Retrieve an already created Pgpier object based the key directory.
+
+    Args:
+        agent_name (str): Agent name
+        config (obj): Config object
+
+    Returns:
+        gpg (obj): Pgpier object if key pair was already generated
+                   for <agent_name>
+        None: If a key pair was not generated for <agent_name>
+    """
+
+    # Uses agent name as wrapper
+    wrapper = '({})'.format(agent_name)
+
+    # Retrieves key directory
+    d_obj = _Directory(config)
+    key_dir = d_obj.keyring()
+
+    gpg = encrypt.Pgpier(key_dir)
+    set_values = gpg.set_from_imp(wrapper)
+
+    # Checks if the Pgpier object of that specific agent was
+    # generated
+    if set_values is True:
+        return gpg
+    else:
+        return None
 
 
 def execute(command, die=True):

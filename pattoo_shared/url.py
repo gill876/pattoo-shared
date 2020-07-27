@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pattoo classes that manage various URL manipulations."""
 
-# Standard imports
+# Standard imports.
 import ipaddress
 
 
