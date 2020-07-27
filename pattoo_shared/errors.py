@@ -95,18 +95,26 @@ Minimum value {} is greater than {}. Please fix.\
     code_max = max(error_codes)
     if int(code_max) > maximum:
         log_message = ('''\
-Extremely large error code {} found. Must be less than {}. Please fix.\
+Extremely large error code {} found. Must be less than {}. Please fix.
 '''.format(code_max, maximum))
         print(log_message)
+
+        # Print line information
+        for item in status[code_max]:
+            print(item)
         sys.exit(2)
 
     # Determine whether codes are in range (MIN)
     code_min = min(error_codes)
     if int(code_min) < minimum:
         log_message = ('''\
-Extremely small error code {} found. Must be greater than {}. Please fix.\
+Extremely small error code {} found. Must be greater than {}. Please fix.
 '''.format(code_min, minimum))
         print(log_message)
+
+        # Print line information
+        for item in status[code_min]:
+            print(item)
         sys.exit(2)
 
     # Process error codes
