@@ -4,9 +4,6 @@ import os
 import getpass
 
 # Pattoo libraries
-
-
-sys.path.append(os.pardir)
 from pattoo_shared import files
 from pattoo_shared.installation import shared
 

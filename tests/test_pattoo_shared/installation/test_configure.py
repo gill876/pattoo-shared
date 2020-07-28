@@ -1,7 +1,6 @@
 #!/usr/bin/env/python3
 """Test pattoo configuration script."""
 
-from unittest.mock import patch
 import os
 import getpass
 import grp
