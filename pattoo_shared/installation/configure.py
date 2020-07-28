@@ -233,7 +233,7 @@ class Configure():
                 log_message = ('''\
 Configuration file's "{}" section does not have a "{}" sub-section. \
 Please fix.'''.format(primary, key))
-                log.log2die_safe(1057, log_message)
+                log.log2die_safe(1062, log_message)
 
     def check_config(self):
         """Ensure agent configuration exists.
