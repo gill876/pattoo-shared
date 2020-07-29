@@ -39,6 +39,7 @@ setuptools.setup(
 
     # Dependencies
     install_requires=[
-        'PyYaml'
+        'PyYaml',
+        'python-gnupg==0.4.6'
     ]
 )
