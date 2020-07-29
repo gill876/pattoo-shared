@@ -1,9 +1,10 @@
-# Main python libraries
+"""Functions for installing external packages."""
+# Standard imports
 import sys
 import os
 import getpass
 
-# Pattoo libraries
+# Import pattoo related libraries
 from pattoo_shared import files
 from pattoo_shared.installation import shared
 

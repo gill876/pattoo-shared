@@ -1,14 +1,14 @@
-"""Methods for configuring pattoo components"""
+"""Functions for configuring pattoo components"""
 # Standard imports
 import os
 import grp
 import pwd
 import getpass
 
-# Dependendices
+# Import dependendices
 import yaml
 
-# Import project libraries
+# Import pattoo related libraries
 from pattoo_shared import files, log
 from pattoo_shared.installation import shared
 
@@ -125,7 +125,7 @@ def check_config(config_file, config_dict):
     # Print Status
     print('??: Checking configuration parameters.')
 
-    # Check config
+    # Retrieve config dict
     config = files.read_yaml_file(config_file)
 
     # Check main keys
@@ -136,7 +136,7 @@ Section "{}" not found in configuration file {} in directory {}. Please fix.\
     '''.format(primary, config_file, config_directory))
             log.log2die_safe(1055, log_message)
 
-    # Check secondary keys
+    # Retrieve and check secondary keys
         secondary_list = config_dict.get(primary)
         secondary_key_check(config, primary, secondary_list)
 

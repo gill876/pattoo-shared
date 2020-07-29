@@ -1,4 +1,5 @@
-# Importing python packages
+"""Functions for configuring and installing system daemons"""
+# Standard imports
 from __future__ import print_function
 import os
 import shutil
@@ -8,7 +9,7 @@ from subprocess import check_output, call
 from pathlib import Path
 import yaml
 
-# Importing installation libraries
+# Import pattoo related libraries
 from pattoo_shared.installation import shared
 
 
