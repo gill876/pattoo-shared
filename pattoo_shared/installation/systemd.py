@@ -40,8 +40,8 @@ def copy_service_files(target_directory, template_dir):
     """Copy service files to target directory.
 
     Args:
-        target_directory: Target directory
-        exec_dir: The directory the script is being executed in
+        target_directory: Target directory the files are being copied to
+        template_dir: The directory that the service files are located in
 
     Returns:
         destination_filepaths: List of destination filepaths
