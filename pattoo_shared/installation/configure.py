@@ -9,7 +9,7 @@ import getpass
 import yaml
 
 # Import project libraries
-from pattoo_shared import files, configuration, log
+from pattoo_shared import files, log
 from pattoo_shared.installation import shared
 
 
