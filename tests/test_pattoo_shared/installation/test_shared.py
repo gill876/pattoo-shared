@@ -4,6 +4,9 @@
 import os
 import sys
 import unittest
+import tempfile
+from pwd import getpwuid
+
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -47,3 +50,11 @@ class Test_Shared(unittest.TestCase):
             expected = 0
             result = shared.run_script("echo this works")[0]
             self.assertEqual(result, expected)
+
+
+if __name__ == '__main__':
+    # Make sure the environment is OK to run unittests
+    UnittestConfig().create()
+
+    # Do the unit test
+    unittest.main()
