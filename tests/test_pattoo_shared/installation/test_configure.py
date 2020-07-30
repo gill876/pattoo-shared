@@ -245,25 +245,6 @@ pattoo_web_api:
     def test_check_config(self, mock_stdout):
         # Initialize key variables
         """Unittest to test the check_config function."""
-        config_dict = {
-            'pattoo': [
-                'log_directory',
-                'log_level',
-                'language',
-                'cache_directory',
-                'daemon_directory',
-                'system_daemon_directory'
-            ],
-            'pattoo_agent_api': [
-                'ip_address',
-                'ip_bind_port'
-            ],
-            'pattoo_web_api': [
-                'ip_address',
-                'ip_bind_port'
-            ]
-        }
-
         config = {
             'pattoo': {
                 'log_directory': self._log_directory,
@@ -299,7 +280,7 @@ OK: Configuration parameter check passed.
             configure.pattoo_config(temp_dir, config)
 
             # Run configuration
-            configure.check_config(config_file, config_dict)
+            configure.check_config(config_file, config)
             self.assertEqual(mock_stdout.getvalue(), expected)
 
 
