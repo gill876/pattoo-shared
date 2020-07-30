@@ -167,8 +167,9 @@ pattoo_ingesterd:
             file_path = os.path.join(temp_dir, "pattoo_server.yaml")
 
             # Create config file
-            configure.pattoo_config(
-                    temp_dir, self.default_server_config, server=True)
+            configure.pattoo_config('pattoo_server',
+                                    temp_dir,
+                                    self.default_server_config)
 
             with open(file_path, 'r') as temp_config:
 
@@ -199,7 +200,7 @@ pattoo_web_api:
             file_path = os.path.join(temp_dir, "pattoo.yaml")
 
             # Create config file
-            configure.pattoo_config(temp_dir, self.default_config)
+            configure.pattoo_config('pattoo', temp_dir, self.default_config)
 
             # Open config file for reading
             with open(file_path, 'r') as temp_config:
@@ -234,7 +235,7 @@ pattoo_web_api:
             file_path = os.path.join(temp_dir, "pattoo.yaml")
 
             # Create config file
-            configure.pattoo_config(temp_dir, expected)
+            configure.pattoo_config('pattoo', temp_dir, expected)
 
             # Retrieve config dict from yaml file
             result = configure.read_config(file_path, expected)
@@ -277,7 +278,7 @@ OK: Configuration parameter check passed.
 '''.format(config_file)
 
             # Create config file
-            configure.pattoo_config(temp_dir, config)
+            configure.pattoo_config('pattoo', temp_dir, config)
 
             # Run configuration
             configure.check_config(config_file, config)

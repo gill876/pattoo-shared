@@ -27,9 +27,8 @@ else:
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
-from pattoo_shared.installation.systemd import _filepaths, copy_service_files
+from pattoo_shared.installation.systemd import _filepaths
 from pattoo_shared.installation.systemd import _get_runtime_directory
-from pattoo_shared.installation.systemd import update_environment_strings
 from pattoo_shared.installation.systemd import symlink_dir, _check_symlinks
 
 

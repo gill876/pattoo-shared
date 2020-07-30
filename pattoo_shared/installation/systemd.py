@@ -272,6 +272,30 @@ def _check_symlinks(etc_dir, daemons):
             shared.run_script('systemctl enable {}'.format(daemon))
 
 
+def daemon_check(daemon_name):
+    """Check if daemon is enabled/running and stops it.
+
+    Args:
+        daemon_name: The system daemon being checked
+
+    Returns:
+        None
+
+    """
+    # Initialize key variables
+    command = '''\
+systemctl is-active {} daemon --quiet service-name'''.format(daemon_name)
+
+    # Check status code of daemon to see if its running
+    status = shared.run_script(command, die=False)[0]
+    if status == 0:
+        print('''
+{} daemon is already enabled/running, stopping daemon'''.format(daemon_name))
+
+        # Stop daemon if its running
+        shared.run_script('systemctl stop {}'.format(daemon_name))
+
+
 def start_daemon(daemon_name):
     """Enable and start respective pattoo daemons.
 
@@ -327,6 +351,7 @@ def install(daemon_list, template_dir):
 
     # Loop through daemon list and start daemons
     for daemon in daemon_list:
+        daemon_check(daemon)
         start_daemon(daemon)
 
     # Check if symlinks got created

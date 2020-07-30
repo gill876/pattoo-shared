@@ -164,24 +164,20 @@ def user_exists(user_name):
         return False
 
 
-def pattoo_config(config_directory, config_dict, server=False):
+def pattoo_config(file_name, config_directory, config_dict):
     """Create configuration file.
 
     Args:
-        config_directory: Configuration directory
+        file_name: Name of the configuration file without its file extension
+        config_directory: Full path to the configuration directory
         config_dict: A dictionary containing the configuration values.
-        server: A boolean value to allow for the pattoo
-        server to be configured
 
     Returns:
         The path to the configuration file
 
     """
     # Initialize key variables
-    if server is False:
-        config_file = os.path.join(config_directory, 'pattoo.yaml')
-    else:
-        config_file = os.path.join(config_directory, 'pattoo_server.yaml')
+    config_file = os.path.join(config_directory, '{}.yaml'.format(file_name))
 
     # Say what we are doing
     print('\nConfiguring {} file.\n'.format(config_file))
@@ -189,9 +185,12 @@ def pattoo_config(config_directory, config_dict, server=False):
     # Get configuration
     config = read_config(config_file, config_dict)
 
-    if server is False:
-        # Check validity of directories
-        for key, value in sorted(config['pattoo'].items()):
+    # Retrieve dictionary keys
+    keys = config.keys()
+
+    # Check validity of directories, if any
+    for primary_key in keys:
+        for key, value in sorted(config[primary_key].items()):
             if 'directory' in key:
                 if os.sep not in value:
                     log.log2die_safe(
