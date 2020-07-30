@@ -136,8 +136,10 @@ Section "{}" not found in configuration file {} in directory {}. Please fix.\
     '''.format(primary, config_file, config_directory))
             log.log2die_safe(1055, log_message)
 
-    # Retrieve and check secondary keys
-        secondary_list = config_dict.get(primary)
+        # Retrieve and check secondary keys
+        secondary_list = list(config_dict.get(primary).keys())
+
+        # Run secondary key check
         secondary_key_check(config, primary, secondary_list)
 
     # Print Status
@@ -172,7 +174,7 @@ def pattoo_config(config_directory, config_dict, server=False):
         server to be configured
 
     Returns:
-        None
+        The path to the configuration file
 
     """
     # Initialize key variables
@@ -200,10 +202,11 @@ def pattoo_config(config_directory, config_dict, server=False):
                 if os.path.isdir(full_directory) is False:
                     files.mkdir(full_directory)
 
-                    # Recursively set file ownership to pattoo user
-                    # and group
-                    shared.chown(full_directory)
+                # Recursively set file ownership to pattoo user and group
+                shared.chown(full_directory)
 
     # Write file
     with open(config_file, 'w') as f_handle:
         yaml.dump(config, f_handle, default_flow_style=False)
+
+    return config_file

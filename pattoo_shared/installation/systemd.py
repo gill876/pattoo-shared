@@ -288,7 +288,7 @@ def start_daemon(daemon_name):
     shared.run_script('systemctl start {}'.format(daemon_name))
 
 
-def install_daemons(daemon_list, template_dir):
+def install(daemon_list, template_dir):
     """Installs and runs all daemons entered.
 
     Args:
