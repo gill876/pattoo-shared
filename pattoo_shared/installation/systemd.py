@@ -110,7 +110,7 @@ def symlink_dir(directory):
 
 
 def update_environment_strings(
-        filepaths, config_dir, pip_dir, username, group):
+        filepaths, config_dir, pip_dir, install_dir, username, group):
     """Update the environment variables in the filepaths files.
 
     Args:
@@ -130,11 +130,6 @@ def update_environment_strings(
     env_user = '^User=(.*?)$'
     env_group = '^Group=(.*?)$'
     env_run = '^RuntimeDirectory=(.*?)$'
-
-    execution_dir = os.path.dirname(os.path.realpath(__file__))
-    install_dir = os.path.abspath(os.path.join(os.path.abspath(
-            os.path.join(
-                execution_dir, os.pardir)), os.pardir))
 
     # Do the needful
     for filepath in filepaths:
@@ -312,12 +307,14 @@ def start_daemon(daemon_name):
     shared.run_script('systemctl start {}'.format(daemon_name))
 
 
-def install(daemon_list, template_dir):
+def install(daemon_list, template_dir, installation_dir):
     """Installs and runs all daemons entered.
 
     Args:
         daemon_list: A list of the daemons to be run and installed
         template_dir: The directory the tempalte files are located in
+        installation_dir: The root directory of the pattoo related project
+        that the daemons will be running from
 
     Returns:
         None
@@ -343,6 +340,7 @@ def install(daemon_list, template_dir):
         destination_filepaths,
         config_dir,
         pip_dir,
+        installation_dir,
         'pattoo',
         'pattoo')
 
