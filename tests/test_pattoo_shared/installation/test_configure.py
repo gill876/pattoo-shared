@@ -284,6 +284,23 @@ OK: Configuration parameter check passed.
             configure.check_config(config_file, config)
             self.assertEqual(mock_stdout.getvalue(), expected)
 
+    def test_configure_component(self):
+        """Unittest to test the configure_component function."""
+        # Initialize key variables
+        test_name = str(os.urandom(5))
+        expected = {
+            'polling_interval': 300,
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(test_name))
+
+            # Create config file
+            configure.configure_component(test_name, temp_dir, expected)
+
+            # Retrieve config dict from yaml file
+            result = configure.read_config(file_path, expected)
+            self.assertEqual(result, expected)
+
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

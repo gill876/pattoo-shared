@@ -175,3 +175,24 @@ def pattoo_config(file_name, config_directory, config_dict):
         yaml.dump(config, f_handle, default_flow_style=False)
 
     return config_file
+
+
+def configure_component(component_name, config_dir, config_dict):
+    """Configure individual pattoo related components and check configuration.
+
+    Args:
+        component_name: The file name for the component being configured
+        config_dir: The directory with the configuration files
+        config_dict: A dictionary containing the configuration values
+
+    Returns:
+        None
+    """
+    # Create configuration
+    config_file = pattoo_config(
+                                component_name,
+                                config_dir,
+                                config_dict)
+
+    # Check if configuration is valid
+    check_config(config_file, config_dict)
