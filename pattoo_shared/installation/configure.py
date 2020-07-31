@@ -71,40 +71,15 @@ def read_config(filepath, default_config):
         config: Dict of configuration
 
     """
-    # Convert config to yaml
-    default_config_string = yaml.dump(default_config)
-
     # Read config
     if os.path.isfile(filepath) is True:
         with open(filepath, 'r') as f_handle:
-            yaml_string = (
-                '{}\n{}'.format(default_config_string, f_handle.read()))
+            yaml_string = f_handle.read()
             config = yaml.safe_load(yaml_string)
     else:
         config = default_config
 
     return config
-
-
-def secondary_key_check(config, primary, secondaries):
-    """Check secondary keys.
-
-    Args:
-        config: Configuration dict
-        primary: Primary key
-        secondaries: List of secondary keys
-
-    Returns:
-        None
-
-    """
-    # Check keys
-    for key in secondaries:
-        if key not in config[primary]:
-            log_message = ('''\
-Configuration file's "{}" section does not have a "{}" sub-section. \
-Please fix.'''.format(primary, key))
-            log.log2die_safe(1062, log_message)
 
 
 def check_config(config_file, config_dict):
@@ -135,12 +110,6 @@ def check_config(config_file, config_dict):
 Section "{}" not found in configuration file {} in directory {}. Please fix.\
     '''.format(primary, config_file, config_directory))
             log.log2die_safe(1055, log_message)
-
-        # Retrieve and check secondary keys
-        secondary_list = list(config_dict.get(primary).keys())
-
-        # Run secondary key check
-        secondary_key_check(config, primary, secondary_list)
 
     # Print Status
     print('OK: Configuration parameter check passed.')
@@ -185,25 +154,21 @@ def pattoo_config(file_name, config_directory, config_dict):
     # Get configuration
     config = read_config(config_file, config_dict)
 
-    # Retrieve dictionary keys
-    keys = config.keys()
-
     # Check validity of directories, if any
-    for primary_key in keys:
-        for key, value in sorted(config[primary_key].items()):
-            if 'directory' in key:
-                if os.sep not in value:
-                    log.log2die_safe(
-                        1019, '{} is an invalid directory'.format(value))
+    for key, value in sorted(config.items()):
+        if 'directory' in key:
+            if os.sep not in value:
+                log.log2die_safe(
+                    1019, '{} is an invalid directory'.format(value))
 
-                # Attempt to create directory
-                full_directory = os.path.expanduser(value)
-                if os.path.isdir(full_directory) is False:
-                    files.mkdir(full_directory)
+            # Attempt to create directory
+            full_directory = os.path.expanduser(value)
+            if os.path.isdir(full_directory) is False:
+                files.mkdir(full_directory)
 
-                # Recursively set file ownership to pattoo user and group
-                if getpass.getuser == 'root':
-                    shared.chown(full_directory)
+            # Recursively set file ownership to pattoo user and group
+            if getpass.getuser == 'root':
+                shared.chown(full_directory)
 
     # Write file
     with open(config_file, 'w') as f_handle:
