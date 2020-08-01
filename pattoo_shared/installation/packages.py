@@ -92,10 +92,8 @@ def install(requirements_dir, installation_directory=None, verbose=True):
         (returncode, _, _) = shared.run_script(
             command, verbose=verbose, die=False)
 
-        # Install any missing pip3 package
-        if bool(returncode) is True:
-            install_missing_pip3(
-                package, installation_directory, verbose=verbose)
+        # Install any pip3 package regardless of if its already installed
+        install_missing_pip3(package, installation_directory, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
