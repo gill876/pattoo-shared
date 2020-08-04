@@ -427,8 +427,8 @@ class Config(BaseConfig):
         Returns:
             url (str): URL of the key exchange point
         """
-        url = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
-        return url
+        url_ = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
+        return url_
 
     def agent_api_validation(self):
         """Get URL to validate encryption status.
@@ -439,8 +439,8 @@ class Config(BaseConfig):
         Returns:
             url (str): URL of the validation point
         """
-        url = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
-        return url
+        url_ = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
+        return url_
 
     def agent_api_encrypted(self):
         """Get URL to receive encrypted data.
@@ -483,6 +483,7 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of the key exchange point
+
         """
         # Initialize key variables
         _ip = url.url_ip_address(self.agent_api_ip_address())
@@ -504,6 +505,7 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of the validation point
+
         """
 
         _ip = url.url_ip_address(self.agent_api_ip_address())
@@ -525,6 +527,7 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of encrypted data receive point
+
         """
 
         _ip = url.url_ip_address(self.agent_api_ip_address())
