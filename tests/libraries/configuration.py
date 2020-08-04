@@ -50,18 +50,25 @@ class UnittestConfig():
                 'daemon_directory': self._daemon_directory,
                 'system_daemon_directory': self._system_daemon_directory,
             },
+            'encryption': {
+                'api_email': 'test_api@example.org',
+            }
+        }
+        self._agent_config = {
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.6',
                 'ip_bind_port': 50505,
             },
+
+            'encryption': {
+                'agent_email': 'test_agent@example.org'
+            }
+        }
+        self._web_config = {
             'pattoo_web_api': {
                 'ip_address': '127.0.0.3',
                 'ip_bind_port': 30303,
             },
-            'encryption': {
-                'api_email': 'test_api@example.org',
-                'agent_email': 'test_agent@example.org'
-            }
         }
 
     def create(self):
@@ -75,12 +82,23 @@ class UnittestConfig():
 
         """
         # Initialize key variables
-        config_file = '{}{}pattoo.yaml'.format(self._config_directory, os.sep)
+        base_config = '{}{}pattoo.yaml'.format(self._config_directory, os.sep)
 
-        # Write good_config to file
-        with open(config_file, 'w') as f_handle:
+        agent_config = '{}{}pattoo_agent.yaml'.format(
+                                            self._config_directory, os.sep)
+
+        web_config = '{}{}pattoo_webd.yaml'.format(
+                                            self._config_directory, os.sep)
+
+        # Write to config files to file
+        with open(base_config, 'w') as f_handle:
             yaml.dump(self._config, f_handle, default_flow_style=False)
 
+        with open(agent_config, 'w') as f_handle:
+            yaml.dump(self._agent_config, f_handle, default_flow_style=False)
+
+        with open(web_config, 'w') as f_handle:
+            yaml.dump(self._web_config, f_handle, default_flow_style=False)
         # Return
         return self._config_directory
 

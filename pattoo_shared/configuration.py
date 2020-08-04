@@ -318,6 +318,8 @@ class Config(BaseConfig):
         # Get the configuration
         BaseConfig.__init__(self)
 
+        self._agent_yaml_configuration = _config_reader('pattoo_agent.yaml')
+
     def agent_api_ip_address(self):
         """Get api_ip_address.
 
@@ -334,7 +336,7 @@ class Config(BaseConfig):
 
         # Get result
         result = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
+            key, sub_key, self._agent_yaml_configuration, die=False)
         if result is None:
             result = 'localhost'
         return result
@@ -355,7 +357,7 @@ class Config(BaseConfig):
 
         # Get result
         intermediate = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
+            key, sub_key, self._agent_yaml_configuration, die=False)
         if intermediate is None:
             result = 20201
         else:
@@ -371,7 +373,6 @@ class Config(BaseConfig):
         Returns:
             email (str): Email address of API
         """
-
         # Initialize key variables
         key = 'encryption'
         sub_key = 'api_email'
@@ -392,14 +393,13 @@ class Config(BaseConfig):
         Returns:
             email (str): Email address of agent
         """
-
         # Initialize key variables
         key = 'encryption'
         sub_key = 'agent_email'
 
         # Get result
         result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
+            key, sub_key, self._agent_yaml_configuration, die=True)
         if result is None:
             result = 'pattoo_agent@example.org'
         return result
@@ -484,7 +484,7 @@ class Config(BaseConfig):
         Returns:
             link (str): Link of the key exchange point
         """
-
+        # Initialize key variables
         _ip = url.url_ip_address(self.agent_api_ip_address())
         link = (
             'http://{}:{}{}'.format(
@@ -538,6 +538,24 @@ class Config(BaseConfig):
 
         return link
 
+
+class WebConfig(BaseConfig):
+    """Class gathers all configuration information relating to pattoo web."""
+
+    def __init__(self):
+        """Initialize the class.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Get the configuration
+        BaseConfig.__init__(self)
+        self._web_yaml_configuration = _config_reader('pattoo_webd.yaml')
+
     def web_api_ip_address(self):
         """Get web_api_ip_address.
 
@@ -554,7 +572,7 @@ class Config(BaseConfig):
 
         # Get result
         result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
+            key, sub_key, self._web_yaml_configuration, die=True)
         return result
 
     def web_api_ip_bind_port(self):
@@ -573,7 +591,7 @@ class Config(BaseConfig):
 
         # Get result
         intermediate = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
+            key, sub_key, self._web_yaml_configuration, die=False)
         if intermediate is None:
             result = 20202
         else:
@@ -696,7 +714,8 @@ def search(key, sub_key, config_dict, die=True):
     # Error if not configured
     if result is None and die is True:
         log_message = (
-            '{}:{} not defined in configuration'.format(key, sub_key))
+            '{}:{} not defined in configuration dict {}'.format(
+                                                    key, sub_key, config_dict))
         log.log2die_safe(1016, log_message)
 
     # Return

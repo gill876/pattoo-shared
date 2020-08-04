@@ -9,7 +9,7 @@ from pattoo_shared import files
 from pattoo_shared.installation import shared
 
 
-def install_missing_pip3(package, pip_dir, verbose=True):
+def install_missing_pip3(package, pip_dir, verbose=False):
     """Automatically Install missing pip3 packages.
 
     Args:
