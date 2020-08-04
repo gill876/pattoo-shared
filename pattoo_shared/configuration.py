@@ -377,7 +377,7 @@ class Config(BaseConfig):
         key = 'encryption'
         sub_key = 'api_email'
 
-        # Get result
+        # Get result - This will be placed in the pattoo.yaml file
         result = search(
             key, sub_key, self._base_yaml_configuration, die=True)
         if result is None:
@@ -397,7 +397,7 @@ class Config(BaseConfig):
         key = 'encryption'
         sub_key = 'agent_email'
 
-        # Get result
+        # Get result - This will be placed in the pattoo_agent.yaml file
         result = search(
             key, sub_key, self._agent_yaml_configuration, die=True)
         if result is None:
@@ -540,7 +540,10 @@ class Config(BaseConfig):
 
 
 class WebConfig(BaseConfig):
-    """Class gathers all configuration information relating to pattoo web."""
+    """Class gathers all configuration information relating to pattoo web.
+
+    The configuration values for this class will be written to pattoo_webd.yaml
+    """
 
     def __init__(self):
         """Initialize the class.
