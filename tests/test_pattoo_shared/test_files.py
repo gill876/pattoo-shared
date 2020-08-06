@@ -359,6 +359,17 @@ class Test_Directory(unittest.TestCase):
         result = directory.keyring()
         self.assertEqual(result, expected)
 
+    def test_session_cache_directory(self):
+        """Test function session_cache_directory"""
+        # Test
+        directory = files._Directory(self.config)
+
+        dir_name = 'session_cache'
+        expected = '{}/{}'.format(
+            self.config.cache_directory(), dir_name)
+        result = directory.session_cache_directory()
+        self.assertEqual(result, expected)
+
 
 class Test_File(unittest.TestCase):
     """Checks all functions and methods."""
