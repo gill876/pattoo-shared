@@ -24,39 +24,36 @@ else:
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
-from pattoo_shared.installation import shared
+from pattoo_shared.installation import shared, environment
 from pattoo_shared.installation.packages import install, install_missing_pip3
 
 
 class Test_Packages(unittest.TestCase):
     """Checks all functions for the Pattoo packages script."""
 
+    @classmethod
+    def setUpClass(cls):
+        """Declare class attributes for Unittesting."""
+        cls.venv_dir = tempfile.mkdtemp()
+        environment.environment_setup(cls.venv_dir)
+
     def test_install_missing_pip3(self):
-        """Unittest to test the install_missing_pip3 function."""
-        # Initialize key variables
-        expected = True
+        """Unittest to test the install_missing_pip3 function."""            
+        # Attempt to install a test package
+        install_missing_pip3('tweepy', verbose=False)
 
-        # Create temporary directory to install packages
-        with tempfile.TemporaryDirectory() as temp_dir:
-            # Attempt to install a test package
-            install_missing_pip3('pandas', temp_dir, verbose=False)
-
-            # Append temporary directory to python path
-            sys.path.append(temp_dir)
-
-            # Try except to determine if package was installed
-            try:
-                import pandas
-                result = True
-            except ModuleNotFoundError:
-                result = False
-            self.assertEqual(result, expected)
+        # Try except to determine if package was installed
+        try:
+            import tweepy
+            result = True
+        except ModuleNotFoundError:
+            result = False
+        self.assertTrue(result)
 
         # Test case that would cause the install_missing_pip3 function to fail
-        with tempfile.TemporaryDirectory() as temp_dir:
-            with self.assertRaises(SystemExit) as cm_:
-                install_missing_pip3('This does not exist', temp_dir, False)
-            self.assertEqual(cm_.exception.code, 2)
+        with self.assertRaises(SystemExit) as cm_:
+            install_missing_pip3('This does not exist', False)
+        self.assertEqual(cm_.exception.code, 2)
 
     def test_install(self):
         """Unittest to test the install function."""
@@ -64,27 +61,26 @@ class Test_Packages(unittest.TestCase):
         with self.subTest():
             with self.assertRaises(SystemExit) as cm_:
                 requirements_dir = data.hashstring(str(random()))
-                install(requirements_dir)
+                install(requirements_dir, self.venv_dir)
             self.assertEqual(cm_.exception.code, 3)
 
         # Test with default expected behaviour
         with self.subTest():
             # At least one expected package
-            expected_package = 'PattooShared'
+            expected_package = 'Flask'
             expected = True
 
             # Create temporary directory
-            with tempfile.TemporaryDirectory() as temp_dir:
-                result = install(ROOT_DIR, temp_dir)
+            result = install(ROOT_DIR, self.venv_dir)
 
-                # Get raw packages in requirements format
-                packages = shared.run_script('python3 -m pip freeze')[1]
+            # Get raw packages in requirements format
+            packages = shared.run_script('python3 -m pip freeze')[1]
 
-                # Get packages with versions removed
-                installed_packages = [package.decode().split('==')[
-                        0] for package in packages.split()]
-                result = expected_package in installed_packages
-                self.assertEqual(result, expected)
+            # Get packages with versions removed
+            installed_packages = [package.decode().split('==')[
+                    0] for package in packages.split()]
+            result = expected_package in installed_packages
+            self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':

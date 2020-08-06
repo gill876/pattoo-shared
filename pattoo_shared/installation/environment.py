@@ -1,5 +1,6 @@
 """Functions for setting up a virtual environment for the installation."""
 import os
+import getpass
 from pattoo_shared.installation import shared
 
 
@@ -19,7 +20,8 @@ def make_venv(file_path):
     shared.run_script(command)
     print('OK: Virtual environment created')
     # Ensure venv is owned by pattoo
-    shared.run_script('chown -R pattoo:pattoo {}'.format(file_path))
+    if getpass.getuser() == 'root':
+        shared.run_script('chown -R pattoo:pattoo {}'.format(file_path))
 
 
 def add_shebang(file_path, shebang):
