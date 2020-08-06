@@ -87,9 +87,6 @@ class UnittestConfig():
         agent_config = '{}{}pattoo_agent.yaml'.format(
                                             self._config_directory, os.sep)
 
-        web_config = '{}{}pattoo_webd.yaml'.format(
-                                            self._config_directory, os.sep)
-
         # Write to config files to file
         with open(base_config, 'w') as f_handle:
             yaml.dump(self._config, f_handle, default_flow_style=False)
@@ -97,8 +94,6 @@ class UnittestConfig():
         with open(agent_config, 'w') as f_handle:
             yaml.dump(self._agent_config, f_handle, default_flow_style=False)
 
-        with open(web_config, 'w') as f_handle:
-            yaml.dump(self._web_config, f_handle, default_flow_style=False)
         # Return
         return self._config_directory
 

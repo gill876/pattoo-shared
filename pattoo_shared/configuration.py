@@ -9,7 +9,7 @@ from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared import url
 from pattoo_shared.constants import (
-    PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
+    PATTOO_API_AGENT_PREFIX)
 from pattoo_shared.variables import PollingPoint
 
 
@@ -540,95 +540,6 @@ class Config(BaseConfig):
             )
 
         return link
-
-
-class WebConfig(BaseConfig):
-    """Class gathers all configuration information relating to pattoo web.
-
-    The configuration values for this class will be written to pattoo_webd.yaml
-    """
-
-    def __init__(self):
-        """Initialize the class.
-
-        Args:
-            None
-
-        Returns:
-            None
-
-        """
-        # Get the configuration
-        BaseConfig.__init__(self)
-        self._web_yaml_configuration = _config_reader('pattoo_webd.yaml')
-
-    def web_api_ip_address(self):
-        """Get web_api_ip_address.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Initialize key variables
-        key = 'pattoo_web_api'
-        sub_key = 'ip_address'
-
-        # Get result
-        result = search(
-            key, sub_key, self._web_yaml_configuration, die=True)
-        return result
-
-    def web_api_ip_bind_port(self):
-        """Get web_api_ip_bind_port.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Initialize key variables
-        key = 'pattoo_web_api'
-        sub_key = 'ip_bind_port'
-
-        # Get result
-        intermediate = search(
-            key, sub_key, self._web_yaml_configuration, die=False)
-        if intermediate is None:
-            result = 20202
-        else:
-            result = int(intermediate)
-        return result
-
-    def web_api_server_url(self, graphql=True):
-        """Get pattoo server's remote URL.
-
-        Args:
-            agent_id: Agent ID
-
-        Returns:
-            result: URL.
-
-        """
-        # Create the suffix
-        if bool(graphql) is True:
-            suffix = '/graphql'
-        else:
-            suffix = '/rest/data'
-
-        # Return
-        _ip = url.url_ip_address(self.web_api_ip_address())
-        result = (
-            'http://{}:{}{}{}'.format(
-                _ip,
-                self.web_api_ip_bind_port(),
-                PATTOO_API_WEB_PREFIX, suffix))
-        return result
-
 
 def agent_config_filename(agent_program):
     """Get the configuration file name.
