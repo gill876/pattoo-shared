@@ -6,6 +6,7 @@ import hashlib
 import os
 import random
 import string
+import stat
 
 
 class Pgpier:
@@ -214,6 +215,10 @@ class Pgpier:
                                 .format(_filename, _wrapper)))
         with open('{}'.format(_file), '{}'.format('w')) as f:
             f.write(_contents)
+        
+        # Change filemode to 600
+        # Only allow the user to access exported passphrase
+        os.chmod(_file, stat.S_IRUSR | stat.S_IWUSR)
 
     def imp_main(self, _wrapper='(main)'):
         """Import pertinent information.
