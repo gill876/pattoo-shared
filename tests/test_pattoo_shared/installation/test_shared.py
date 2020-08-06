@@ -25,7 +25,7 @@ else:
 
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
-from pattoo_shared.installation import shared, environment
+from pattoo_shared.installation import shared
 
 
 class Test_Shared(unittest.TestCase):
