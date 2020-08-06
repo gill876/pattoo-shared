@@ -582,6 +582,25 @@ def get_gnupg(agent_name, config):
         return None
 
 
+def get_session_cache_dir(config):
+    """Get Flask-Session cache directory
+
+    Args:
+        config (obj): Config object
+
+    Returns:
+        cache_dir (str): Path to Flask-Session cache directory
+
+    """
+
+    # Get directory
+    directory = _Directory(config)
+    cache_dir = directory.session_cache_directory()
+
+    # Return directory
+    return cache_dir
+
+
 def execute(command, die=True):
     """Run the command UNIX CLI command and record output.
 
