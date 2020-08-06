@@ -5,6 +5,7 @@ import os
 import time
 import sys
 import json
+import stat
 from random import random
 import subprocess
 
@@ -88,6 +89,10 @@ class _Directory():
         # Return
         value = '{}{}keys{}{}'.format(self._root, os.sep, os.sep, '.gnupg')
         mkdir(value)
+
+        # Change filemode to 700
+        # Only allow the user to access the Pgpier folder
+        os.chmod(value, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         return value
 
 
