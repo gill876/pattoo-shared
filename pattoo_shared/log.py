@@ -26,11 +26,7 @@ def check_environment():
     """
     # Get environment
     if 'PATTOO_CONFIGDIR' not in os.environ:
-        log_message = (
-            'Environment variable $PATTOO_CONFIGDIR needs '
-            'to be set to the pattoo configuration directory.')
-        # Must print statement as logging requires a config directory
-        log2die_safe(1019, log_message)
+        os.environ['PATTOO_CONFIGDIR'] = '/etc/pattoo'
 
     # Verify configuration directory
     config_directory = os.environ['PATTOO_CONFIGDIR']
