@@ -22,7 +22,7 @@ def install_missing_pip3(package, verbose=False):
 python3 -m pip install {0} -U --force-reinstall'''.format(package), verbose=verbose)
 
 
-def install(requirements_dir, installation_directory, verbose=True):
+def install(requirements_dir, installation_directory, verbose=False):
     """Ensure PIP3 packages are installed correctly.
 
     Args:

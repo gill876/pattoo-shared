@@ -28,7 +28,7 @@ from pattoo_shared.installation import shared, environment
 from pattoo_shared.installation.packages import install, install_missing_pip3
 
 
-class Test_Packages(unittest.TestCase):
+class TestPackages(unittest.TestCase):
     """Checks all functions for the Pattoo packages script."""
 
     @classmethod
@@ -38,7 +38,7 @@ class Test_Packages(unittest.TestCase):
         environment.environment_setup(cls.venv_dir)
 
     def test_install_missing_pip3(self):
-        """Unittest to test the install_missing_pip3 function."""            
+        """Unittest to test the install_missing_pip3 function."""           
         # Attempt to install a test package
         install_missing_pip3('tweepy', verbose=False)
 
