@@ -11,7 +11,7 @@ def make_venv(file_path):
         file_path: The path to the virtual environment
 
     Returns:
-
+        None
     """
     # Say what we're doing
     print('??: Create virtual environment')
