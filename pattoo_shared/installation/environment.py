@@ -1,7 +1,7 @@
 """Functions for setting up a virtual environment for the installation."""
 import os
 import getpass
-from pattoo_shared.installation import shared
+from pattoo_shared.installation import shared, configure
 
 
 def make_venv(file_path):
@@ -18,9 +18,10 @@ def make_venv(file_path):
     command = 'python3 -m virtualenv {}'.format(file_path)
     shared.run_script(command)
     print('OK: Virtual environment created')
-    # Ensure venv is owned by pattoo
-    if getpass.getuser() == 'root':
-        shared.run_script('chown -R pattoo:pattoo {}'.format(file_path))
+    # Ensure venv is owned by pattoo if the pattoo user exists
+    if configure.user_exists('pattoo') and configure.group_exists('pattoo'):
+        if getpass.getuser() == 'root':
+            shared.run_script('chown -R pattoo:pattoo {}'.format(file_path))
 
 
 def activate_venv(activation_path):
