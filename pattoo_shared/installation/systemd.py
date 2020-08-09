@@ -267,11 +267,12 @@ def _check_symlinks(etc_dir, daemons):
             shared.run_script('systemctl enable {}'.format(daemon))
 
 
-def daemon_check(daemon_name):
+def daemon_check(daemon_name, verbose=False):
     """Check if daemon is enabled/running and stops it.
 
     Args:
         daemon_name: The system daemon being checked
+        verbose: A boolean value to toggle verbose output
 
     Returns:
         None
@@ -282,32 +283,34 @@ def daemon_check(daemon_name):
 systemctl is-active {} daemon --quiet service-name'''.format(daemon_name)
 
     # Check status code of daemon to see if its running
-    status = shared.run_script(command, die=False)[0]
+    status = shared.run_script(command, die=False, verbose=verbose)[0]
     if status == 0:
         print('''
 {} daemon is already enabled/running, stopping daemon'''.format(daemon_name))
 
         # Stop daemon if its running
-        shared.run_script('systemctl stop {}'.format(daemon_name))
+        shared.run_script('systemctl stop {}'.format(daemon_name),
+                          verbose=verbose)
 
 
-def start_daemon(daemon_name):
+def start_daemon(daemon_name, verbose=False):
     """Enable and start respective pattoo daemons.
 
     Args:
         daemon_name: The name of the daemon being started
+        verbose: A boolean value to toggle verbose output
 
     Returns:
         None
 
     """
     # Enable daemon
-    shared.run_script('systemctl enable {}'.format(daemon_name))
+    shared.run_script('systemctl enable {}'.format(daemon_name), verbose=verbose)
     # Start daemon
-    shared.run_script('systemctl start {}'.format(daemon_name))
+    shared.run_script('systemctl start {}'.format(daemon_name), verbose=verbose)
 
 
-def install(daemon_list, template_dir, installation_dir):
+def install(daemon_list, template_dir, installation_dir, verbose=False):
     """Installs and runs all daemons entered.
 
     Args:
@@ -315,6 +318,7 @@ def install(daemon_list, template_dir, installation_dir):
         template_dir: The directory the tempalte files are located in
         installation_dir: The root directory of the pattoo related project
         that the daemons will be running from
+        verbose: A boolean value to toggle verbose output
 
     Returns:
         None
@@ -345,7 +349,7 @@ def install(daemon_list, template_dir, installation_dir):
         'pattoo')
 
     # Perform daemon reload
-    shared.run_script('systemctl daemon-reload')
+    shared.run_script('systemctl daemon-reload', verbose=verbose)
 
     # Loop through daemon list and start daemons
     for daemon in daemon_list:
