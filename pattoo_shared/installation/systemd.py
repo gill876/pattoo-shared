@@ -345,7 +345,6 @@ def install(daemon_list, template_dir, installation_dir, verbose=False):
     # Initialize key variables
     etc_dir = '/etc/systemd/system/multi-user.target.wants'
     config_dir = '/etc/pattoo'
-    pip_dir = '/opt/pattoo-daemon/.python'
 
     # Make sure this system supports systemd and that
     # the required directories exist
@@ -361,7 +360,6 @@ def install(daemon_list, template_dir, installation_dir, verbose=False):
     update_environment_strings(
         destination_filepaths,
         config_dir,
-        pip_dir,
         installation_dir,
         'pattoo',
         'pattoo')

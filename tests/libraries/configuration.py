@@ -86,7 +86,7 @@ class UnittestConfig():
             f_handle = open(base_config, 'w')
         except PermissionError:
             log.log2die(1019, '''\
-Insufficient permissions for creating the file:{}'''.format(base_config))
+Insufficient permissions for creating the file:{}'''.format(f_handle))
         else:
             with f_handle:
                 yaml.dump(self._config, f_handle, default_flow_style=False)
@@ -96,7 +96,7 @@ Insufficient permissions for creating the file:{}'''.format(base_config))
             f_handle = open(agent_config, 'w')
         except PermissionError:
             log.log2die(1062, '''\
-Insufficient permissions for creating the file:{}'''.format(agent_config))
+Insufficient permissions for creating the file:{}'''.format(f_handle))
         else:
             with f_handle:
                 yaml.dump(self._agent_config, f_handle, default_flow_style=False)
