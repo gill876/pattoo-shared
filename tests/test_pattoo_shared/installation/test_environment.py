@@ -24,6 +24,19 @@ from tests.libraries.configuration import UnittestConfig
 from pattoo_shared.installation import environment, packages, shared
 
 
+def pip_helper(package):
+    """Retrieve pip package without version.
+
+    Args:
+        package: The pip package parsed from the pip requirements file
+
+    Returns:
+        The package with its version removed
+
+    """
+    return package.decode().split('==')[0]
+
+
 class TestEnvironment(unittest.TestCase):
     """Checks all functions for the Pattoo environment script."""
 
@@ -31,12 +44,9 @@ class TestEnvironment(unittest.TestCase):
     def setUpClass(cls):
         """Declare class attributes for Unittesting."""
         cls.venv_dir = tempfile.mkdtemp()
-        cls.venv_dir2 = tempfile.mkdtemp()
-        cls.venv_dir3 = tempfile.mkdtemp()
 
     # test_environment_setup tests both make_venv and activate_venv
     # by creating and activating the venv
-
     def test_make_venv(self):
         """Unittest to test the make_venv function."""
         pass
@@ -48,15 +58,15 @@ class TestEnvironment(unittest.TestCase):
     def test_environment_setup(self):
         """Unittest to test the environment_setup function."""
         # Set up venv
-        environment.environment_setup(self.venv_dir3)
+        environment.environment_setup(self.venv_dir)
 
         # Ensure that there are no packages
         with self.subTest():
             pip_packages = shared.run_script('python3 -m pip freeze')[1]
 
             # Retrieve packages without version
-            installed_packages = [package.decode().split('==')[
-                                    0] for package in pip_packages.split()]
+            installed_packages = [
+                pip_helper(package) for package in pip_packages.split()]
             result = installed_packages == []
             self.assertTrue(result)
 
@@ -66,8 +76,8 @@ class TestEnvironment(unittest.TestCase):
             pip_packages = shared.run_script('python3 -m pip freeze')[1]
 
             # Retrieve packages without version
-            installed_packages = [package.decode().split('==')[
-                                    0] for package in pip_packages.split()]
+            installed_packages = [
+                pip_helper(package) for package in pip_packages.split()]
             result = 'matplotlib' in installed_packages
             self.assertTrue(result)
 
