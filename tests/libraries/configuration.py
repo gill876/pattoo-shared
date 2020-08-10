@@ -50,16 +50,17 @@ class UnittestConfig():
                 'daemon_directory': self._daemon_directory,
                 'system_daemon_directory': self._system_daemon_directory,
             },
+            'encryption': {
+                'api_email': 'test_api@example.org',
+            }
+        }
+        self._agent_config = {
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.6',
                 'ip_bind_port': 50505,
             },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.3',
-                'ip_bind_port': 30303,
-            },
+
             'encryption': {
-                'api_email': 'test_api@example.org',
                 'agent_email': 'test_agent@example.org'
             }
         }
@@ -75,11 +76,30 @@ class UnittestConfig():
 
         """
         # Initialize key variables
-        config_file = '{}{}pattoo.yaml'.format(self._config_directory, os.sep)
+        base_config = '{}{}pattoo.yaml'.format(self._config_directory, os.sep)
 
-        # Write good_config to file
-        with open(config_file, 'w') as f_handle:
-            yaml.dump(self._config, f_handle, default_flow_style=False)
+        agent_config = '{}{}pattoo_agent.yaml'.format(
+                                            self._config_directory, os.sep)
+
+        # Write to pattoo.yaml
+        try:
+            f_handle = open(base_config, 'w')
+        except PermissionError:
+            log.log2die(1019, '''\
+Insufficient permissions for creating the file:{}'''.format(f_handle))
+        else:
+            with f_handle:
+                yaml.dump(self._config, f_handle, default_flow_style=False)
+
+        # Write to pattoo_agent.yaml
+        try:
+            f_handle = open(agent_config, 'w')
+        except PermissionError:
+            log.log2die(1062, '''\
+Insufficient permissions for creating the file:{}'''.format(f_handle))
+        else:
+            with f_handle:
+                yaml.dump(self._agent_config, f_handle, default_flow_style=False)
 
         # Return
         return self._config_directory
