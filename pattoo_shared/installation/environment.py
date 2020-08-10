@@ -2,6 +2,7 @@
 import os
 import getpass
 from pattoo_shared.installation import shared, configure
+from pattoo_shared import log
 
 
 def make_venv(file_path):
@@ -35,9 +36,21 @@ def activate_venv(activation_path):
 
     """
     # Open activte_this.py for reading
-    with open(activation_path) as f:
-        code = compile(f.read(), activation_path, 'exec')
-        exec(code, dict(__file__=activation_path))
+    try:
+        f_handle = open(activation_path)
+    except PermissionError:
+        log.log2die_safe(1061, '''\
+Insufficient permissions on file: {}. Ensure the directory has the necessary \
+read-write permissions'''.format(activation_path))
+    except FileNotFoundError:
+        log.log2die_safe(1074, '''\
+activate_this.py for the venv has not been created at {} with virtualenv. \
+Ensure that its created using the module "virtualenv"
+'''.format(activation_path))
+    else:
+        with f_handle:
+            code = compile(f_handle.read(), activation_path, 'exec')
+            exec(code, dict(__file__=activation_path))
 
 
 def environment_setup(file_path):

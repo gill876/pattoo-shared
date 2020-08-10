@@ -64,12 +64,6 @@ class UnittestConfig():
                 'agent_email': 'test_agent@example.org'
             }
         }
-        self._web_config = {
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.3',
-                'ip_bind_port': 30303,
-            },
-        }
 
     def create(self):
         """Create a good config and set the PATTOO_CONFIGDIR variable.
@@ -87,12 +81,25 @@ class UnittestConfig():
         agent_config = '{}{}pattoo_agent.yaml'.format(
                                             self._config_directory, os.sep)
 
-        # Write to config files to file
-        with open(base_config, 'w') as f_handle:
-            yaml.dump(self._config, f_handle, default_flow_style=False)
+        # Write to pattoo.yaml
+        try:
+            f_handle = open(base_config, 'w')
+        except PermissionError:
+            log.log2die(1019, '''\
+Insufficient permissions for creating the file:{}'''.format(base_config))
+        else:
+            with f_handle:
+                yaml.dump(self._config, f_handle, default_flow_style=False)
 
-        with open(agent_config, 'w') as f_handle:
-            yaml.dump(self._agent_config, f_handle, default_flow_style=False)
+        # Write to pattoo_agent.yaml
+        try:
+            f_handle = open(agent_config, 'w')
+        except PermissionError:
+            log.log2die(1062, '''\
+Insufficient permissions for creating the file:{}'''.format(agent_config))
+        else:
+            with f_handle:
+                yaml.dump(self._agent_config, f_handle, default_flow_style=False)
 
         # Return
         return self._config_directory

@@ -5,6 +5,7 @@ import getpass
 
 # Import pattoo related libraries
 from pattoo_shared.installation import shared
+from pattoo_shared import log
 
 
 def install_missing_pip3(package, verbose=False):
@@ -46,7 +47,13 @@ def install(requirements_dir, installation_directory, verbose=False):
         shared.log('Cannot find PIP3 requirements file {}'.format(filepath))
 
     # Opens pip_requirements file for reading
-    with open(filepath, 'r') as _fp:
+    try:
+        _fp = open(filepath, 'r')
+    except PermissionError:
+        log.log2die_safe(1079, '''\
+Insufficient permissions for reading the file: {}. \
+Ensure the file has read-write permissions and try again'''.format(filepath))
+    else:
         line = _fp.readline()
         while line:
             # Strip line
