@@ -334,16 +334,6 @@ class AgentAPI(Agent):
             ip_bind_port=_config.ip_bind_port(),
             ip_listen_address=_config.ip_listen_address())
 
-        # Add email address to Agent subclass
-        econfig = Config()
-        email_addr = econfig.api_email_address()
-        self.set_email(email_addr)
-        # Email address must be same in the created Pgpier
-        # object for the API as the one in the yaml file
-        # or else an error might be encounter. To use a
-        # different email address, delete the contents of the
-        # key folder
-
     def query(self):
         """Query all remote targets for data.
 
@@ -402,6 +392,27 @@ fix.'''.format(self.pidfile_parent))
 
         # Run
         _StandaloneApplication(self._app, self.parent, options=options).run()
+
+    def set_api_email(self):
+        """Set email address for API to support encryption
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+
+        # Add email address to Agent subclass
+        econfig = Config()
+        email_addr = econfig.api_email_address()
+        self.set_email(email_addr)
+        # Email address must be same in the created Pgpier
+        # object for the API as the one in the yaml file
+        # or else an error might be encounter. To use a
+        # different email address, delete the contents of the
+        # key folder
 
 
 class _StandaloneApplication(BaseApplication):
