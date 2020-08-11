@@ -40,6 +40,8 @@ setuptools.setup(
     # Dependencies
     install_requires=[
         'PyYaml',
-        'python-gnupg==0.4.6'
+        'python-gnupg==0.4.6',
+        'distro',
+        'virtualenv'
     ]
 )

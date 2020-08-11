@@ -73,9 +73,15 @@ def read_config(filepath, default_config):
     """
     # Read config
     if os.path.isfile(filepath) is True:
-        with open(filepath, 'r') as f_handle:
-            yaml_string = f_handle.read()
-            config = yaml.safe_load(yaml_string)
+        try:
+            f_handle = open(filepath, 'r')
+        except PermissionError:
+            log.log2die_safe(1078, '''\
+Insufficient permissions for reading the file:{}'''.format(filepath))
+        else:
+            with f_handle:
+                yaml_string = f_handle.read()
+                config = yaml.safe_load(yaml_string)
     else:
         config = default_config
 
@@ -171,8 +177,15 @@ def pattoo_config(file_name, config_directory, config_dict):
                 shared.chown(full_directory)
 
     # Write file
-    with open(config_file, 'w') as f_handle:
-        yaml.dump(config, f_handle, default_flow_style=False)
+            # Write to pattoo.yaml
+        try:
+            f_handle = open(config_file, 'w')
+        except PermissionError:
+            log.log2die(1076, '''\
+Insufficient permissions for creating the file:{}'''.format(config))
+        else:
+            with f_handle:
+                yaml.dump(config, f_handle, default_flow_style=False)
 
     return config_file
 

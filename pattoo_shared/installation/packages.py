@@ -1,41 +1,29 @@
 """Functions for installing external packages."""
 # Standard imports
-import sys
 import os
 import getpass
 
 # Import pattoo related libraries
-from pattoo_shared import files
 from pattoo_shared.installation import shared
+from pattoo_shared import log
 
 
-def install_missing_pip3(package, pip_dir, verbose=True):
+def install_missing_pip3(package, verbose=False):
     """Automatically Install missing pip3 packages.
 
     Args:
         package: The pip3 package to be installed
-        pip_dir: The directory the packages should be installed to
 
     Returns:
         True: if the package could be successfully installed
 
     """
     # Validate pip directory
-    if not os.path.isdir(pip_dir):
-        shared.log('Pip directory is invalid')
-    # Installs to the directory specified as pip_dir if the user is not travis
-    username = getpass.getuser()
-    if username == 'root':
-        shared.run_script('''\
-python3 -m pip install {0} -t {1} -U --force-reinstall'''.format(package,
-                                                                  pip_dir),
-                                                                  verbose=verbose)
-    else:
-        shared.run_script(
-            'python3 -m pip install {0}'.format(package), verbose=verbose)
+    shared.run_script('''\
+python3 -m pip install {0} -U --force-reinstall'''.format(package), verbose=verbose)
 
 
-def install(requirements_dir, installation_directory=None, verbose=True):
+def install(requirements_dir, installation_directory, verbose=False):
     """Ensure PIP3 packages are installed correctly.
 
     Args:
@@ -49,14 +37,6 @@ def install(requirements_dir, installation_directory=None, verbose=True):
     """
     # Initialize key variables
     lines = []
-    if bool(installation_directory) is False:
-        installation_directory = '/opt/pattoo-daemon/.python'
-
-    # Create directory if it doesn't exist
-    if os.path.isdir(installation_directory) is False:
-        files.mkdir(installation_directory)
-    # Appends pip3 dir to python path
-    sys.path.append(installation_directory)
 
     # Read pip_requirements file
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
@@ -67,7 +47,13 @@ def install(requirements_dir, installation_directory=None, verbose=True):
         shared.log('Cannot find PIP3 requirements file {}'.format(filepath))
 
     # Opens pip_requirements file for reading
-    with open(filepath, 'r') as _fp:
+    try:
+        _fp = open(filepath, 'r')
+    except PermissionError:
+        log.log2die_safe(1079, '''\
+Insufficient permissions for reading the file: {}. \
+Ensure the file has read-write permissions and try again'''.format(filepath))
+    else:
         line = _fp.readline()
         while line:
             # Strip line
@@ -94,8 +80,7 @@ def install(requirements_dir, installation_directory=None, verbose=True):
 
         # Install any missing pip3 package
         if bool(returncode) is True:
-            install_missing_pip3(
-                package, installation_directory, verbose=verbose)
+            install_missing_pip3(package, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
