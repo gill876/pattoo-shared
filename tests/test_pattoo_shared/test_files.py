@@ -305,6 +305,17 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method or function named _generate_agent_id."""
         pass
 
+    def test_get_session_cache_dir(self):
+        """Test get_session_cache_dir function"""
+        # Test
+
+        dir_name = 'session_cache'
+        expected = '{}/{}'.format(
+            self.config.cache_directory(), dir_name)
+        result = files.get_session_cache_dir(self.config)
+        self.assertEqual(result, expected)
+
+
 class Test_Directory(unittest.TestCase):
     """Checks all functions and methods."""
 
@@ -357,6 +368,17 @@ class Test_Directory(unittest.TestCase):
                        os.sep, os.sep, '.gnupg'
                        )
         result = directory.keyring()
+        self.assertEqual(result, expected)
+
+    def test_session_cache_directory(self):
+        """Test function session_cache_directory"""
+        # Test
+        directory = files._Directory(self.config)
+
+        dir_name = 'session_cache'
+        expected = '{}/{}'.format(
+            self.config.cache_directory(), dir_name)
+        result = directory.session_cache_directory()
         self.assertEqual(result, expected)
 
 
