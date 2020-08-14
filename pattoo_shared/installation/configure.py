@@ -176,7 +176,7 @@ def pattoo_config(file_name, config_directory, config_dict):
                         files.mkdir(full_directory)
 
                     # Recursively set file ownership to pattoo user and group
-                    if getpass.getuser == 'root':
+                    if getpass.getuser() == 'root':
                         shared.chown(full_directory)
 
         # Write file
