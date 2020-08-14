@@ -50,7 +50,7 @@ class _GetLog():
     def __init__(self):
         """Initialize the class."""
         # Pattoo libraries
-        from pattoo_shared.configuration import Config
+        from pattoo_shared.configuration import BaseConfig
 
         # Define key variables
         app_name = 'pattoo'
@@ -63,7 +63,7 @@ class _GetLog():
         }
 
         # Get the logging directory
-        config = Config()
+        config = BaseConfig()
         log_file = config.log_file()
         config_log_level = config.log_level()
 
@@ -273,8 +273,8 @@ Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
         log2warning(code, message)
 
     # Write trace to log file
-    from pattoo_shared.configuration import Config
-    config = Config()
+    from pattoo_shared.configuration import BaseConfig
+    config = BaseConfig()
     log_file = config.log_file()
     with open(log_file, 'a+') as _fh:
         traceback.print_tb(exc_traceback, file=_fh)
