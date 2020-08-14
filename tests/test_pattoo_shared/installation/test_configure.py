@@ -212,30 +212,46 @@ pattoo_web_api:
     def test_pattoo_config_custom_dict(self):
         """Unittest to test the pattoo_config function with custom dictionary."""
         # Initialize key variables
-        expected = {
-            'pattoo': {
-                'log_directory': self._log_directory,
-                'log_level': 'debug',
-                'language': 'xyz',
-                'cache_directory': self._cache_directory,
-                'daemon_directory': self._daemon_directory,
-                'system_daemon_directory': self._system_daemon_directory,
-            },
-            'pattoo_agent_api': {
-                'ip_address': '127.0.0.6',
-                'ip_bind_port': 50505,
-            },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.3',
-                'ip_bind_port': 30303,
-            }
-        }
-
         with tempfile.TemporaryDirectory() as temp_dir:
+            log_dir = os.path.join(temp_dir, 'pattoo/log')
+            cache_dir = os.path.join(temp_dir, 'pattoo/cache')
+            daemon_dir = os.path.join(temp_dir, 'pattoo/daemon')
+            expected = {
+                'pattoo': {
+                    'log_directory': log_dir,
+                    'log_level': 'debug',
+                    'language': 'xyz',
+                    'cache_directory': cache_dir,
+                    'daemon_directory': daemon_dir,
+                    'system_daemon_directory': self._system_daemon_directory,
+                },
+                'pattoo_agent_api': {
+                    'ip_address': '127.0.0.6',
+                    'ip_bind_port': 50505,
+                },
+                'pattoo_web_api': {
+                    'ip_address': '127.0.0.3',
+                    'ip_bind_port': 30303,
+                }
+            }
+
             file_path = os.path.join(temp_dir, "pattoo.yaml")
 
             # Create config file
             configure.pattoo_config('pattoo', temp_dir, expected)
+
+            # Test for directories
+            with self.subTest():
+                result = os.path.isdir(cache_dir)
+                self.assertTrue(result)
+
+            with self.subTest():
+                result = os.path.isdir(log_dir)
+                self.assertTrue(result)
+
+            with self.subTest():
+                result = os.path.isdir(daemon_dir)
+                self.assertTrue(result)
 
             # Retrieve config dict from yaml file
             result = configure.read_config(file_path, expected)

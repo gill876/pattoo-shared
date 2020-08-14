@@ -541,6 +541,7 @@ class Config(BaseConfig):
 
         return link
 
+
 def agent_config_filename(agent_program):
     """Get the configuration file name.
 
