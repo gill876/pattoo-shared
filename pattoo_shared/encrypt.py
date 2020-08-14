@@ -6,6 +6,7 @@ import hashlib
 import os
 import random
 import string
+import stat
 
 
 class Pgpier:
@@ -189,16 +190,19 @@ class Pgpier:
         # _wrapper = '(main)'
         _contents = self.passphrase
 
-        file_names = [f for f in os.listdir(_path) if os.path.isfile(f)
-                      and f.endswith(_wrapper)]
+        file_names = [
+            file_wrapper for file_wrapper in os.listdir(_path)
+            if os.path.isfile(file_wrapper) and
+            file_wrapper.endswith(_wrapper)
+            ]
         if file_names != []:
-            for f in file_names:
+            for f_name in file_names:
 
                 # removes the wrapper
-                file_name_len = len(f)
+                file_name_len = len(f_name)
                 wrapper_len = len(_wrapper)
                 file_nowrap = file_name_len - wrapper_len
-                clean_f_name = f[0:file_nowrap]
+                clean_f_name = f_name[0:file_nowrap]
 
                 # clean file name
                 clean_f = os.path.abspath(os.path.join(_path, clean_f_name))
@@ -206,14 +210,18 @@ class Pgpier:
                 # exists it would make a copy
                 try:
                     # renames the file without the wrapper
-                    os.rename(f, clean_f)
+                    os.rename(f_name, clean_f)
                 except Exception as e:
                     print(e)
 
         _file = os.path.abspath(os.path.join(_path, '{0}{1}'
                                 .format(_filename, _wrapper)))
-        with open('{}'.format(_file), '{}'.format('w')) as f:
-            f.write(_contents)
+        with open('{}'.format(_file), 'w') as file_export:
+            file_export.write(_contents)
+
+        # Change filemode to 600
+        # Only allow the user to access exported passphrase
+        os.chmod(_file, stat.S_IRUSR | stat.S_IWUSR)
 
     def imp_main(self, _wrapper='(main)'):
         """Import pertinent information.
