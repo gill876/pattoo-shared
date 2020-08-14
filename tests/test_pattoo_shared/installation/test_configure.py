@@ -162,16 +162,14 @@ class TestConfigure(unittest.TestCase):
             with open(file_path, 'w+') as temp_config:
                 yaml.dump(expected, temp_config, default_flow_style=False)
             config = configure.read_config(file_path, expected)
-            #result = config == expected
             self.assertEqual(config, expected)
 
             # Test find and replace
             with self.subTest():
                 expected = self.custom_config
                 config = configure.read_config(file_path, expected)
-                print(f'\n\nConfigurtion is: {config}\n\n')
-                print(f'\n\nExpected is: {expected}\n\n')
                 self.assertEqual(config, expected)
+
     def test_pattoo_config_server(self):
         """Unittest to test the pattoo_config function for the pattoo server."""
         # Initialize key variables
@@ -288,6 +286,19 @@ pattoo_web_api:
             # Retrieve config dict from yaml file
             result = configure.read_config(file_path, expected)
             self.assertEqual(result, expected)
+
+            # Test if file gets overwritten
+            with self.subTest():
+                expected = self.custom_config
+                # Create config file
+                configure.pattoo_config('pattoo', temp_dir, expected)
+
+                # Retrieve config dict from yaml file
+                result = configure.read_config(file_path, expected)
+                self.assertEqual(result, expected)
+
+
+
 
     # Using mock patch to capture output
     @unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
