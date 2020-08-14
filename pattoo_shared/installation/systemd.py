@@ -369,8 +369,8 @@ def install(daemon_list, template_dir, installation_dir, verbose=False):
 
     # Loop through daemon list and start daemons
     for daemon in daemon_list:
-        daemon_check(daemon)
-        start_daemon(daemon)
+        daemon_check(daemon, verbose=verbose)
+        start_daemon(daemon, verbose=verbose)
 
     # Check if symlinks got created
     _check_symlinks(etc_dir, daemon_list)

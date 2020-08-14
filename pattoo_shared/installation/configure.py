@@ -162,22 +162,24 @@ def pattoo_config(file_name, config_directory, config_dict):
 
     # Check validity of directories, if any
     for key, value in sorted(config.items()):
-        if 'directory' in key:
-            if os.sep not in value:
-                log.log2die_safe(
-                    1019, '{} is an invalid directory'.format(value))
+        if type(value) == dict:
+            for secondary_key in value:
+                if 'directory' in secondary_key:
+                    if os.sep not in value.get(secondary_key):
+                        log.log2die_safe(
+                            1019, '{} is an invalid directory'.format(value))
 
-            # Attempt to create directory
-            full_directory = os.path.expanduser(value)
-            if os.path.isdir(full_directory) is False:
-                files.mkdir(full_directory)
+                    # Attempt to create directory
+                    full_directory = os.path.expanduser(value.get(secondary_key))
+                    if os.path.isdir(full_directory) is False:
+                        print('Creating: {}'.format(full_directory))
+                        files.mkdir(full_directory)
 
-            # Recursively set file ownership to pattoo user and group
-            if getpass.getuser == 'root':
-                shared.chown(full_directory)
+                    # Recursively set file ownership to pattoo user and group
+                    if getpass.getuser() == 'root':
+                        shared.chown(full_directory)
 
-    # Write file
-            # Write to pattoo.yaml
+        # Write file
         try:
             f_handle = open(config_file, 'w')
         except PermissionError:
