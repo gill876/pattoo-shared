@@ -368,6 +368,7 @@ def install(daemon_list, template_dir, installation_dir, verbose=False):
     shared.run_script('systemctl daemon-reload', verbose=verbose)
 
     # Loop through daemon list and start daemons
+    print('Starting daemons')
     for daemon in daemon_list:
         daemon_check(daemon, verbose=verbose)
         start_daemon(daemon, verbose=verbose)

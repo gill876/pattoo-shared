@@ -82,6 +82,15 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
             with f_handle:
                 yaml_string = f_handle.read()
                 config = yaml.safe_load(yaml_string)
+
+        # Find and replace dictionary values
+        for default_key in default_config:
+            for key in config:
+                if key == default_key:
+                    config[key] = default_config.get(default_key)
+            if default_key not in config:
+                config[default_key] = default_config.get(default_key)
+
     else:
         config = default_config
 

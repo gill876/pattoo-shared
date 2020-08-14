@@ -65,6 +65,31 @@ class TestConfigure(unittest.TestCase):
             }
         }
 
+        cls.custom_config = {
+            'encryption': {
+                'api_email': 'api_email@example.org',
+            },
+            'pattoo': {
+                'language': 'en',
+                'log_directory': (
+                    '/var/log/pattoo'),
+                'log_level': 'debug',
+                'cache_directory': (
+                    '/opt/pattoo-cache'),
+                'daemon_directory': (
+                    '/opt/pattoo-daemon'),
+                'system_daemon_directory': '/var/run/pattoo'
+            },
+            'pattoo_agent_api': {
+                'ip_address': '127.0.0.1',
+                'ip_bind_port': 20201
+            },
+            'pattoo_web_api': {
+                'ip_address': '127.0.0.1',
+                'ip_bind_port': 20202,
+            }
+        }
+
         cls.default_server_config = {
             'pattoo_db': {
                 'db_pool_size': 10,
@@ -137,9 +162,16 @@ class TestConfigure(unittest.TestCase):
             with open(file_path, 'w+') as temp_config:
                 yaml.dump(expected, temp_config, default_flow_style=False)
             config = configure.read_config(file_path, expected)
-            result = config == expected
-            self.assertEqual(result, True)
+            #result = config == expected
+            self.assertEqual(config, expected)
 
+            # Test find and replace
+            with self.subTest():
+                expected = self.custom_config
+                config = configure.read_config(file_path, expected)
+                print(f'\n\nConfigurtion is: {config}\n\n')
+                print(f'\n\nExpected is: {expected}\n\n')
+                self.assertEqual(config, expected)
     def test_pattoo_config_server(self):
         """Unittest to test the pattoo_config function for the pattoo server."""
         # Initialize key variables
