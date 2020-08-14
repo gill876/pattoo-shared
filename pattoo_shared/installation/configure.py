@@ -161,6 +161,11 @@ def pattoo_config(file_name, config_directory, config_dict):
     config = read_config(config_file, config_dict)
 
     # Check validity of directories, if any
+    if bool(config) is False:
+        # Set default
+        config = config_dict
+
+    # Iterate over config dict
     for key, value in sorted(config.items()):
         if type(value) == dict:
             for secondary_key in value:
