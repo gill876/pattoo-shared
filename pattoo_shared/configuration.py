@@ -364,26 +364,6 @@ class Config(BaseConfig):
             result = int(intermediate)
         return result
 
-    def api_email_address(self):
-        """GET API email address from yaml file.
-
-        Args:
-            None
-
-        Returns:
-            email (str): Email address of API
-        """
-        # Initialize key variables
-        key = 'encryption'
-        sub_key = 'api_email'
-
-        # Get result - This will be placed in the pattoo.yaml file
-        result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
-        if result is None:
-            result = 'pattoo_api@example.org'
-        return result
-
     def agent_email_address(self):
         """GET agent email address from yaml file.
 

@@ -138,14 +138,6 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_api_email_address(self):
-        """Test api email address retrieval"""
-        # Test from yaml file
-        result = self.config.api_email_address()
-        expected = 'test_api@example.org'
-
-        self.assertEqual(result, expected)
-
     def test_agent_email_address(self):
         """Test agent email address retrieval"""
         # Test from yaml file
