@@ -140,7 +140,6 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
     for key in installed_packages:
         if version_check(key, installed_packages) is False:
             # Reinstall updated version of package
-            print(key)
             install_missing_pip3(key, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
