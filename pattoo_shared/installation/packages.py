@@ -2,10 +2,60 @@
 # Standard imports
 import os
 import getpass
+import json
+import urllib.request
 
 # Import pattoo related libraries
 from pattoo_shared.installation import shared
 from pattoo_shared import log
+
+
+def get_installed_packages():
+    """Retrieve installed pip packages.
+
+    Args:
+        None
+
+    Returns:
+        package_dict:A dictionary containing the installed packages
+
+    """
+    packages = shared.run_script('python3 -m pip freeze')[1]
+    # Retrieve package names
+    keys = [package.decode().split('==')[0] for package in packages.split()]
+
+    # Retrieve package versions
+    values = [package.decode().split('==')[1] for package in packages.split()]
+
+    # Create dictionary with package versions
+    package_dict = dict(zip(keys, values)) 
+
+    return package_dict
+
+
+def version_check(package_name, package_dict):
+    """Check if package installed is updated to its latest version.
+
+    Args:
+        package_dict: A dictionary containing the packages
+        package_name: The package being checked
+
+    Returns:
+        True: If the package is updated
+        False: If the package is not updated/installed
+
+    """
+    package_url = 'https://pypi.org/pypi/{}/json'.format(package_name)
+    # Retrieve information on latest package version
+    package_data = urllib.request.urlopen(package_url).read()
+    data = json.loads(package_data)
+    latest_version = data['info']['version']
+
+    # Get version name from dictionary
+    if package_dict.get(package_name) == latest_version:
+        return True
+    else:
+        return False
 
 
 def install_missing_pip3(package, verbose=False):
@@ -80,6 +130,17 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
 
         # Install any missing pip3 package
         if bool(returncode) is True:
+            install_missing_pip3(package, verbose=verbose)
+
+    # Check for outdated packages
+    if verbose:
+        print('Checking for outdated packages')
+
+    # Retrieve installed packages
+    installed_packages = get_installed_packages()
+    for key in installed_packages:
+        if version_check(package, installed_packages) is False:
+            # Reinstall updated version of package
             install_missing_pip3(package, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
