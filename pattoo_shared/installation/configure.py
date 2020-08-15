@@ -84,12 +84,6 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
                 config = yaml.safe_load(yaml_string)
 
         # Find and replace dictionary values
-<<<<<<< HEAD
-        for default_key in default_config:
-            # Add new entries to config dict if they aren't in the file
-            if default_key not in config:
-                config[default_key] = default_config.get(default_key)
-=======
         # for default_key, default_value in default_config.items():
         #     if isinstance(default_value, dict)
         #     for key in config:
@@ -98,7 +92,6 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
         #     # Add new entries to config dict if they aren't in the file
         #     if default_key not in config:
         #         config[default_key] = default_config.get(default_key)
->>>>>>> 68de4855874a71df01cd0801256c2920887063d3
 
     else:
         config = default_config
