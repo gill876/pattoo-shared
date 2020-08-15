@@ -85,9 +85,6 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
 
         # Find and replace dictionary values
         for default_key in default_config:
-            for key in config:
-                if key == default_key:
-                    config[key] = default_config.get(default_key)
             # Add new entries to config dict if they aren't in the file
             if default_key not in config:
                 config[default_key] = default_config.get(default_key)
