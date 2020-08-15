@@ -297,9 +297,6 @@ pattoo_web_api:
                 result = configure.read_config(file_path, expected)
                 self.assertEqual(result, expected)
 
-
-
-
     # Using mock patch to capture output
     @unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
     def test_check_config(self, mock_stdout):
