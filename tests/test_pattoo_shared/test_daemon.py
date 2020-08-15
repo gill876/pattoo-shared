@@ -35,6 +35,7 @@ from tests.libraries.configuration import UnittestConfig
 AGENT_NAME = 'parent'
 _config = Config()
 
+
 def handle_daemon(command):
     """Allows for the daemon start
 
@@ -45,8 +46,10 @@ def handle_daemon(command):
         None
 
     """
-    daemon_start_script_path = os.path.join(EXEC_DIR, 'daemon_start_test_script.py')
-    subprocess.call(['python', daemon_start_script_path, command])
+    daemon_start_script_path = os.path.join(
+        EXEC_DIR, 'daemon_start_test_script.py')
+    subprocess.call(['python3', daemon_start_script_path, command])
+
 
 def create_agent():
     """Creates new agent for use in testing start and restart
@@ -60,6 +63,7 @@ def create_agent():
     """
     _agent = Agent(parent=AGENT_NAME, config=_config)
     return _agent
+
 
 class MockDaemonMixin():
     """Mixin definging run functoin for MockDaemon and MockGracefulDaemon"""
@@ -89,12 +93,14 @@ class MockDaemon(MockDaemonMixin, Daemon):
 
     """
 
+
 class MockGracefulDaemon(MockDaemonMixin, GracefulDaemon):
     """Mock Graceful Daemon used to test Graceful Daemon class
 
     Built to provide minimal functionality to test Graceful Daemon run method
 
     """
+
 
 class TestDaemon(unittest.TestCase):
     """Checks all functions and methods."""
