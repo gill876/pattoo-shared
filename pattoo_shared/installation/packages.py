@@ -65,7 +65,7 @@ def install_missing_pip3(package, verbose=False):
         package: The pip3 package to be installed
 
     Returns:
-        True: if the package could be successfully installed
+        None
 
     """
     # Validate pip directory
@@ -104,16 +104,17 @@ def install(requirements_dir, installation_directory, verbose=False):
 Insufficient permissions for reading the file: {}. \
 Ensure the file has read-write permissions and try again'''.format(filepath))
     else:
-        line = _fp.readline()
-        while line:
-            # Strip line
-            _line = line.strip()
-            # Read line
-            if True in [_line.startswith('#'), bool(_line) is False]:
-                pass
-            else:
-                lines.append(_line)
+        with _fp:
             line = _fp.readline()
+            while line:
+                # Strip line
+                _line = line.strip()
+                # Read line
+                if True in [_line.startswith('#'), bool(_line) is False]:
+                    pass
+                else:
+                    lines.append(_line)
+                line = _fp.readline()
 
     # Process each line of the file
     for line in lines:
@@ -135,13 +136,12 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
     # Check for outdated packages
     if verbose:
         print('Checking for outdated packages')
-
-    # Retrieve installed packages
     installed_packages = get_installed_packages()
     for key in installed_packages:
-        if version_check(package, installed_packages) is False:
+        if version_check(key, installed_packages) is False:
             # Reinstall updated version of package
-            install_missing_pip3(package, verbose=verbose)
+            print(key)
+            install_missing_pip3(key, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
