@@ -84,10 +84,21 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
                 config = yaml.safe_load(yaml_string)
 
         # Find and replace dictionary values
+<<<<<<< HEAD
         for default_key in default_config:
             # Add new entries to config dict if they aren't in the file
             if default_key not in config:
                 config[default_key] = default_config.get(default_key)
+=======
+        # for default_key, default_value in default_config.items():
+        #     if isinstance(default_value, dict)
+        #     for key in config:
+        #         if key == default_key:
+        #             config[key] = default_config.get(default_key)
+        #     # Add new entries to config dict if they aren't in the file
+        #     if default_key not in config:
+        #         config[default_key] = default_config.get(default_key)
+>>>>>>> 68de4855874a71df01cd0801256c2920887063d3
 
     else:
         config = default_config
@@ -117,7 +128,7 @@ def check_config(config_file, config_dict):
     config = files.read_yaml_file(config_file)
 
     # Check main keys
-    for primary in config_dict:
+    for primary in config_dict.keys():
         if primary not in config:
             log_message = ('''\
 Section "{}" not found in configuration file {} in directory {}. Please fix.\
@@ -173,16 +184,17 @@ def pattoo_config(file_name, config_directory, config_dict):
         config = config_dict
 
     # Iterate over config dict
-    for key, value in sorted(config.items()):
-        if type(value) == dict:
-            for secondary_key in value:
+    for _, value in sorted(config.items()):
+        if isinstance(value, dict) is True:
+            for secondary_key in value.keys():
                 if 'directory' in secondary_key:
                     if os.sep not in value.get(secondary_key):
                         log.log2die_safe(
                             1019, '{} is an invalid directory'.format(value))
 
                     # Attempt to create directory
-                    full_directory = os.path.expanduser(value.get(secondary_key))
+                    full_directory = os.path.expanduser(
+                        value.get(secondary_key))
                     if os.path.isdir(full_directory) is False:
                         print('Creating: {}'.format(full_directory))
                         files.mkdir(full_directory)
@@ -216,10 +228,7 @@ def configure_component(component_name, config_dir, config_dict):
         None
     """
     # Create configuration
-    config_file = pattoo_config(
-                                component_name,
-                                config_dir,
-                                config_dict)
+    config_file = pattoo_config(component_name, config_dir, config_dict)
 
     # Check if configuration is valid
     check_config(config_file, config_dict)
