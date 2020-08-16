@@ -79,8 +79,8 @@ class Agent():
         pass
 
 
-class AgentDaemonRunMixin(Daemon):
-    """Class that defines basic run function for AgentDaemons"""
+class _AgentRun():
+    """Class that defines basic run function for AgentDaemons."""
 
     def run(self):
         """Start Polling
@@ -97,7 +97,7 @@ class AgentDaemonRunMixin(Daemon):
             self.agent.query()
 
 
-class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
+class AgentDaemon(_AgentRun, Daemon):
     """Class that manages base agent daemonization"""
 
     def __init__(self, agent):
@@ -117,8 +117,9 @@ class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
         Daemon.__init__(self, agent)
 
 
-class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
-    """Class that manages graceful agent daemonization"""
+class GracefulAgentDaemon(_AgentRun, GracefulDaemon):
+    """Class that manages graceful agent daemonization."""
+
     def __init__(self, agent):
         """Initialize the class.
 
@@ -243,7 +244,7 @@ class AgentCLI():
 
         # Instantiate agent daemon
         if graceful is False:
-            _daemon = BaseAgentDaemon(agent)
+            _daemon = AgentDaemon(agent)
         else:
             _daemon = GracefulAgentDaemon(agent)
 

@@ -27,9 +27,11 @@ from pattoo_shared import agent, files
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
 from tests.libraries.configuration import UnittestConfig
+from tests.libraries import general
 
 # Test Daemon importation
-from tests.test_pattoo_shared.test_daemon import  TestDaemon, TestGracefulDaemon, AGENT_NAME
+from tests.test_pattoo_shared import test_daemon
+
 
 class TestAgent(unittest.TestCase):
     """Checks all functions and methods."""
@@ -47,7 +49,7 @@ class TestAgent(unittest.TestCase):
         child = 'child'
 
         # Test - No Child
-        tester = agent.Agent(parent)
+        tester = agent.Agent(parent, config=self.config)
         self.assertEqual(tester.parent, parent)
         expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
@@ -57,7 +59,7 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(tester._pidfile_child, expected)
 
         # Test - With Child
-        tester = agent.Agent(parent, child=child)
+        tester = agent.Agent(parent, child=child, config=self.config)
         self.assertEqual(tester.parent, parent)
         expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
@@ -75,12 +77,12 @@ class TestAgent(unittest.TestCase):
         tester = agent.Agent(parent)
         self.assertEqual(tester.name(), parent)
 
-    def test_query(self):
+    def test_run(self):
         """Testing method or function named query."""
         pass
 
 
-class TestBaseAgentDaemon(TestDaemon):
+class TestAgentDaemon(test_daemon.TestDaemon):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -92,16 +94,18 @@ class TestBaseAgentDaemon(TestDaemon):
 
         # Setup base config and agent
         self._config = Config()
-        self._agent = agent.Agent(parent=AGENT_NAME, config=self._config)
+        agent_name = general.random_agent_name()
+        self._agent = agent.Agent(agent_name, config=self._config)
 
         # Instantiation of test daemon
-        self._daemon = agent.BaseAgentDaemon(self._agent)
+        self._daemon = agent.AgentDaemon(self._agent)
 
     def test_run(self):
         """Testing method or function named run."""
         pass
 
-class TestGracefulAgentDaemon(TestGracefulDaemon):
+
+class TestGracefulAgentDaemon(test_daemon.TestGracefulDaemon):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -113,7 +117,8 @@ class TestGracefulAgentDaemon(TestGracefulDaemon):
 
         # Setup base config and agent
         self._config = Config()
-        self._agent = agent.Agent(parent=AGENT_NAME, config=self._config)
+        agent_name = general.random_agent_name()
+        self._agent = agent.Agent(agent_name, config=self._config)
 
         # Instantiation of test daemon
         self._daemon = agent.GracefulAgentDaemon(self._agent)
@@ -121,6 +126,7 @@ class TestGracefulAgentDaemon(TestGracefulDaemon):
     def test_run(self):
         """Testing method or function named run."""
         pass
+
 
 class TestAgentCLI(unittest.TestCase):
     """Checks all functions and methods."""
