@@ -146,14 +146,10 @@ file and directory permissions.'''.format(daemon_log_file)
 
         """
         # Check for a pidfile to see if the daemon already runs
-        try:
-            with open(self.pidfile, 'r') as pf_handle:
-                pid = int(pf_handle.read().strip())
+        pid = _pid(self.pidfile)
 
-        except IOError:
-            pid = None
-
-        if pid:
+        # Die if already running
+        if bool(pid) is True:
             log_message = (
                 'PID file: {} already exists. Daemon already running?'
                 ''.format(self.pidfile))
@@ -195,14 +191,9 @@ file and directory permissions.'''.format(daemon_log_file)
             None
 
         """
-        # Get the pid from the pidfile
-        try:
-            with open(self.pidfile, 'r') as pf_handle:
-                pid = int(pf_handle.read().strip())
-        except IOError:
-            pid = None
-
-        if not pid:
+        # Check for a pidfile to see if the daemon already runs
+        pid = _pid(self.pidfile)
+        if bool(pid) is False:
             log_message = (
                 'PID file: {} does not exist. Daemon not running?'
                 ''.format(self.pidfile))
@@ -215,7 +206,7 @@ file and directory permissions.'''.format(daemon_log_file)
             os.kill(pid, signal.SIGTERM)
         except OSError as err:
             error = str(err.args)
-            if error.find("No such process") > 0:
+            if error.find('No such process') > 0:
                 self.delpid()
                 self.dellock()
             else:
@@ -225,7 +216,7 @@ file and directory permissions.'''.format(daemon_log_file)
                 log.log2die(1068, log_message)
         except:
             log_message = (
-                'Unknown daemon "stop" error for PID file: {}'
+                'Unknown daemon "stopped" error for PID file: {}'
                 ''.format(self.pidfile))
             log.log2die(1066, log_message)
 
@@ -256,14 +247,15 @@ file and directory permissions.'''.format(daemon_log_file)
         """Get daemon status.
 
         Args:
-            None
+            verbose: Print message if True
 
         Returns:
-            None
+            result: True if the PID and PID file exists
 
         """
-        # Get status
-        if os.path.exists(self.pidfile) is True:
+        # Determine whether pid file exists
+        pid = _pid(self.pidfile)
+        if bool(pid) is True:
             print('Daemon is running - {}'.format(self.name))
         else:
             print('Daemon is stopped - {}'.format(self.name))
@@ -375,7 +367,7 @@ class GracefulDaemon(Daemon):
         return wrapper
 
     def stop(self):
-        """Stops the daemon gracefully.
+        """Stop the daemon gracefully.
 
         Uses parent class stop method after checking that daemon is no longer
         processing data or making use of a resource.
@@ -393,7 +385,7 @@ class GracefulDaemon(Daemon):
     def restart(self):
         """Restarts the daemon gracefully.
 
-        Uses parent class restart method after checking that daemon is no longer
+        Uses parent class restart method after checking that daemon is not
         processing data or making use of a resource.
 
         Args:
@@ -405,3 +397,28 @@ class GracefulDaemon(Daemon):
         """
         wrapper = self.graceful_shutdown(super(GracefulDaemon, self).restart)
         wrapper()
+
+
+def _pid(pidfile):
+    """Start the daemon.
+
+    Args:
+        pidfile: Name of file containing PID
+
+    Returns:
+        result: Value of PID
+
+    """
+    # Initialize key varialbes
+    result = None
+
+    # Check for a pidfile
+    try:
+        with open(pidfile, 'r') as pf_handle:
+            result = int(pf_handle.read().strip())
+
+    except IOError:
+        result = None
+
+    # Return
+    return result

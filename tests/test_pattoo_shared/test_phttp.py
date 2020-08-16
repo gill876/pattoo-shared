@@ -33,7 +33,7 @@ from pattoo_shared import converter
 from pattoo_shared.files import set_gnupg, get_gnupg
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
-from tests.resources import test_agent as ta
+from tests.libraries import general as ta
 
 
 class Test_Post(unittest.TestCase):
@@ -653,7 +653,7 @@ class TestEncryptedPostAgent(unittest.TestCase):
 
             # Encrypted purge
             encrypted_agent.purge()
-            
+
             # Check that both the post and purge exchanged keys and
             # send data
             self.assertEqual(m.call_count, 8)
