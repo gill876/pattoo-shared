@@ -34,9 +34,13 @@ def install_missing_pip3(package, verbose=False):
         None
 
     """
-    # Validate pip directory
-    shared.run_script('''\
-python3 -m pip install {0} -U --force-reinstall'''.format(package), verbose=verbose)
+    # Intitialize key variables
+    command = 'python3 -m pip install {0} -U --force-reinstall'.format(package)
+    try:
+        shared.run_script(command, verbose=verbose)
+    except SystemExit:
+        message = 'Invalid pip package/package version "{}"'.format(package)
+        log.log2die_safe(1088, message)
 
 
 def install(requirements_dir, installation_directory, verbose=False):
@@ -53,8 +57,6 @@ def install(requirements_dir, installation_directory, verbose=False):
     """
     # Initialize key variables
     lines = []
-
-    # Read pip_requirements file
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
 
     # Say what we are doing
@@ -79,6 +81,8 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
                 if True in [_line.startswith('#'), bool(_line) is False]:
                     pass
                 else:
+
+                    # Append package with version and package name to list
                     lines.append(_line)
                 line = _fp.readline()
     # Process each line of the file

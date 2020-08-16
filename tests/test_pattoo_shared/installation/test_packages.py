@@ -39,22 +39,46 @@ class TestPackages(unittest.TestCase):
         environment.environment_setup(cls.venv_dir)
 
     def test_install_missing_pip3(self):
-        """Unittest to test the install_missing_pip3 function."""           
-        # Attempt to install a test package
-        install_missing_pip3('tweepy', verbose=False)
+        """Unittest to test the install_missing_pip3 function.""" 
+        # Test with expected behaviour
+        with self.subTest(): 
+            # Attempt to install a test package
+            install_missing_pip3('tweepy', verbose=False)
 
-        # Try except to determine if package was installed
-        try:
-            import tweepy
-            result = True
-        except ModuleNotFoundError:
-            result = False
-        self.assertTrue(result)
+            # Try except to determine if package was installed
+            try:
+                import tweepy
+                result = True
+            except ModuleNotFoundError:
+                result = False
+            self.assertTrue(result)
 
-        # Test case that would cause the install_missing_pip3 function to fail
-        with self.assertRaises(SystemExit) as cm_:
-            install_missing_pip3('This does not exist', False)
-        self.assertEqual(cm_.exception.code, 2)
+        # Test case that would cause the install_missing_pip3
+        # function to fail
+        with self.subTest():
+            with self.assertRaises(SystemExit) as cm_:
+                install_missing_pip3('This does not exist', False)
+            self.assertEqual(cm_.exception.code, 2)
+
+        # Test with outdated package version
+        with self.subTest():
+            install_missing_pip3('matplotlib==3.3.0', False)
+            expected = '3.3.0'
+            result = get_package_version('matplotlib')
+            self.assertEqual(result, expected)
+
+        # Test with non-existent package version
+        with self.subTest():
+            with self.assertRaises(SystemExit) as cm_:
+                install_missing_pip3('pandas==100000')
+            self.assertEqual(cm_.exception.code, 2)
+
+        # Test package reinstall to more updated version
+        with self.subTest():
+            install_missing_pip3('matplotlib==3.3.1')
+            expected = '3.3.1'
+            result = get_package_version('matplotlib')
+            self.assertEqual(result, expected)
 
     def test_install(self):
         """Unittest to test the install function."""
@@ -78,11 +102,12 @@ class TestPackages(unittest.TestCase):
             packages = shared.run_script('python3 -m pip freeze')[1]
 
             # Get packages with versions removed
-            installed_packages = [package.decode().split('==')[
-                    0] for package in packages.split()]
+            installed_packages = [
+                package.decode().split('==')[0] for package in packages.split()
+                ]
             result = expected_package in installed_packages
             self.assertEqual(result, expected)
-
+        
     def test_get_package_version(self):
         """Unittest to test the get_package_version function."""
         package = 'PattooShared'

@@ -27,7 +27,8 @@ else:
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
-from pattoo_shared.installation.systemd import _filepaths
+from pattoo_shared.installation import shared
+from pattoo_shared.installation.systemd import _filepaths, remove_file
 from pattoo_shared.installation.systemd import _get_runtime_directory
 from pattoo_shared.installation.systemd import symlink_dir, _check_symlinks
 
@@ -139,27 +140,60 @@ class Test_Systemd(unittest.TestCase):
                 _get_runtime_directory(temp_dir)
             self.assertEqual(cm_.exception.code, 3)
 
-        def test___check_symlinks(self):
-            """Testing method or function named "_get_runtime_directory"."""
-            # Initialize key variables
-            daemons = [
-                'pattoo_apid',
-                'pattoo_api_agentd',
-                'pattoo_ingesterd'
-                ]
-            result = []
+    def test___check_symlinks(self):
+        """Testing method or function named "_get_runtime_directory"."""
+        # Initialize key variables
+        daemons = [
+            'pattoo_apid',
+            'pattoo_api_agentd',
+            'pattoo_ingesterd'
+        ]
 
-            with tempfile.TemporaryDirectory() as temp_dir:
-                # Create target directory
-                target_dir = os.path.join(temp_dir, 'test_symlink')
-                os.mkdir(target_dir)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Create target directory
+            target_dir = os.path.join(temp_dir, 'test_symlink')
+            os.mkdir(target_dir)
+            # Create service files
+            for daemon in daemons:
+                daemon_path = os.path.join(
+                                target_dir, '{}.service'.format(daemon))
+                with open(daemon_path, 'w'):
+                    pass
 
+                # Since this block will exit if the user is not running as root
+                # A try except was used to test if the files are deleted
+                with self.subTest():
+                    try:
+                        _check_symlinks(target_dir, daemon)
+                    except SystemExit:
+
+                        # If the files are successfully deleted, all elements
+                        # of this list will be false
+                        result = [
+                            os.path.exists(daemon_path) for daemon in daemons]
+                        self.assertTrue(not any(result))
                 # Check for symlinks and sudo access
                 with self.assertRaises(SystemExit) as cm_:
-                    _check_symlinks(temp_dir, daemons)
-                self.assertEqual(cm_.exception.code, 3)
+                    _check_symlinks(temp_dir, daemon)
+                self.assertEqual(cm_.exception.code, 2)
 
-            self.assertTrue(all(result))
+    def test_remove_file(self):
+        """Testing method named "remove_file"."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, 'test.txt')
+
+            # Testing function when the file does not exist
+            with self.subTest():
+                with self.assertRaises(SystemExit) as cm_:
+                    remove_file(file_path)
+                self.assertEqual(cm_.exception.code, 2)
+
+            # Testing function by creating file and then removing it
+            with self.subTest():
+                with open(file_path, 'w'):
+                    pass
+                remove_file(file_path)
+                self.assertFalse(os.path.exists(file_path))
 
 
 if __name__ == '__main__':
