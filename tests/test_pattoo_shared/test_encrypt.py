@@ -7,7 +7,7 @@ import os
 import sys
 import shutil
 import stat
-
+import tempfile
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -42,11 +42,7 @@ class TestEncrypt(unittest.TestCase):
         """
 
         # #####################Essential######################
-        main_dir = os.path.abspath(
-            os.path.join(
-                os.getcwd(), '{}'.format('keys')
-            )
-        )
+        main_dir = os.path.join(tempfile.mkdtemp(), 'keys')
 
         cls.main_dir = main_dir
         # ###################################################
@@ -54,9 +50,9 @@ class TestEncrypt(unittest.TestCase):
         # #####################1st Pgpier######################
         # Create sub directory for 1st Pgpier and change
         # permissions for the directory
-        test1 = os.path.join(main_dir, '{}'.format('test1'))
+        test1 = os.path.join(main_dir, 'test1')
         cls.test1 = test1
-        person1 = os.path.join(test1, '{}'.format('.gnupg'))
+        person1 = os.path.join(test1, '.gnupg')
         os.makedirs(person1)
         os.chmod(person1, stat.S_IRWXU)
 
@@ -87,9 +83,9 @@ class TestEncrypt(unittest.TestCase):
         # #####################2nd Pgpier######################
         # Create sub directory for 2nd Pgpier and change
         # permissions for the directory
-        test2 = os.path.join(main_dir, '{}'.format('test2'))
+        test2 = os.path.join(main_dir, 'test2')
         cls.test2 = test2
-        person2 = os.path.join(test2, '{}'.format('.gnupg'))
+        person2 = os.path.join(test2, '.gnupg')
         os.makedirs(person2)
         os.chmod(person2, stat.S_IRWXU)
 

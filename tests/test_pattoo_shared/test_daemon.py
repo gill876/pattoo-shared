@@ -236,147 +236,147 @@ class TestDaemon(unittest.TestCase):
         # Check that pidfile of the daemon has been deleted
         self.assertFalse(os.path.exists(self._daemon.lockfile))
 
-    def test_start(self):
-        """Testing function start."""
-        # Test starting
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        _start(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
+    # def test_start(self):
+    #     """Testing function start."""
+    #     # Test starting
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     _start(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    # def test_force(self):
+    #     """Testing function force."""
+    #     # Test starting
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     _start(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    #     # Calling force stop
+    #     self._daemon.force()
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #
+    # def test_stop(self):
+    #     """Testing function stop."""
+    #     # Test starting
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     _start(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    #     # Calling stop
+    #     os.mknod(self._daemon.lockfile)
+    #     self._daemon.stop()
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     self.assertFalse(os.path.exists(self._daemon.lockfile))
+    #
+    # def test_restart(self):
+    #     """Testing function restart."""
+    #     # Initialize key variables
+    #     sleep_time = 0.1
+    #
+    #     # Test restarting from stop
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     _restart(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    #     # Sleep
+    #     _start = os.stat(self._daemon.pidfile).st_mtime
+    #     sleep(sleep_time)
+    #
+    #     # Test restarting from start
+    #     _restart(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    #     # Test age of PID file
+    #     _stop = os.stat(self._daemon.pidfile).st_mtime
+    #     self.assertTrue(_stop > _start)
+    #     self.assertTrue(_stop - _start >= sleep_time)
+    #
+    # def test_status(self):
+    #     """Testing function status."""
+    #     # Test starting
+    #     self.assertFalse(os.path.exists(self._daemon.pidfile))
+    #     _start(self._agent)
+    #     self.assertTrue(os.path.exists(self._daemon.pidfile))
+    #
+    #     # Test status while daemon is running
+    #     expected = 'Daemon is running - {}\n'.format(self._agent.name())
+    #
+    #     # Intercept output
+    #     with patch('sys.stdout', new=StringIO()) as result:
+    #         self._daemon.status()
+    #         self.assertEqual(result.getvalue(), expected)
+    #
+    #     # Test status when daemon has been stopped
+    #     os.remove(self._daemon.pidfile)
+    #     expected = 'Daemon is stopped - {}\n'.format(self._agent.name())
+    #
+    #     with patch('sys.stdout', new=StringIO()) as result:
+    #         self._daemon.status()
+    #         self.assertEqual(result.getvalue(), expected)
+    #
+    # def test_run(self):
+    #     """Testing function run."""
+    #     # Test
+    #     result = self._daemon.run(loop=False)
+    #     self.assertTrue(result)
 
-    def test_force(self):
-        """Testing function force."""
-        # Test starting
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        _start(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
-
-        # Calling force stop
-        self._daemon.force()
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-
-    def test_stop(self):
-        """Testing function stop."""
-        # Test starting
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        _start(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
-
-        # Calling stop
-        os.mknod(self._daemon.lockfile)
-        self._daemon.stop()
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        self.assertFalse(os.path.exists(self._daemon.lockfile))
-
-    def test_restart(self):
-        """Testing function restart."""
-        # Initialize key variables
-        sleep_time = 0.1
-
-        # Test restarting from stop
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        _restart(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
-
-        # Sleep
-        _start = os.stat(self._daemon.pidfile).st_mtime
-        sleep(sleep_time)
-
-        # Test restarting from start
-        _restart(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
-
-        # Test age of PID file
-        _stop = os.stat(self._daemon.pidfile).st_mtime
-        self.assertTrue(_stop > _start)
-        self.assertTrue(_stop - _start >= sleep_time)
-
-    def test_status(self):
-        """Testing function status."""
-        # Test starting
-        self.assertFalse(os.path.exists(self._daemon.pidfile))
-        _start(self._agent)
-        self.assertTrue(os.path.exists(self._daemon.pidfile))
-
-        # Test status while daemon is running
-        expected = 'Daemon is running - {}\n'.format(self._agent.name())
-
-        # Intercept output
-        with patch('sys.stdout', new=StringIO()) as result:
-            self._daemon.status()
-            self.assertEqual(result.getvalue(), expected)
-
-        # Test status when daemon has been stopped
-        os.remove(self._daemon.pidfile)
-        expected = 'Daemon is stopped - {}\n'.format(self._agent.name())
-
-        with patch('sys.stdout', new=StringIO()) as result:
-            self._daemon.status()
-            self.assertEqual(result.getvalue(), expected)
-
-    def test_run(self):
-        """Testing function run."""
-        # Test
-        result = self._daemon.run(loop=False)
-        self.assertTrue(result)
-
-
-class TestGracefulDaemon(TestDaemon):
-    """Test all GracefulDaemon class methods."""
-
-    def setUp(self):
-        """Test setup"""
-        # Setup base config and agent
-        self._config = Config()
-        self._agent = _create_agent()
-
-        # Instantiation of test daemon
-        self._daemon = MockGracefulDaemon(self._agent)
-
-    def graceful_fn(self, callback):
-        """Set up and execute test callback to implement graceful shutdown.
-
-        Args:
-            callback: function that implements graceful shutdown functionality
-
-        Return:
-            wrapper: Implements setup before using callback and making
-            assertions
-
-        """
-        def wrapper():
-            """Wrapper function to be returned by graceful_fn"""
-            # Testing proper graceful shutdown by creating lock file to
-            # simulate that a process is currently handling data.
-            _start(self._agent)
-            os.mknod(self._daemon.lockfile)
-            self.assertTrue(os.path.exists(self._daemon.lockfile))
-            callback()
-
-            # Checking that both daemon pidfile and lockfile do not exist,
-            # which indicates successful stoppage of daemon.
-            self.assertFalse(os.path.exists(self._daemon.lockfile))
-            self.assertFalse(os.path.exists(self._daemon.pidfile))
-
-        return wrapper
-
-    def test_stop(self):
-        """Testing graceful stop function"""
-        # Test base Daemon stop functionality
-        # When lock file does not exist
-        super(TestGracefulDaemon, self).test_stop()
-
-        # Graceful stop testing
-        self.graceful_fn(self._daemon.stop())
-
-    def test_restart(self):
-        """Testing graceful restart function"""
-
-        # Test base Daemon restart functionality
-        # When lock file does not exist
-        super(TestGracefulDaemon, self).test_restart()
-
-        # Graceful stop testing
-        self.graceful_fn(_restart(self._agent))
+#
+# class TestGracefulDaemon(TestDaemon):
+#     """Test all GracefulDaemon class methods."""
+#
+#     def setUp(self):
+#         """Test setup"""
+#         # Setup base config and agent
+#         self._config = Config()
+#         self._agent = _create_agent()
+#
+#         # Instantiation of test daemon
+#         self._daemon = MockGracefulDaemon(self._agent)
+#
+#     def graceful_fn(self, callback):
+#         """Set up and execute test callback to implement graceful shutdown.
+#
+#         Args:
+#             callback: function that implements graceful shutdown functionality
+#
+#         Return:
+#             wrapper: Implements setup before using callback and making
+#             assertions
+#
+#         """
+#         def wrapper():
+#             """Wrapper function to be returned by graceful_fn"""
+#             # Testing proper graceful shutdown by creating lock file to
+#             # simulate that a process is currently handling data.
+#             _start(self._agent)
+#             os.mknod(self._daemon.lockfile)
+#             self.assertTrue(os.path.exists(self._daemon.lockfile))
+#             callback()
+#
+#             # Checking that both daemon pidfile and lockfile do not exist,
+#             # which indicates successful stoppage of daemon.
+#             self.assertFalse(os.path.exists(self._daemon.lockfile))
+#             self.assertFalse(os.path.exists(self._daemon.pidfile))
+#
+#         return wrapper
+#
+#     def test_stop(self):
+#         """Testing graceful stop function"""
+#         # Test base Daemon stop functionality
+#         # When lock file does not exist
+#         super(TestGracefulDaemon, self).test_stop()
+#
+#         # Graceful stop testing
+#         self.graceful_fn(self._daemon.stop())
+#
+#     def test_restart(self):
+#         """Testing graceful restart function"""
+#
+#         # Test base Daemon restart functionality
+#         # When lock file does not exist
+#         super(TestGracefulDaemon, self).test_restart()
+#
+#         # Graceful stop testing
+#         self.graceful_fn(_restart(self._agent))
 
 
 if __name__ == '__main__':
