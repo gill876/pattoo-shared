@@ -30,8 +30,7 @@ from tests.libraries.configuration import UnittestConfig
 from tests.libraries import general
 
 # Test Daemon importation
-from tests.test_pattoo_shared.test_daemon import  (
-    TestDaemon, TestGracefulDaemon)
+from tests.test_pattoo_shared import test_daemon
 
 
 class TestAgent(unittest.TestCase):
@@ -50,7 +49,7 @@ class TestAgent(unittest.TestCase):
         child = 'child'
 
         # Test - No Child
-        tester = agent.Agent(parent)
+        tester = agent.Agent(parent, config=self.config)
         self.assertEqual(tester.parent, parent)
         expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
@@ -60,7 +59,7 @@ class TestAgent(unittest.TestCase):
         self.assertEqual(tester._pidfile_child, expected)
 
         # Test - With Child
-        tester = agent.Agent(parent, child=child)
+        tester = agent.Agent(parent, child=child, config=self.config)
         self.assertEqual(tester.parent, parent)
         expected = files.pid_file(parent, self.config)
         self.assertEqual(tester.pidfile_parent, expected)
@@ -83,7 +82,7 @@ class TestAgent(unittest.TestCase):
         pass
 
 
-class TestAgentDaemon(TestDaemon):
+class TestAgentDaemon(test_daemon.TestDaemon):
     """Checks all functions and methods."""
 
     #########################################################################
@@ -106,7 +105,7 @@ class TestAgentDaemon(TestDaemon):
         pass
 
 
-class TestGracefulAgentDaemon(TestGracefulDaemon):
+class TestGracefulAgentDaemon(test_daemon.TestGracefulDaemon):
     """Checks all functions and methods."""
 
     #########################################################################
