@@ -280,6 +280,11 @@ def _check_symlinks(etc_dir, daemons):
         if link is False:
             if getpass.getuser() != 'root':
                 shared.log('Current user is not root')
+
+            # Delete files that aren't symlinks
+            print('{} Is not a symlink. Removing'.format(symlink_path))
+            os.remove('{0}.service'.format(symlink_path))
+
             print('Creating symlink for {}'.format(daemon))
             # Create symlink if it doesn't exist
             shared.run_script('systemctl enable {}'.format(daemon))
