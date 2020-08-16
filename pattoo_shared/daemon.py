@@ -260,6 +260,7 @@ file and directory permissions.'''.format(daemon_log_file)
             print('Daemon is running - {}'.format(self.name))
         else:
             print('Daemon is stopped - {}'.format(self.name))
+        return bool(pid)
 
     def run(self):
         """You should override this method when you subclass Daemon.
