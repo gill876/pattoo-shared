@@ -283,13 +283,16 @@ def _check_symlinks(etc_dir, daemons):
             print('Creating symlink for {}'.format(daemon))
             # Create symlink if it doesn't exist
             shared.run_script('systemctl enable {}'.format(daemon))
+    print('OK: Symlinks are present for the daemons')
 
 
-def daemon_check(daemon_name, verbose=False):
-    """Check if daemon is enabled/running and stops it.
+def run_daemon(daemon_name, verbose=False):
+    """Start/Restart pattoo system daemons.
+
+    Starts daemons if they aren't running and restarts them if running
 
     Args:
-        daemon_name: The system daemon being checked
+        daemon_name: The system daemon
         verbose: A boolean value to toggle verbose output
 
     Returns:
@@ -304,18 +307,23 @@ systemctl is-active {} daemon --quiet service-name'''.format(daemon_name)
     status = shared.run_script(command, die=False, verbose=verbose)[0]
     if status == 0:
         print('''
-{} daemon is already enabled/running, stopping daemon'''.format(daemon_name))
+The {} daemon is already enabled/running, restarting daemon
+'''.format(daemon_name))
+        # Restart daemon if its running
+        install_daemon(daemon_name, 'restart', verbose=verbose)
 
-        # Stop daemon if its running
-        shared.run_script('systemctl stop {}'.format(daemon_name),
-                          verbose=verbose)
+    # Starts daemon if its not running
+    else:
+        print('Enabling and starting {} daemon'.format(daemon_name))
+        install_daemon(daemon_name, 'start', verbose=verbose)
 
 
-def start_daemon(daemon_name, verbose=False):
-    """Enable and start respective pattoo daemons.
+def install_daemon(daemon_name, command, verbose=False):
+    """Enable and start/restart respective pattoo daemons.
 
     Args:
         daemon_name: The name of the daemon being started
+        command: The command to either start, or restart the daemon
         verbose: A boolean value to toggle verbose output
 
     Returns:
@@ -324,8 +332,16 @@ def start_daemon(daemon_name, verbose=False):
     """
     # Enable daemon
     shared.run_script('systemctl enable {}'.format(daemon_name), verbose=verbose)
-    # Start daemon
-    shared.run_script('systemctl start {}'.format(daemon_name), verbose=verbose)
+    # Start/Restart daemon
+    try:
+        shared.run_script('systemctl {0} {1}'.format(command, daemon_name), verbose=verbose)
+    except SystemExit:
+        message = '''\
+Unable to {0} daemon.
+Run the following command to see what could be causing the problem: \
+"systemctl status {1}.service"
+'''.format(command, daemon_name)
+        log.log2die(1087, message)
 
 
 def install(daemon_list, template_dir, installation_dir, verbose=False):
@@ -368,10 +384,9 @@ def install(daemon_list, template_dir, installation_dir, verbose=False):
     shared.run_script('systemctl daemon-reload', verbose=verbose)
 
     # Loop through daemon list and start daemons
-    print('Starting daemons')
+    print('Setting up system daemons')
     for daemon in daemon_list:
-        daemon_check(daemon, verbose=verbose)
-        start_daemon(daemon, verbose=verbose)
+        run_daemon(daemon, verbose=verbose)
 
     # Check if symlinks got created
     _check_symlinks(etc_dir, daemon_list)
