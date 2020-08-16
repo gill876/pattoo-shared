@@ -8,8 +8,7 @@ import subprocess
 import sys
 import shlex
 from time import sleep
-from io import StringIO
-from unittest.mock import patch
+
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
