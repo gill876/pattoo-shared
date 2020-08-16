@@ -431,6 +431,6 @@ def env():
 
     # Make sure the PATTOO_CONFIGDIR environment variable is set to unittest
     if 'unittest' in os.environ['PATTOO_CONFIGDIR'].lower():
-        log_message = (
-            'The PATTOO_CONFIGDIR is not set to a unittest directory')
+        log_message = ('''\
+The PATTOO_CONFIGDIR is set to a unittest directory. Daemon cannot be run''')
         log2die_safe(1040, log_message)

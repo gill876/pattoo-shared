@@ -34,48 +34,65 @@ from tests.libraries.configuration import UnittestConfig
 from tests.libraries import general
 
 
-def _start(agent_name):
+def _create_agent():
+    """Creates new test agent.
+
+    Args:
+        None
+
+    Return:
+        result: new agent for testing
+
+    """
+    # Return
+    config = Config()
+    name = general.random_agent_name()
+    result = Agent(name, config=config)
+    return result
+
+
+def _start(_agent):
     """Start test daemon.
 
     Args:
-        agent_name: Name of agent
+        _agent: Agent object
 
     Return:
         None
 
     """
     # Run script
-    arguments = '--start --agent_name={}'.format(agent_name)
+    arguments = '--start --agent_name={}'.format(_agent.name())
     _daemonizer(arguments)
 
 
-def _stop(agent_name):
+def _stop(_agent):
     """Stop test daemon.
 
     Args:
-        agent_name: Name of agent
+        _agent: Agent object
 
     Return:
         None
 
     """
     # Run script
-    arguments = '--stop --agent_name={}'.format(agent_name)
+    arguments = '--stop --agent_name={}'.format(_agent.name())
     _daemonizer(arguments)
 
 
-def _restart(agent_name):
+def _restart(_agent):
     """Restart test daemon.
 
     Args:
-        agent_name: Name of agent
+        _agent: Agent object
 
     Return:
         None
 
     """
     # Run script
-    arguments = '--restart --agent_name={}'.format(agent_name)
+    arguments = '--restart --agent_name={}'.format(_agent.name())
     _daemonizer(arguments)
 
 
@@ -92,23 +109,7 @@ def _daemonizer(arguments):
     _path = os.path.join(ROOT_DIR, 'tests/bin/mock_daemon.py')
     script = 'python3 {} {}'.format(_path, arguments)
     args = shlex.split(script)
-
-    # Spawn script
-    process = subprocess.Popen(
-        args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdoutdata, stderrdata = process.communicate()
-    returncode = process.returncode
-
-    # Crash if the return code is not 0
-    if returncode != 0:
-        print('''\
-Error Running: {0}
-Return Code  : {1}
-STDOUT       :
-{2}
-STDERR       :
-{3}
-'''.format(script, returncode, stdoutdata.decode(), stderrdata.decode()))
+    subprocess.call(args)
 
 
 class _Run():
@@ -128,46 +129,43 @@ class _Run():
             None
 
         """
-        print('Running')
+        # Loop
         while loop:
             sleep(60)
+        return True
 
 
 class MockGracefulDaemon(_Run, GracefulDaemon):
     """Class to create graceful daemon for testing."""
 
-    def __init__(self, agent_name):
+    def __init__(self, _agent):
         """Initialize the class.
 
         Args:
-            agent_name: Name of agent
+            _agent: Agent
 
         Returns:
             None
 
         """
         # Setting up MockDaemon and starting process for testing
-        config = Config()
-        _agent = Agent(agent_name, config=config)
         GracefulDaemon.__init__(self, _agent)
 
 
 class MockDaemon(_Run, Daemon):
     """Class to create daemon for testing."""
 
-    def __init__(self, agent_name):
+    def __init__(self, _agent):
         """Initialize the class.
 
         Args:
-            agent_name: Name of agent
+            _agent: Agent
 
         Returns:
             None
 
         """
         # Setting up MockDaemon and starting process for testing
-        config = Config()
-        _agent = Agent(agent_name, config=config)
         Daemon.__init__(self, _agent)
 
 
@@ -180,10 +178,9 @@ class TestDaemon(unittest.TestCase):
 
     def setUp(self):
         """Test setup"""
-
         # Setup base config and agent
         self._config = Config()
-        self._agent = general.random_agent_name()
+        self._agent = _create_agent()
 
         # Instantiation of test daemon
         self._daemon = MockDaemon(self._agent)
@@ -195,14 +192,14 @@ class TestDaemon(unittest.TestCase):
     def test___init__(self):
         """Testing function __init__."""
         # Check daemon name matches agent name
-        self.assertEqual(self._daemon.name, self._agent)
+        self.assertEqual(self._daemon.name, self._agent.name())
 
         # Checking daemon pid_file
-        expected = files.pid_file(self._agent, self._config)
+        expected = files.pid_file(self._agent.name(), self._config)
         self.assertEqual(self._daemon.pidfile, expected)
 
         # Checking daemon lock_file
-        expected = files.lock_file(self._agent, self._config)
+        expected = files.lock_file(self._agent.name(), self._config)
         self.assertEqual(self._daemon.lockfile, expected)
 
     def test__daemonize(self):
@@ -301,7 +298,7 @@ class TestDaemon(unittest.TestCase):
         self.assertTrue(os.path.exists(self._daemon.pidfile))
 
         # Test status while daemon is running
-        expected = 'Daemon is running - {}\n'.format(self._agent)
+        expected = 'Daemon is running - {}\n'.format(self._agent.name())
 
         # Intercept output
         with patch('sys.stdout', new=StringIO()) as result:
@@ -310,7 +307,7 @@ class TestDaemon(unittest.TestCase):
 
         # Test status when daemon has been stopped
         os.remove(self._daemon.pidfile)
-        expected = 'Daemon is stopped - {}\n'.format(self._agent)
+        expected = 'Daemon is stopped - {}\n'.format(self._agent.name())
 
         with patch('sys.stdout', new=StringIO()) as result:
             self._daemon.status()
@@ -318,10 +315,9 @@ class TestDaemon(unittest.TestCase):
 
     def test_run(self):
         """Testing function run."""
-        expected = 'Running\n'
-        with patch('sys.stdout', new=StringIO()) as result:
-            self._daemon.run(loop=False)
-            self.assertEqual(result.getvalue(), expected)
+        # Test
+        result = self._daemon.run(loop=False)
+        self.assertTrue(result)
 
 
 class TestGracefulDaemon(TestDaemon):
@@ -329,10 +325,9 @@ class TestGracefulDaemon(TestDaemon):
 
     def setUp(self):
         """Test setup"""
-
         # Setup base config and agent
         self._config = Config()
-        self._agent = general.random_agent_name()
+        self._agent = _create_agent()
 
         # Instantiation of test daemon
         self._daemon = MockGracefulDaemon(self._agent)

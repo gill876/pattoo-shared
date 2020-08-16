@@ -91,9 +91,10 @@ file and directory permissions.'''.format(daemon_log_file)
         f_handle_si = open(os.devnull, 'r')
         f_handle_so = open(daemon_log_file, 'a+')
         f_handle_se = open(daemon_log_file, 'a+')
-        os.dup2(f_handle_si.fileno(), sys.stdin.fileno())
-        os.dup2(f_handle_so.fileno(), sys.stdout.fileno())
-        os.dup2(f_handle_se.fileno(), sys.stderr.fileno())
+        # os.dup2(f_handle_si.fileno(), sys.stdin.fileno())
+        # os.dup2(f_handle_so.fileno(), sys.stdout.fileno())
+        # os.dup2(f_handle_se.fileno(), sys.stderr.fileno())
+        # print('boo')
 
         # write pidfile
         atexit.register(self.delpid)

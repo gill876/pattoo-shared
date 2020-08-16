@@ -73,10 +73,68 @@ class Agent():
         value = self.parent
         return value
 
-    def run(self):
+    def query(self):
         """Create placeholder method. Do not delete."""
         # Do nothing
         pass
+
+
+class _AgentRun():
+    """Class that defines basic run function for AgentDaemons."""
+
+    def run(self):
+        """Start Polling
+
+        Args:
+            None
+
+        Return:
+            None
+
+        """
+        # Start polling. (Poller decides frequency)
+        while True:
+            self.agent.query()
+
+
+class AgentDaemon(_AgentRun, Daemon):
+    """Class that manages base agent daemonization"""
+
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: agent object
+
+        Returns:
+            None
+
+        """
+        # Initialize variables to be used by daemon
+        self.agent = agent
+
+        # Instantiate daemon superclass
+        Daemon.__init__(self, agent)
+
+
+class GracefulAgentDaemon(_AgentRun, GracefulDaemon):
+    """Class that manages graceful agent daemonization."""
+
+    def __init__(self, agent):
+        """Initialize the class.
+
+        Args:
+            agent: agent object
+
+        Returns:
+            None
+
+        """
+        # Initialize variables to be used by daemon
+        self.agent = agent
+
+        # Instantiate daemon superclass
+        GracefulDaemon.__init__(self, agent)
 
 
 class AgentCLI():
@@ -186,9 +244,9 @@ class AgentCLI():
 
         # Instantiate agent daemon
         if graceful is False:
-            _daemon = Daemon(agent)
+            _daemon = AgentDaemon(agent)
         else:
-            _daemon = GracefulDaemon(agent)
+            _daemon = GracefulAgentDaemon(agent)
 
         # Run daemon
         if args.start is True:
@@ -248,7 +306,7 @@ class AgentAPI(Agent):
             ip_bind_port=_config.ip_bind_port(),
             ip_listen_address=_config.ip_listen_address())
 
-    def run(self):
+    def query(self):
         """Query all remote targets for data.
 
         Args:

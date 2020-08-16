@@ -36,6 +36,9 @@ def main():
         None
 
     """
+    # Initialize key variables
+    config = Config()
+
     # Set up parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--start', help='Start daemon', action='store_true')
@@ -47,7 +50,8 @@ def main():
     args = parser.parse_args()
 
     # Daemon manipulation
-    daemon = MockDaemon(args.agent_name)
+    agent_ = Agent(args.agent_name, config=config)
+    daemon = MockDaemon(agent_)
     if bool(args.start):
         daemon.start()
     elif bool(args.stop):

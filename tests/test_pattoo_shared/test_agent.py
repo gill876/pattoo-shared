@@ -83,50 +83,50 @@ class TestAgent(unittest.TestCase):
         pass
 
 
-# class TestBaseAgentDaemon(TestDaemon):
-#     """Checks all functions and methods."""
-#
-#     #########################################################################
-#     # General object setup
-#     #########################################################################
-#
-#     def setUp(self):
-#         """Test setup"""
-#
-#         # Setup base config and agent
-#         self._config = Config()
-#         agent_name = general.random_agent_name()
-#         self._agent = agent.Agent(agent_name, config=self._config)
-#
-#         # Instantiation of test daemon
-#         self._daemon = agent.BaseAgentDaemon(self._agent)
-#
-#     def test_run(self):
-#         """Testing method or function named run."""
-#         pass
-#
-#
-# class TestGracefulAgentDaemon(TestGracefulDaemon):
-#     """Checks all functions and methods."""
-#
-#     #########################################################################
-#     # General object setup
-#     #########################################################################
-#
-#     def setUp(self):
-#         """Test setup"""
-#
-#         # Setup base config and agent
-#         self._config = Config()
-#         agent_name = general.random_agent_name()
-#         self._agent = agent.Agent(agent_name, config=self._config)
-#
-#         # Instantiation of test daemon
-#         self._daemon = agent.GracefulAgentDaemon(self._agent)
-#
-#     def test_run(self):
-#         """Testing method or function named run."""
-#         pass
+class TestAgentDaemon(TestDaemon):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._config = Config()
+        agent_name = general.random_agent_name()
+        self._agent = agent.Agent(agent_name, config=self._config)
+
+        # Instantiation of test daemon
+        self._daemon = agent.AgentDaemon(self._agent)
+
+    def test_run(self):
+        """Testing method or function named run."""
+        pass
+
+
+class TestGracefulAgentDaemon(TestGracefulDaemon):
+    """Checks all functions and methods."""
+
+    #########################################################################
+    # General object setup
+    #########################################################################
+
+    def setUp(self):
+        """Test setup"""
+
+        # Setup base config and agent
+        self._config = Config()
+        agent_name = general.random_agent_name()
+        self._agent = agent.Agent(agent_name, config=self._config)
+
+        # Instantiation of test daemon
+        self._daemon = agent.GracefulAgentDaemon(self._agent)
+
+    def test_run(self):
+        """Testing method or function named run."""
+        pass
 
 
 class TestAgentCLI(unittest.TestCase):
