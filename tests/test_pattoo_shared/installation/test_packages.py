@@ -26,7 +26,8 @@ from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
 from pattoo_shared.installation import shared, environment
 from pattoo_shared.installation.packages import install, install_missing_pip3
-
+from pattoo_shared.installation.packages import get_installed_packages
+from pattoo_shared.installation.packages import version_check
 
 class TestPackages(unittest.TestCase):
     """Checks all functions for the Pattoo packages script."""
@@ -81,6 +82,35 @@ class TestPackages(unittest.TestCase):
                     0] for package in packages.split()]
             result = expected_package in installed_packages
             self.assertEqual(result, expected)
+
+    def test_get_installed_packages(self):
+        """Unittest to test the get_installed packages function."""
+        packages = shared.run_script('python3 -m pip freeze')[1]
+
+        # Get packages with versions removed
+        pkg_names = [
+            package.decode().split('==')[0] for package in packages.split()
+            ]
+        pkg_versions = [
+            package.decode().split('==')[0] for package in packages.split()
+            ]
+        expected = dict(zip(pkg_names, pkg_versions))
+        result = get_installed_packages()
+        self.assertEqual(result, expected)
+
+    def test_version_check(self):
+        """Unittest to test the version_check function."""
+        # Test with outdated pattoo_shared version
+        with self.subTest():
+            shared.run_script('pip3 install PattooShared==0.0.89')
+            packages = get_installed_packages()
+            self.assertFalse(version_check('PattooShared', packages))
+
+        # Test by updating pattoo shared
+        with self.subTest():
+            shared.run_script('pip3 install PattooShared -U')
+            packages = get_installed_packages()
+            self.assertTrue(version_check('PattooShared', packages))
 
 
 if __name__ == '__main__':
