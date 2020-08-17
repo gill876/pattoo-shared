@@ -5,6 +5,8 @@ import unittest
 from random import random
 import sys
 import tempfile
+import json
+import urllib
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -118,13 +120,30 @@ class TestPackages(unittest.TestCase):
 
     def test_check_outdated_packages(self):
         """Unittest to test the check_outdated_packages function."""
-        # Install outdated pattoo shared version
-        install_missing_pip3('PattooShared==0.0.89')
-        packages = ['PattooShared==0.0.94']
-        expected = '0.0.94'
-        check_outdated_packages(packages)
-        result = get_package_version('PattooShared')
-        self.assertEqual(result, expected)
+        # Initialize key variables
+        package_dict = {
+            'Flask': '1.1.0',
+            'pandas': '1.0.5',
+            'PyNaCl': '1.4.0',
+            'distro': '1.5.0'
+        }
+
+        packages = [
+            'Flask<=1.1.0', 'pandas==1.0.5', 'PyNaCl>=1.3', 'distro<1.5.0']
+
+        # Install the packages
+        for package in package_dict:
+            shared.run_script('pip3 install {}'.format(package))
+
+        # Check if they're outdated based on the packages list
+        check_outdated_packages(packages, verbose=True)
+
+        # Iterate over package dict and perform unittests
+        for package in package_dict:
+            with self.subTest():
+                result = get_package_version(package)
+                expected = package_dict.get(package)
+                self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':

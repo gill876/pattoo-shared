@@ -18,7 +18,11 @@ def get_package_version(package_name):
         package_dict:A dictionary containing the installed packages
 
     """
-    raw_description = shared.run_script('pip3 show {}'.format(package_name))[1]
+    try:
+        raw_description = shared.run_script('pip3 show {}'.format(package_name))[1]
+    except SystemExit:
+        message = 'The package {} is not installed'.format(package_name)
+        log.log2die_safe(1093, message)
     pkg_description = raw_description.decode().split('\n')
     version = pkg_description[1].replace(' ', '').split(':')
     return version[1]
@@ -39,7 +43,12 @@ def check_outdated_packages(packages, verbose=False):
         print('Checking for outdated packages')
     for package in packages:
         # Get packages with versions from pip_requirements.txt
-        requirement_package = package.split('==', 1)
+        delimiters = ['==', '<=', '>=', '<', '>']
+        requirement_package = package
+        for delimiter in delimiters:
+            if delimiter in package:
+                requirement_package = package.split(delimiter, 1)
+                break
         if len(requirement_package) == 2:
             installed_version = get_package_version(requirement_package[0])
             # Reinstall package if incorrect version is installed
@@ -66,13 +75,14 @@ def install_missing_pip3(package, verbose=False):
         log.log2die_safe(1088, message)
 
 
-def install(requirements_dir, installation_directory, verbose=False):
+def install(requirements_dir, install_dir, verbose=False, update_packages=True):
     """Ensure PIP3 packages are installed correctly.
 
     Args:
         requirements_dir: The directory with the pip_requirements file.
-        installation_directory: Directory where packages must be installed.
+        install_dir: Directory where packages must be installed.
         verbose: Print status messages if True
+        update_packages: Boolean value to toggle the updating of the packages
 
     Returns:
         True if pip3 packages are installed successfully
@@ -126,12 +136,13 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
             install_missing_pip3(package, verbose=verbose)
 
     # Check for outdated packages
-    check_outdated_packages(lines, verbose=verbose)
+    if update_packages is True:
+        check_outdated_packages(lines, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
-        if os.path.isdir(installation_directory) is True:
+        if os.path.isdir(install_dir) is True:
             shared.run_script('chown -R pattoo:pattoo {}'.format(
-                installation_directory), verbose=verbose)
+                install_dir), verbose=verbose)
 
     print('pip3 packages successfully installed')
