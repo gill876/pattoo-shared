@@ -43,7 +43,7 @@ def check_outdated_packages(packages, verbose=False):
         print('Checking for outdated packages')
     for package in packages:
         # Get packages with versions from pip_requirements.txt
-        delimiters = ['==', '<=', '>=', '<', '>']
+        delimiters = ['==', '<=', '>=', '<', '>', '~=']
         requirement_package = package
         for delimiter in delimiters:
             if delimiter in package:
