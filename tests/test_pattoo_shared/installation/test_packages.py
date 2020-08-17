@@ -5,8 +5,6 @@ import unittest
 from random import random
 import sys
 import tempfile
-import json
-import urllib
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
