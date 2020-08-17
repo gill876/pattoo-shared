@@ -24,6 +24,29 @@ def get_package_version(package_name):
     return version[1]
 
 
+def check_outdated_packages(packages, verbose=False):
+    """Check for outdated packages and reinstall them.
+
+    Args:
+        packages: A list of pip packages parsed from the requirement file
+
+    Returns:
+        None
+
+    """
+    # Say what we are doing
+    if verbose:
+        print('Checking for outdated packages')
+    for package in packages:
+        # Get packages with versions from pip_requirements.txt
+        requirement_package = package.split('==', 1)
+        if len(requirement_package) == 2:
+            installed_version = get_package_version(requirement_package[0])
+            # Reinstall package if incorrect version is installed
+            if installed_version != requirement_package[1]:
+                install_missing_pip3(package, verbose=verbose)
+
+
 def install_missing_pip3(package, verbose=False):
     """Automatically Install missing pip3 packages.
 
@@ -103,16 +126,7 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
             install_missing_pip3(package, verbose=verbose)
 
     # Check for outdated packages
-    if verbose:
-        print('Checking for outdated packages')
-    for package in lines:
-        # Get packages with versions from pip_requirements.txt
-        requirement_package = package.split('==', 1)
-        if len(requirement_package) == 2:
-            installed_version = get_package_version(requirement_package[0])
-            # Reinstall package if incorrect version is installed
-            if installed_version != requirement_package[1]:
-                install_missing_pip3(package, verbose=verbose)
+    check_outdated_packages(lines, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':

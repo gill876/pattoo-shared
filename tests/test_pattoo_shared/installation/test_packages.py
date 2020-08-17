@@ -26,7 +26,7 @@ from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
 from pattoo_shared.installation import shared, environment
 from pattoo_shared.installation.packages import install, install_missing_pip3
-from pattoo_shared.installation.packages import get_package_version
+from pattoo_shared.installation.packages import get_package_version, check_outdated_packages
 
 
 class TestPackages(unittest.TestCase):
@@ -107,14 +107,24 @@ class TestPackages(unittest.TestCase):
                 ]
             result = expected_package in installed_packages
             self.assertEqual(result, expected)
-        
+
     def test_get_package_version(self):
         """Unittest to test the get_package_version function."""
         package = 'PattooShared'
         shared.run_script('python3 -m pip install {}==0.0.90'.format(package))
         result = get_package_version(package)
         expected = '0.0.90'
-        self.assertEqual(expected, result)
+        self.assertEqual(result, expected)
+
+    def test_check_outdated_packages(self):
+        """Unittest to test the check_outdated_packages function."""
+        # Install outdated pattoo shared version
+        install_missing_pip3('PattooShared==0.0.89')
+        packages = ['PattooShared==0.0.94']
+        expected = '0.0.94'
+        check_outdated_packages(packages)
+        result = get_package_version('PattooShared')
+        self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':
