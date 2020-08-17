@@ -42,6 +42,6 @@ setuptools.setup(
         'PyYaml',
         'python-gnupg==0.4.6',
         'distro',
-        'virtualenv'
+        'virtualenv==20.0.30'
     ]
 )
