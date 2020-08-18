@@ -8,7 +8,7 @@ import shutil
 import getpass
 
 
-def run_script(cli_string, die=True, verbose=False):
+def run_script(cli_string, die=True, verbose=True):
     """Run the cli_string UNIX CLI command and record output.
 
     Args:

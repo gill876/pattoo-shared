@@ -15,14 +15,14 @@ def get_package_version(package_name):
         package_name: The name of the package
 
     Returns:
-        package_dict:A dictionary containing the installed packages
+        version: The version of the package if the package is installed.
+        None: If the package is not installed
 
     """
     try:
         raw_description = shared.run_script('pip3 show {}'.format(package_name))[1]
     except SystemExit:
-        message = 'The package {} is not installed'.format(package_name)
-        log.log2die_safe(1093, message)
+        return None
     pkg_description = raw_description.decode().split('\n')
     version = pkg_description[1].replace(' ', '').split(':')
     return version[1]
@@ -51,7 +51,11 @@ def check_outdated_packages(packages, verbose=False):
                 break
         if len(requirement_package) == 2:
             installed_version = get_package_version(requirement_package[0])
-            # Reinstall package if incorrect version is installed
+            # Reinstall package if incorrect version is installed and
+            # install if it didn't get installed
+            if installed_version is None:
+                install_missing_pip3(package, verbose=verbose)
+
             if installed_version != requirement_package[1]:
                 install_missing_pip3(package, verbose=verbose)
 
