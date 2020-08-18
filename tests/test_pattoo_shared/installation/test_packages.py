@@ -111,10 +111,15 @@ class TestPackages(unittest.TestCase):
     def test_get_package_version(self):
         """Unittest to test the get_package_version function."""
         package = 'PattooShared'
-        shared.run_script('python3 -m pip install {}==0.0.90'.format(package))
-        result = get_package_version(package)
-        expected = '0.0.90'
-        self.assertEqual(result, expected)
+        with self.subTest():
+            result = get_package_version(package)
+            expected = None
+            self.assertEqual(result, expected)
+        with self.subTest():
+            shared.run_script('python3 -m pip install {}==0.0.90'.format(package))
+            result = get_package_version(package)
+            expected = '0.0.90'
+            self.assertEqual(result, expected)
 
     def test_check_outdated_packages(self):
         """Unittest to test the check_outdated_packages function."""
