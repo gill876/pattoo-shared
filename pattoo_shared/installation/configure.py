@@ -201,7 +201,7 @@ def pattoo_config(file_name, config_directory, config_dict):
             f_handle = open(config_file, 'w')
         except PermissionError:
             log.log2die(1076, '''\
-Insufficient permissions for creating the file:{}'''.format(config))
+Insufficient permissions for creating the file:{}'''.format(config_file))
         else:
             with f_handle:
                 yaml.dump(config, f_handle, default_flow_style=False)

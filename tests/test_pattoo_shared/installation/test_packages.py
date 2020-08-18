@@ -26,8 +26,8 @@ from tests.libraries.configuration import UnittestConfig
 from pattoo_shared import data
 from pattoo_shared.installation import shared, environment
 from pattoo_shared.installation.packages import install, install_missing_pip3
-from pattoo_shared.installation.packages import get_installed_packages
-from pattoo_shared.installation.packages import version_check
+from pattoo_shared.installation.packages import get_package_version, check_outdated_packages
+
 
 class TestPackages(unittest.TestCase):
     """Checks all functions for the Pattoo packages script."""
@@ -39,22 +39,46 @@ class TestPackages(unittest.TestCase):
         environment.environment_setup(cls.venv_dir)
 
     def test_install_missing_pip3(self):
-        """Unittest to test the install_missing_pip3 function."""           
-        # Attempt to install a test package
-        install_missing_pip3('tweepy', verbose=False)
+        """Unittest to test the install_missing_pip3 function.""" 
+        # Test with expected behaviour
+        with self.subTest(): 
+            # Attempt to install a test package
+            install_missing_pip3('tweepy', verbose=False)
 
-        # Try except to determine if package was installed
-        try:
-            import tweepy
-            result = True
-        except ModuleNotFoundError:
-            result = False
-        self.assertTrue(result)
+            # Try except to determine if package was installed
+            try:
+                import tweepy
+                result = True
+            except ModuleNotFoundError:
+                result = False
+            self.assertTrue(result)
 
-        # Test case that would cause the install_missing_pip3 function to fail
-        with self.assertRaises(SystemExit) as cm_:
-            install_missing_pip3('This does not exist', False)
-        self.assertEqual(cm_.exception.code, 2)
+        # Test case that would cause the install_missing_pip3
+        # function to fail
+        with self.subTest():
+            with self.assertRaises(SystemExit) as cm_:
+                install_missing_pip3('This does not exist', False)
+            self.assertEqual(cm_.exception.code, 2)
+
+        # Test with outdated package version
+        with self.subTest():
+            install_missing_pip3('matplotlib==3.3.0', False)
+            expected = '3.3.0'
+            result = get_package_version('matplotlib')
+            self.assertEqual(result, expected)
+
+        # Test with non-existent package version
+        with self.subTest():
+            with self.assertRaises(SystemExit) as cm_:
+                install_missing_pip3('pandas==100000')
+            self.assertEqual(cm_.exception.code, 2)
+
+        # Test package reinstall to more updated version
+        with self.subTest():
+            install_missing_pip3('matplotlib==3.3.1')
+            expected = '3.3.1'
+            result = get_package_version('matplotlib')
+            self.assertEqual(result, expected)
 
     def test_install(self):
         """Unittest to test the install function."""
@@ -78,39 +102,51 @@ class TestPackages(unittest.TestCase):
             packages = shared.run_script('python3 -m pip freeze')[1]
 
             # Get packages with versions removed
-            installed_packages = [package.decode().split('==')[
-                    0] for package in packages.split()]
+            installed_packages = [
+                package.decode().split('==')[0] for package in packages.split()
+                ]
             result = expected_package in installed_packages
             self.assertEqual(result, expected)
 
-    def test_get_installed_packages(self):
-        """Unittest to test the get_installed packages function."""
-        packages = shared.run_script('python3 -m pip freeze')[1]
-
-        # Get packages with versions removed
-        pkg_names = [
-            package.decode().split('==')[0] for package in packages.split()
-            ]
-        pkg_versions = [
-            package.decode().split('==')[0] for package in packages.split()
-            ]
-        expected = dict(zip(pkg_names, pkg_versions))
-        result = get_installed_packages()
-        self.assertEqual(result, expected)
-
-    def test_version_check(self):
-        """Unittest to test the version_check function."""
-        # Test with outdated pattoo_shared version
+    def test_get_package_version(self):
+        """Unittest to test the get_package_version function."""
+        package = 'PattooShared'
         with self.subTest():
-            shared.run_script('pip3 install PattooShared==0.0.89')
-            packages = get_installed_packages()
-            self.assertFalse(version_check('PattooShared', packages))
-
-        # Test by updating pattoo shared
+            result = get_package_version(package)
+            expected = None
+            self.assertEqual(result, expected)
         with self.subTest():
-            shared.run_script('pip3 install PattooShared -U')
-            packages = get_installed_packages()
-            self.assertTrue(version_check('PattooShared', packages))
+            shared.run_script('python3 -m pip install {}==0.0.90'.format(package))
+            result = get_package_version(package)
+            expected = '0.0.90'
+            self.assertEqual(result, expected)
+
+    def test_check_outdated_packages(self):
+        """Unittest to test the check_outdated_packages function."""
+        # Initialize key variables
+        package_dict = {
+            'Flask': '1.1.0',
+            'pandas': '1.0.5',
+            'PyNaCl': '1.4.0',
+            'distro': '1.5.0'
+        }
+
+        packages = [
+            'Flask<=1.1.0', 'pandas==1.0.5', 'PyNaCl>=1.3', 'distro<1.5.0']
+
+        # Install the packages
+        for package in package_dict:
+            shared.run_script('pip3 install {}'.format(package))
+
+        # Check if they're outdated based on the packages list
+        check_outdated_packages(packages, verbose=True)
+
+        # Iterate over package dict and perform unittests
+        for package in package_dict:
+            with self.subTest():
+                result = get_package_version(package)
+                expected = package_dict.get(package)
+                self.assertEqual(result, expected)
 
 
 if __name__ == '__main__':

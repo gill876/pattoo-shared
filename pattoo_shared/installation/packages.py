@@ -2,60 +2,62 @@
 # Standard imports
 import os
 import getpass
-import json
-import urllib.request
 
 # Import pattoo related libraries
 from pattoo_shared.installation import shared
 from pattoo_shared import log
 
 
-def get_installed_packages():
-    """Retrieve installed pip packages.
+def get_package_version(package_name):
+    """Retrieve installed pip package version.
 
     Args:
+        package_name: The name of the package
+
+    Returns:
+        version: The version of the package if the package is installed.
+        None: If the package is not installed
+
+    """
+    try:
+        raw_description = shared.run_script('pip3 show {}'.format(package_name))[1]
+    except SystemExit:
+        return None
+    pkg_description = raw_description.decode().split('\n')
+    version = pkg_description[1].replace(' ', '').split(':')
+    return version[1]
+
+
+def check_outdated_packages(packages, verbose=False):
+    """Check for outdated packages and reinstall them.
+
+    Args:
+        packages: A list of pip packages parsed from the requirement file
+
+    Returns:
         None
 
-    Returns:
-        package_dict:A dictionary containing the installed packages
-
     """
-    packages = shared.run_script('python3 -m pip freeze')[1]
-    # Retrieve package names
-    keys = [package.decode().split('==')[0] for package in packages.split()]
+    # Say what we are doing
+    if verbose:
+        print('Checking for outdated packages')
+    for package in packages:
+        # Get packages with versions from pip_requirements.txt
+        delimiters = ['==', '<=', '>=', '<', '>', '~=']
+        requirement_package = package
+        for delimiter in delimiters:
+            if delimiter in package:
+                requirement_package = package.split(delimiter, 1)
+                break
+        if len(requirement_package) == 2:
+            installed_version = get_package_version(requirement_package[0])
+            # Reinstall package if incorrect version is installed and
+            # install if it didn't get installed
+            if installed_version is None:
+                install_missing_pip3(package, verbose=verbose)
 
-    # Retrieve package versions
-    values = [package.decode().split('==')[1] for package in packages.split()]
-
-    # Create dictionary with package versions
-    package_dict = dict(zip(keys, values)) 
-
-    return package_dict
-
-
-def version_check(package_name, package_dict):
-    """Check if package installed is updated to its latest version.
-
-    Args:
-        package_dict: A dictionary containing the packages
-        package_name: The package being checked
-
-    Returns:
-        True: If the package is updated
-        False: If the package is not updated/installed
-
-    """
-    package_url = 'https://pypi.org/pypi/{}/json'.format(package_name)
-    # Retrieve information on latest package version
-    package_data = urllib.request.urlopen(package_url).read()
-    data = json.loads(package_data)
-    latest_version = data['info']['version']
-
-    # Get version name from dictionary
-    if package_dict.get(package_name) == latest_version:
-        return True
-    else:
-        return False
+            if installed_version != requirement_package[1]:
+                install_missing_pip3(package, verbose=verbose)
 
 
 def install_missing_pip3(package, verbose=False):
@@ -68,18 +70,23 @@ def install_missing_pip3(package, verbose=False):
         None
 
     """
-    # Validate pip directory
-    shared.run_script('''\
-python3 -m pip install {0} -U --force-reinstall'''.format(package), verbose=verbose)
+    # Intitialize key variables
+    command = 'python3 -m pip install {0} -U --force-reinstall'.format(package)
+    try:
+        shared.run_script(command, verbose=verbose)
+    except SystemExit:
+        message = 'Invalid pip package/package version "{}"'.format(package)
+        log.log2die_safe(1088, message)
 
 
-def install(requirements_dir, installation_directory, verbose=False):
+def install(requirements_dir, install_dir, verbose=False, update_packages=True):
     """Ensure PIP3 packages are installed correctly.
 
     Args:
         requirements_dir: The directory with the pip_requirements file.
-        installation_directory: Directory where packages must be installed.
+        install_dir: Directory where packages must be installed.
         verbose: Print status messages if True
+        update_packages: Boolean value to toggle the updating of the packages
 
     Returns:
         True if pip3 packages are installed successfully
@@ -87,8 +94,6 @@ def install(requirements_dir, installation_directory, verbose=False):
     """
     # Initialize key variables
     lines = []
-
-    # Read pip_requirements file
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
 
     # Say what we are doing
@@ -113,9 +118,10 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
                 if True in [_line.startswith('#'), bool(_line) is False]:
                     pass
                 else:
+
+                    # Append package with version and package name to list
                     lines.append(_line)
                 line = _fp.readline()
-
     # Process each line of the file
     for line in lines:
         # Determine the package
@@ -134,18 +140,13 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
             install_missing_pip3(package, verbose=verbose)
 
     # Check for outdated packages
-    if verbose:
-        print('Checking for outdated packages')
-    installed_packages = get_installed_packages()
-    for key in installed_packages:
-        if version_check(key, installed_packages) is False:
-            # Reinstall updated version of package
-            install_missing_pip3(key, verbose=verbose)
+    if update_packages is True:
+        check_outdated_packages(lines, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
-        if os.path.isdir(installation_directory) is True:
+        if os.path.isdir(install_dir) is True:
             shared.run_script('chown -R pattoo:pattoo {}'.format(
-                installation_directory), verbose=verbose)
+                install_dir), verbose=verbose)
 
     print('pip3 packages successfully installed')
