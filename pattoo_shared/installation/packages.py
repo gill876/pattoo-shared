@@ -53,8 +53,6 @@ def check_outdated_packages(packages, verbose=False):
             installed_version = get_package_version(requirement_package[0])
             # Reinstall package if incorrect version is installed and
             # install if it didn't get installed
-            if installed_version is None:
-                install_missing_pip3(package, verbose=verbose)
 
             if installed_version != requirement_package[1]:
                 install_missing_pip3(package, verbose=verbose)
