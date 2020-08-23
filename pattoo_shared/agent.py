@@ -79,6 +79,28 @@ class Agent():
         pass
 
 
+class EncryptedAgent(Agent):
+    """Encrypted Agent class for daemons."""
+
+    def __init__(self, parent, child=None, config=None):
+        """Initialize the class.
+
+        Args:
+            parent: Name of parent daemon
+            child: Name of child daemon
+            config: Config object
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables (Parent)
+        Agent.__init__(self, parent, child=child, config=config)
+
+        # Create GPG key for agent
+        self._gpg = files.set_gnupg(parent, config)
+
+
 class _AgentRun():
     """Class that defines basic run function for AgentDaemons."""
 
@@ -386,8 +408,7 @@ class EncryptedAgentAPI(AgentAPI):
         AgentAPI.__init__(self, parent, child, app, config=config)
 
         # Create GPG key for agent
-        files.set_gnupg(
-            parent, self.config, self.config.api_email_address())
+        files.set_gnupg(parent, config)
 
 
 class _StandaloneApplication(BaseApplication):

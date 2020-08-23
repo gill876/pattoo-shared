@@ -1,6 +1,5 @@
-#!/usr/bin/env python3
+"""Encryption module."""
 
-import gnupg
 import uuid
 import hashlib
 import os
@@ -8,8 +7,11 @@ import random
 import string
 import stat
 
+# PIP imports
+import gnupg
 
-class Pgpier:
+
+class Pgpier():
     """Pgpier class.
 
     A class that handles encryption and decryption
@@ -247,7 +249,6 @@ class Pgpier:
         # path to parent directory of gnupg home
         # where Pgpier will operate its own files
         _path = self.wrk_dir
-        # _wrapper = '(main)'
 
         # returns list of files if it ends with the wrapper
         key = [_file for _file in os.listdir(_path)
