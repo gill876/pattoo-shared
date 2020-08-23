@@ -30,9 +30,9 @@ else:
 from pattoo_shared import phttp
 from pattoo_shared import data
 from pattoo_shared import converter
-from pattoo_shared.files import set_gnupg, get_gnupg
-from pattoo_shared.configuration import Config
-from tests.libraries.configuration import UnittestConfig
+from pattoo_shared import files
+from pattoo_shared.configuration import Config, ServerConfig
+from tests.libraries.configuration import UnittestConfig, TestConfigAgentAPId
 from tests.libraries import general as ta
 
 
@@ -164,14 +164,10 @@ class TestEncryptedPost(unittest.TestCase):
     symmetric_key = None
     nonce = None
 
-    # Initialize
-    # Create Pgpier objects
-    agent_gpg = set_gnupg(
-        'test_agent0', Config(), 'test_agent0@example.org'
-            )
-    api_gpg = set_gnupg(
-        'test_api0', Config(), 'test_api0@example.org'
-            )
+    # Initialize encrytion keys
+    agent_gpg = files.set_gnupg('test_agent0', Config())
+    api_gpg = files.set_gnupg('test_api0', TestConfigAgentAPId())
+
     # Create EncryptedPost object
     encrypted_post = phttp.EncryptedPost(identifier, data, agent_gpg)
 
@@ -240,11 +236,13 @@ class TestEncryptedPost(unittest.TestCase):
             encrypted_nonce = self.api_gpg.encrypt_data(
                 self.nonce, self.agent_gpg.fingerprint)
 
-            json_response = {'data': {
+            json_response = {
+                'data': {
                     'api_email': api_email_addr,
                     'api_key': api_publickey,
                     'encrypted_nonce': encrypted_nonce
-                }}
+                }
+            }
 
             # Send data
             return json_response
@@ -490,13 +488,8 @@ class TestEncryptedPostAgent(unittest.TestCase):
     """Test EncryptedPostAgent"""
 
     # Initialize
-    # Create Pgpier objects
-    agent_gpg = set_gnupg(
-        'test_agent0', Config(), 'test_agent0@example.org'
-            )
-    api_gpg = set_gnupg(
-        'test_api0', Config(), 'test_api0@example.org'
-            )
+    agent_gpg = files.set_gnupg('test_agent0', Config())
+    api_gpg = files.set_gnupg('test_api0', TestConfigAgentAPId())
 
     # Variables that will be modified by callback functions
     agent_publickey = None
@@ -512,11 +505,10 @@ class TestEncryptedPostAgent(unittest.TestCase):
 
         # Get agent variables
         _data = converter.agentdata_to_post(agentdata)
-        data = converter.posting_data_points(_data)
+        data2post = converter.posting_data_points(_data)
 
         # Create agent
-        encrypted_agent = phttp.EncryptedPostAgent(
-            agentdata, self.agent_gpg)
+        encrypted_agent = phttp.EncryptedPostAgent(agentdata, self.agent_gpg)
 
         # Define callback functions
 
@@ -557,11 +549,13 @@ class TestEncryptedPostAgent(unittest.TestCase):
             encrypted_nonce = self.api_gpg.encrypt_data(
                 self.nonce, self.agent_gpg.fingerprint)
 
-            json_response = {'data': {
+            json_response = {
+                'data': {
                     'api_email': api_email_addr,
                     'api_key': api_publickey,
                     'encrypted_nonce': encrypted_nonce
-                }}
+                }
+            }
 
             # Send data
             return json_response
@@ -608,7 +602,7 @@ class TestEncryptedPostAgent(unittest.TestCase):
 
             # Check that decrypted data is the same as the received
             # The two dictionaries are hashed then the values are compared
-            agent_data = data
+            agent_data = data2post
             if len(agent_data) == len(recv_data):
                 # Data received and decrypted successfully
                 context.status_code = 202
@@ -649,7 +643,7 @@ class TestEncryptedPostAgent(unittest.TestCase):
             identifier = agentdata.agent_id
 
             # Save data to cache
-            phttp._save_data(data, identifier)
+            phttp._save_data(data2post, identifier)
 
             # Encrypted purge
             encrypted_agent.purge()

@@ -428,12 +428,10 @@ class Test_GnuPG(unittest.TestCase):
 
         # Agent details
         agent_name = 'test_agent1'
-        agent_email = 'test_agent1@example.org'
+        # agent_email = 'test_agent1@example.org'
 
         # Result
-        result = files.set_gnupg(
-                    agent_name, self.config, agent_email
-                                )
+        result = files.set_gnupg(agent_name, self.config)
 
         # If a Pgpier object was created, a key ID would
         # be set of type str
@@ -446,12 +444,10 @@ class Test_GnuPG(unittest.TestCase):
         # Create Pgpier object
         # Agent details
         agent_name = 'test_agent2'
-        agent_email = 'test_agent2@example.org'
+        # agent_email = 'test_agent2@example.org'
 
         # Result
-        files.set_gnupg(
-                    agent_name, self.config, agent_email
-                        )
+        files.set_gnupg(agent_name, self.config)
 
         # Retrieve Pgpier object
         result = files.get_gnupg(agent_name, self.config)

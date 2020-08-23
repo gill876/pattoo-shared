@@ -13,7 +13,9 @@ import subprocess
 import yaml
 
 # Pattoo libraries
-from pattoo_shared import log, data
+from pattoo_shared import log
+from pattoo_shared import data
+from pattoo_shared import configuration
 from pattoo_shared import encrypt
 
 
@@ -520,19 +522,25 @@ def get_agent_id(agent_name, config):
     return agent_id
 
 
-def set_gnupg(agent_name, config, agent_email):
+def set_gnupg(agent_name, config):
     """Generate key pair and store credentials
 
     Args:
         agent_name (str): Agent name
         config (obj): Config object
-        agent_email (str): Agent email address
 
     Returns:
         gpg (obj): Pgpier object
+
     """
     # Uses agent name as wrapper
     wrapper = '({})'.format(agent_name)
+
+    # Set the email address to be used for encryption
+    if isinstance(config, configuration.Config):
+        agent_email = config.agent_email_address()
+    else:
+        agent_email = config.api_email_address()
 
     # Retrieves key directory
     d_obj = _Directory(config)
