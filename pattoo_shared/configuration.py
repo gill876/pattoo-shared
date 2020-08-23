@@ -3,6 +3,7 @@
 
 # Standard imports
 import os
+import stat
 
 # Import project libraries
 from pattoo_shared import files
@@ -232,6 +233,50 @@ class BaseConfig():
 
         # Return
         return value
+
+    def keyring_directory(self):
+        """Get keyring_directory.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        result = '{}/.keyring'.format(self.keys_directory())
+
+        # Create directory if it doesn't exist
+        files.mkdir(result)
+
+        # Make only accessible to the user
+        os.chmod(result, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Return
+        return result
+
+    def keys_directory(self):
+        """Get keys_directory.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        result = '{}/keys'.format(self.daemon_directory())
+
+        # Create directory if it doesn't exist
+        files.mkdir(result)
+
+        # Make only accessible to the user
+        os.chmod(result, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Return
+        return result
 
     def system_daemon_directory(self):
         """Determine the system_daemon_directory.

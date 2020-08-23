@@ -216,6 +216,26 @@ class TestConfig(unittest.TestCase):
         result = self.config.agent_cache_directory(agent_id)
         self.assertEqual(result, expected)
 
+    def test_keyring_directory(self):
+        """Testing function keyring_directory."""
+        # Initialize key values
+        expected = (
+            '{1}{0}.keyring'.format(os.sep, self.config.keys_directory()))
+
+        # Test
+        result = self.config.keys_directory()
+        self.assertEqual(result, expected)
+
+    def test_keys_directory(self):
+        """Testing function keys_directory."""
+        # Initialize key values
+        expected = (
+            '{1}{0}keys'.format(os.sep, self.config.daemon_directory()))
+
+        # Test
+        result = self.config.keys_directory()
+        self.assertEqual(result, expected)
+
 
 class TestBasicFunctions(unittest.TestCase):
     """Checks all functions and methods."""

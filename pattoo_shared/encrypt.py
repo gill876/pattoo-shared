@@ -6,9 +6,17 @@ import os
 import random
 import string
 import stat
+from collections import namedtuple
 
 # PIP imports
 import gnupg
+
+# Pattoo imports
+from pattoo_shared.configuration import Config
+from pattoo_shared import log
+
+# Create constant for processing
+_METADATA = namedtuple('_METADATA', 'fingerprint passphrase')
 
 
 class Pgpier():
@@ -506,6 +514,446 @@ class Pgpier():
 
         data = (decrypted_data.data).decode('utf-8')
         return data
+
+    def email_to_key(self, email):
+        """Email to fingerprint.
+
+        Method to retrieve fingerprint of associated
+        email address from the GnuPG keyring
+
+        Args:
+            email (str): Email address
+
+        Returns:
+            int: Fingerprint that is associated with the email
+            address if it is found
+            None: If no associated fingerprint is found
+        """
+
+        # Gets all available public keys in keyring
+        keys = self.list_pub_keys()
+
+        result = None
+
+        for key in keys:  # Go through each public key
+            uids = list(filter((lambda item: email in item), key['uids']))
+            if uids != []:
+                parts = uids[0].split(' ')
+                wrapped_email = list(filter((lambda item: '<' in item), parts))
+                unwrapped_email = wrapped_email[0].strip('<>')
+                if unwrapped_email == email:
+                    return key['fingerprint']
+
+        return result
+
+    def trust_key(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
+        """Trust public key.
+
+        Method to trust public key that was imported to have the
+        ability to encrypt data using
+        that public key
+
+        Args:
+            fingerprint (int): Fingerprint of pubic key to trust
+            trustlevel (str): Trust level to assign to public key
+
+        Returns:
+            None
+        """
+        gpg = self.gpg
+
+        gpg.trust_keys(fingerprint, trustlevel)
+
+    def symmetric_encrypt(self, data, passphrase,
+                          algorithm='AES256', armor=True):
+        """Symmetric encrypt.
+
+        Method to encrypt data using symmmetric key encryption
+        using a passphrase and encryption
+        algorithm
+
+        Args:
+            data (str): String of data to be encrypted
+            passphrase (str): String of passphrase to
+            be used to encrypt the data
+            algorithm (str): The type of algorithm to
+            be used to encrypte the data
+            armor (bool): True for the return type to be in ASCII string
+                          False for the return type to be Crypt object
+
+        Returns:
+            str: ASCII string of encrypted data
+        """
+        gpg = self.gpg
+
+        crypt = gpg.encrypt(data, symmetric=algorithm, passphrase=passphrase,
+                            armor=armor, recipients=None)
+        # print(crypt.status)
+        return str(crypt)
+
+    def symmetric_decrypt(self, data, passphrase):
+        """Method to decrypt data that was encrypted using symmetric encryption.
+
+        Args:
+            data (str): Data in ASCII string to be decrypted
+            passphrase (str): Passphrase used in the encryption
+
+        Returns:
+            str: ASCII string of decrypted data
+        """
+        gpg = self.gpg
+
+        data = gpg.decrypt(data, passphrase=passphrase)
+        # print(data.status)
+        return (data.data).decode('utf-8')
+
+    def gen_symm_key(self, stringLength=70):
+        password_characters = string.ascii_letters + string.digits\
+                              + string.punctuation
+        return ''.join(random.choice(password_characters)
+                       for i in range(stringLength))
+
+    def del_pub_key(self, fingerprint):
+        """Deletes public key from keyring.
+
+        Args:
+            fingerprint: Fingerprint of public key to be deleted
+
+        Returns:
+            (bool): True if the public key was deleted
+                    False if the public key was not deleted
+        """
+
+        output = False
+        gpg = self.gpg
+
+        # Deletes public key
+        result = gpg.delete_keys(fingerprint)
+
+        if str(result) == 'ok':
+            output = True
+
+        return output
+
+    def set_email(self):
+        """Set email.
+
+        Retrieve email from keyring and set the correponding email address from
+        the set fingperprint
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+
+        # Retrieve gnupg object and set fingerprint
+        gpg = self.gpg
+        fp = self.fingerprint
+
+        # Lists keys from keyring
+        keys = gpg.list_keys()
+
+        for key in keys:
+            if key['fingerprint'] == fp:
+                # Removes space from uids value and returns the items in a list
+                uids = key['uids'][0].split(' ')
+                # Gets the email from the items which is
+                # wrapped by "<"<email@example.com>">"
+                wrapped_email = list(filter((lambda item: '<' in item), uids))
+                # Removes "<" and ">" from email
+                email = wrapped_email[0].strip('<>')
+                self.email_addr = email
+
+
+class KeyRing():
+    """Class for managing PGP keyring."""
+
+    def __init__(self, agent_name, email):
+        """Instantiate the class.
+
+        Args:
+            agent_name: Name of agent generating the private key
+            email: Email address to use for encryption
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self._agent_name = agent_name
+        self._wrapper = '({})'.format(agent_name)
+        self._config = Config()
+
+        # Initialize GPG object. Note: options=['--pinentry-mode=loopback']
+        # ensures the passphrase can be entered via python and won't prompt
+        # the user.
+        self.gpg = gnupg.GPG(
+            gnupghome=self._config.keyring_directory(),
+            options=['--pinentry-mode=loopback'])
+
+        # Import metadata for managing keys
+        metadata = self._import()
+
+        # Create and store metadata if nonexistent
+        if metadata is None:
+            metadata = self._generate(email)
+            self._export(metadata)
+
+        # Get the public key ID
+        self._public_keyid = self._get_public_keyid(metadata.fingerprint)
+
+    def _import(self):
+        """Import private key information.
+
+        Method to import the fingerprint and passphrase of the owned public /
+        private key pair of the user. The method also looks for a wrapper on
+        the file to distinguish the public private key pair the user currently
+        owns.
+
+        Args:
+            None
+
+        Returns:
+            result: Tuple of (fingerprint, passphrase), None if nonexistent
+
+        """
+        # Initialize key variables
+        result = None
+        directory = self._config.keys_directory()
+
+        # Get list of key files whose names end with the wrapper
+        key = [_file for _file in os.listdir(
+            directory) if _file.endswith(self._wrapper)]
+
+        # Process data
+        count = len(key)
+        if count > 1:
+            # Die if we have duplicate keys found in the directory
+            log_message = (
+                'More than one {} key-pair stores found'.format(self._wrapper))
+            log.log2die(1062, log_message)
+
+        elif count == 1:
+            # Get passphrase
+            filename = key[0]
+            filepath = os.path.abspath(os.path.join(directory, filename))
+            try:
+                fh_ = open(filepath, 'r')
+            except PermissionError:
+                log.log2die(1091, '''\
+Insufficient permissions for reading the file:{}'''.format(filepath))
+            except:
+                log.log2die(1093, 'Error reading file:{}'.format(filepath))
+            else:
+                with fh_:
+                    passphrase = fh_.read()
+
+            # Basic validation
+            if isinstance(passphrase, str) is False:
+                log.log2die(1094, 'Corrupted keyfile:{}'.format(filepath))
+
+            # Retrieve fingerprint from the filename
+            fingerprint = filename[0:len(filename) - len(self._wrapper)]
+            result = _METADATA(fingerprint=fingerprint, passphrase=passphrase)
+
+        return result
+
+    def _export(self, metadata):
+        """Export pertinent information.
+
+        Method to store the passphrase for future retrieval
+        and name the file by the fingerprint of the
+        class. The method also adds a wrapper to the
+        name of the file so that when the Pgpier class is looking
+        for the public private key pair, it finds the pair it owns.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        # Initialize variables
+        directory = self._config.keys_directory()
+        filepath = os.path.abspath(os.path.join(
+            directory, '{0}{1}'.format(metadata.fingerprint, self._wrapper)))
+
+        # Export data
+        try:
+            fh_ = open(filepath, 'w')
+        except PermissionError:
+            log.log2die(1095, '''\
+Insufficient permissions for writing the file:{}'''.format(filepath))
+        except:
+            log.log2die(1096, 'Error writing file:{}'.format(filepath))
+        else:
+            with fh_:
+                fh_.write(metadata.passphrase)
+
+        # Allow RW file access to only the current user
+        os.chmod(filepath, stat.S_IRUSR | stat.S_IWUSR)
+
+    def _generate(self, email, key_type='RSA', key_length=4096):
+        """Generate public / private key-pairs.
+
+        Args:
+            email (str): Email of the user
+            key_type (str): The key type of the private public key pair
+            key_length (int): Key length of the private public key pair
+
+        Returns:
+            None
+        """
+        # Initialize key variables
+        comment = 'Key pair generated for {}'.format(self._agent_name)
+
+        # Generates random passphrase
+        passphrase = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
+
+        # Generate key-pair
+        data_ = self.gpg.gen_key_input(
+            key_type=key_type,
+            key_length=key_length,
+            name_real=self._agent_name,
+            name_comment=comment,
+            name_email=email,
+            passphrase=passphrase)
+        key = self.gpg.gen_key(data_)
+        fingerprint = key.fingerprint
+
+        # Return results
+        result = _METADATA(passphrase=passphrase, fingerprint=fingerprint)
+        return result
+
+    def _get_public_keyid(self, fingerprint):
+        """Get the public key ID.
+
+        Get the public key associated with the instance from a database of keys
+        stored in the GnuPG keyring.
+
+        Args:
+            fingerprint: Fingerprint of the object instance
+
+        Returns:
+            result: Public key ID
+
+        """
+        # Initialize key variables
+        result = None
+        keys = self.gpg.list_keys()
+
+        # Identify the public key
+        for key in keys:
+            if key['fingerprint'] == fingerprint:
+                result = key['keyid']
+                break
+
+        # Return
+        return result
+
+
+class Encryption(KeyRing):
+    """Class for managing PGP keypairs."""
+
+    def __init__(self, agent_name, email):
+        """Instantiate the class.
+
+        Args:
+            agent_name: Name of agent generating the private key
+            email: Email address to use for encryption
+
+        Returns:
+            None
+
+        """
+        KeyRing.__init__(self, agent_name, email)
+
+    def exp_pub_key(self):
+        """Method to export the user's public key into ASCII.
+
+        Args:
+            None
+
+        Returns:
+            str: String of ASCII armored public key
+            None: If keyid is not set
+        """
+        ascii_armored_public_keys = None
+        keyid = self.keyid
+        gpg = self.gpg
+
+        if keyid is not None:
+            ascii_armored_public_keys = gpg.export_keys(keyid)
+            return ascii_armored_public_keys
+        else:
+            return ascii_armored_public_keys
+
+    def imp_pub_key(self, key_data):
+        """Import public key.
+
+        Method to import the ASCII public of a user
+         into the current user's GnuPG keyring
+
+        Args:
+            key_data (str): String of public key armored ASCII
+
+        Returns:
+            result (dict): The number of imported keys and the
+                           the number of keys not imported
+        """
+        gpg = self.gpg
+
+        import_result = gpg.import_keys(key_data)
+
+        # Returns the amount of: imported, not imported
+        result = {"imported": import_result.imported,
+                  "not_imported": import_result.not_imported}
+        return result
+
+    def encrypt_data(self, data, recipients):
+        """Encrypt data.
+
+        Method to encrypt data using the imported recipient's public
+        key from user's GnuPG keyring
+
+        Args:
+            data (str): Data to be encrypted
+            recipients (int): Fingerprint of recipient
+
+        Returns:
+            str: encrypted data in ASCII string
+            
+        """
+        gpg = self.gpg
+
+        encrypted_ascii_data = gpg.encrypt(data, recipients=recipients)
+        # print(encrypted_ascii_data.status)
+        ascii_str = str(encrypted_ascii_data)
+        return ascii_str
+
+    def decrypt(self, data, passphrase=None):
+        """Decrypt data.
+
+        Method to decrypt data using the imported recipient's
+        public key from user's GnuPG keyring
+
+        Args:
+            data (str): Data in String ASCII to be decrypted
+            passphrase (str): Passphrase of the user
+
+        Returns:
+            result: Decrypted data into string
+        """
+        # Initialize the passphrase
+        if bool(passphrase) is False:
+            passphrase = self.metadata.passphrase
+        decrypted = self.gpg.decrypt(data, passphrase=passphrase)
+
+        # Return
+        result = (decrypted.data).decode()
+        return result
 
     def email_to_key(self, email):
         """Email to fingerprint.
