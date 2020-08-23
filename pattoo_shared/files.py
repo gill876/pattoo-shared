@@ -15,7 +15,6 @@ import yaml
 # Pattoo libraries
 from pattoo_shared import log
 from pattoo_shared import data
-from pattoo_shared import configuration
 from pattoo_shared import encrypt
 
 
@@ -533,11 +532,14 @@ def set_gnupg(agent_name, config):
         gpg (obj): Pgpier object
 
     """
+    # Do an import to prevent circular imports
+    from pattoo_shared.configuration import Config
+
     # Uses agent name as wrapper
     wrapper = '({})'.format(agent_name)
 
     # Set the email address to be used for encryption
-    if isinstance(config, configuration.Config):
+    if isinstance(config, Config):
         agent_email = config.agent_email_address()
     else:
         agent_email = config.api_email_address()

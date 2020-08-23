@@ -6,10 +6,10 @@ import socket
 import re
 
 # pattoo imports
-from . import data
-from . import files
-from . import network
-from .constants import (
+from pattoo_shared import data
+from pattoo_shared import files
+from pattoo_shared import network
+from pattoo_shared.constants import (
     DATA_INT, DATA_FLOAT, DATA_COUNT64, DATA_COUNT, DATA_STRING, DATA_NONE,
     DATAPOINT_KEYS, AGENT_METADATA_KEYS)
 
