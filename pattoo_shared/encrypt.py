@@ -870,49 +870,7 @@ class Encryption(KeyRing):
         """
         KeyRing.__init__(self, agent_name, email)
 
-    def exp_pub_key(self):
-        """Method to export the user's public key into ASCII.
-
-        Args:
-            None
-
-        Returns:
-            str: String of ASCII armored public key
-            None: If keyid is not set
-        """
-        ascii_armored_public_keys = None
-        keyid = self.keyid
-        gpg = self.gpg
-
-        if keyid is not None:
-            ascii_armored_public_keys = gpg.export_keys(keyid)
-            return ascii_armored_public_keys
-        else:
-            return ascii_armored_public_keys
-
-    def imp_pub_key(self, key_data):
-        """Import public key.
-
-        Method to import the ASCII public of a user
-         into the current user's GnuPG keyring
-
-        Args:
-            key_data (str): String of public key armored ASCII
-
-        Returns:
-            result (dict): The number of imported keys and the
-                           the number of keys not imported
-        """
-        gpg = self.gpg
-
-        import_result = gpg.import_keys(key_data)
-
-        # Returns the amount of: imported, not imported
-        result = {"imported": import_result.imported,
-                  "not_imported": import_result.not_imported}
-        return result
-
-    def encrypt_data(self, data, recipients):
+    def encrypt(self, data, recipients):
         """Encrypt data.
 
         Method to encrypt data using the imported recipient's public
@@ -923,15 +881,12 @@ class Encryption(KeyRing):
             recipients (int): Fingerprint of recipient
 
         Returns:
-            str: encrypted data in ASCII string
-            
-        """
-        gpg = self.gpg
+            result (str): encrypted data in ASCII string
 
-        encrypted_ascii_data = gpg.encrypt(data, recipients=recipients)
-        # print(encrypted_ascii_data.status)
-        ascii_str = str(encrypted_ascii_data)
-        return ascii_str
+        """
+        # Return
+        result = str(self.gpg.encrypt(data, recipients=recipients))
+        return result
 
     def decrypt(self, data, passphrase=None):
         """Decrypt data.
@@ -955,43 +910,8 @@ class Encryption(KeyRing):
         result = (decrypted.data).decode()
         return result
 
-    def email_to_key(self, email):
-        """Email to fingerprint.
-
-        Method to retrieve fingerprint of associated
-        email address from the GnuPG keyring
-
-        Args:
-            email (str): Email address
-
-        Returns:
-            int: Fingerprint that is associated with the email
-            address if it is found
-            None: If no associated fingerprint is found
-        """
-
-        # Gets all available public keys in keyring
-        keys = self.list_pub_keys()
-
-        result = None
-
-        for key in keys:  # Go through each public key
-            uids = list(filter((lambda item: email in item), key['uids']))
-            if uids != []:
-                parts = uids[0].split(' ')
-                wrapped_email = list(filter((lambda item: '<' in item), parts))
-                unwrapped_email = wrapped_email[0].strip('<>')
-                if unwrapped_email == email:
-                    return key['fingerprint']
-
-        return result
-
-    def trust_key(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
-        """Trust public key.
-
-        Method to trust public key that was imported to have the
-        ability to encrypt data using
-        that public key
+    def trust(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
+        """Trust imported public key to encrypt data.
 
         Args:
             fingerprint (int): Fingerprint of pubic key to trust
@@ -1000,9 +920,8 @@ class Encryption(KeyRing):
         Returns:
             None
         """
-        gpg = self.gpg
-
-        gpg.trust_keys(fingerprint, trustlevel)
+        # Apply
+        self.gpg.trust_keys(fingerprint, trustlevel)
 
     def symmetric_encrypt(self, data, passphrase,
                           algorithm='AES256', armor=True):
@@ -1022,58 +941,23 @@ class Encryption(KeyRing):
                           False for the return type to be Crypt object
 
         Returns:
-            str: ASCII string of encrypted data
-        """
-        gpg = self.gpg
+            result: ASCII string of encrypted data
 
-        crypt = gpg.encrypt(data, symmetric=algorithm, passphrase=passphrase,
-                            armor=armor, recipients=None)
-        # print(crypt.status)
+        """
+        # Return
+        crypt = self.gpg.encrypt(
+            data,
+            symmetric=algorithm,
+            passphrase=passphrase,
+            armor=armor,
+            recipients=None)
         return str(crypt)
-
-    def symmetric_decrypt(self, data, passphrase):
-        """Method to decrypt data that was encrypted using symmetric encryption.
-
-        Args:
-            data (str): Data in ASCII string to be decrypted
-            passphrase (str): Passphrase used in the encryption
-
-        Returns:
-            str: ASCII string of decrypted data
-        """
-        gpg = self.gpg
-
-        data = gpg.decrypt(data, passphrase=passphrase)
-        # print(data.status)
-        return (data.data).decode('utf-8')
 
     def gen_symm_key(self, stringLength=70):
         password_characters = string.ascii_letters + string.digits\
                               + string.punctuation
         return ''.join(random.choice(password_characters)
                        for i in range(stringLength))
-
-    def del_pub_key(self, fingerprint):
-        """Deletes public key from keyring.
-
-        Args:
-            fingerprint: Fingerprint of public key to be deleted
-
-        Returns:
-            (bool): True if the public key was deleted
-                    False if the public key was not deleted
-        """
-
-        output = False
-        gpg = self.gpg
-
-        # Deletes public key
-        result = gpg.delete_keys(fingerprint)
-
-        if str(result) == 'ok':
-            output = True
-
-        return output
 
     def set_email(self):
         """Set email.
@@ -1089,13 +973,10 @@ class Encryption(KeyRing):
         """
 
         # Retrieve gnupg object and set fingerprint
-        gpg = self.gpg
         fp = self.fingerprint
 
         # Lists keys from keyring
-        keys = gpg.list_keys()
-
-        for key in keys:
+        for key in self.gpg.list_keys():
             if key['fingerprint'] == fp:
                 # Removes space from uids value and returns the items in a list
                 uids = key['uids'][0].split(' ')
@@ -1105,3 +986,80 @@ class Encryption(KeyRing):
                 # Removes "<" and ">" from email
                 email = wrapped_email[0].strip('<>')
                 self.email_addr = email
+
+    def email_to_key(self, email):
+        """Email to fingerprint.
+
+        Method to retrieve fingerprint of associated
+        email address from the GnuPG keyring
+
+        Args:
+            email (str): Email address
+
+        Returns:
+            result: Fingerprint that is associated with the email
+
+        """
+        # Initialize key variables
+        result = None
+
+        # Go through each public key
+        for key in self.gpg.list_keys():
+            uids = list(filter((lambda item: email in item), key['uids']))
+            if bool(uids) is True:
+                parts = uids[0].split('')
+                wrapped_email = list(filter((lambda item: '<' in item), parts))
+                unwrapped_email = wrapped_email[0].strip('<>')
+                if unwrapped_email == email:
+                    result = key['fingerprint']
+                    break
+
+        return result
+
+    def pdelete(self, fingerprint):
+        """Delete public key from keyring.
+
+        Args:
+            fingerprint: Fingerprint of public key to be deleted
+
+        Returns:
+            result (bool): True if the public key was deleted False if the
+                public key was not deleted
+
+        """
+        # Delete public key
+        _result = self.gpg.delete_keys(fingerprint)
+        result = str(_result).lower() == 'ok'
+        return result
+
+    def pexport(self):
+        """Export the user's public key into ASCII.
+
+        Args:
+            None
+
+        Returns:
+            result: String of ASCII armored public key
+
+        """
+        # Initialize key variables
+        result = None
+
+        # Return result
+        keyid = self._public_keyid()
+        if keyid is not None:
+            result = self.gpg.export_keys(keyid)
+        return result
+
+    def pimport(self, key):
+        """Import public key into the current user's GnuPG keyring.
+
+        Args:
+            key (str): String of public key armored ASCII
+
+        Returns:
+            None
+
+        """
+        # Import
+        self.gpg.import_keys(key)
