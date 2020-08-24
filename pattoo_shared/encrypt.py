@@ -14,6 +14,7 @@ import gnupg
 # Pattoo imports
 from pattoo_shared.configuration import Config
 from pattoo_shared import log
+from pattoo_shared import files
 
 # Create constant for processing
 _METADATA = namedtuple('_METADATA', 'fingerprint passphrase')
@@ -113,7 +114,7 @@ class Pgpier():
                                             passphrase=self.passphrase)
         # generation of key pair
         key = self.gpg.gen_key(input_data)
-        # print("stderr: ", key.stderr)
+        # "stderr: ", key.stderr)
         self.fingerprint = key.fingerprint  # store fingerprint in class
 
     def set_passphrase(self, passphrase):
@@ -278,7 +279,7 @@ class Pgpier():
 
             fp_file = os.path.abspath(os.path.join(_path, _fingerprint))
 
-            with open('{}'.format(fp_file), '{}'.format('r')) as f:
+            with open(fp_file, 'r') as f:
                 _passphrase = f.read()
 
             if type(_passphrase) != str:
@@ -380,52 +381,6 @@ class Pgpier():
                       '{}'.format('w')) as f:
                 f.write(pub_key)
 
-    def sym_encrypt_files(self, symmetric_key, file_path, output,
-                          delaf=False, algorithm='AES256', armor=True):
-        """Method to encrypt files using a symmetric key.
-
-        Args:
-            symmetric_key (str): String of passphrase to be
-            used to encrypt the data
-            file_path (str): Absolute file path to the files to be encrypted
-            output (str): Absolute file path to intended file output
-            delaf (bool): True if the files should be deleted after encryption
-                          Fasle if the files should be kept after
-                          encryption
-            algorithm (str): The type of algorithm to be used to encrypt
-                             the data
-            armor (bool): True for the return type to be in ASCII string
-                          False for the return type to be Crypt object
-
-        Returns:
-            None
-        """
-        gpg = self.gpg
-
-        files_dir = []
-
-        files = [f for f in os.listdir(file_path)]
-
-        for f in files:
-            files_dir.append('{}'.format(f))
-
-        for x in files_dir:
-            with open('{}{}{}'.format(file_path, os.sep, x), '{}'
-                      .format('r')) as f:
-                contents = f.read()
-                gpg.encrypt(contents, symmetric=algorithm,
-                            passphrase=symmetric_key, armor=armor,
-                            recipients=None, output='{}{}{}'.format(file_path,
-                            os.sep, files_dir[files_dir.index(x)]))
-                # print("ok: ", crypt.ok)
-                # print("status: ", crypt.status)
-                # print("stderr: ", crypt.stderr)
-            if delaf:
-                os.rename('{}{}{}'.format(file_path, os.sep,
-                          files_dir[files_dir.index(x)]), '{}{}{}'
-                          .format(output, os.sep,
-                          files_dir[files_dir.index(x)]))
-
     def encrypt_data(self, data, recipients):
         """Encrypt data.
 
@@ -442,57 +397,8 @@ class Pgpier():
         gpg = self.gpg
 
         encrypted_ascii_data = gpg.encrypt(data, recipients=recipients)
-        # print(encrypted_ascii_data.status)
         ascii_str = str(encrypted_ascii_data)
         return ascii_str
-
-    def sym_decrypt_files(self, symmetric_key, file_path, output, delaf=False):
-        """Method to decrypt files using a symmetric key.
-
-        Args:
-            symmetric_key (str): String of passphrase to be used
-            to decrypt the data
-            file_path (str): Absolute file path to the files to be
-            encrypted
-            output (str): Absolute file path to intended file output
-            delaf (bool): True if the files should be deleted after
-                          decryption
-                          Fasle if the files should be kept after
-                          decryption
-            algorithm (str): The type of algorithm that was used to
-                             encrypt the data
-            armor (bool): True for the return type to be in ASCII string
-                          False for the return type to be Crypt object
-
-        Returns:
-            None
-        """
-        gpg = self.gpg
-
-        files_dir = []
-
-        files = [f for f in os.listdir(file_path)]
-
-        for f in files:
-            files_dir.append('{}'.format(f))
-
-        for x in files_dir:
-            with open('{}{}{}'.format(file_path, os.sep, x),
-                      '{}'.format('r')) as f:
-                crypt = f.read()
-                # print(crypt)
-                data = gpg.decrypt(crypt, passphrase=symmetric_key)
-                de_data = (data.data).decode('utf-8')
-                # print('\n\n\n\n--->{}<---\n\n\n'.format(de_data))
-                with open('{}{}{}'.format(output, os.sep,
-                          files_dir[files_dir.index(x)]),
-                          '{}'.format('w')) as decrypted:
-                    decrypted.write(de_data)
-                # print("ok: ", data.ok)
-                # print("status: ", data.status)
-                # print("stderr: ", data.stderr)
-            if delaf:
-                os.remove('{}{}{}'.format(file_path, os.sep, x))
 
     def decrypt_data(self, data, passphrase):
         """Decrypt data.
@@ -588,7 +494,6 @@ class Pgpier():
 
         crypt = gpg.encrypt(data, symmetric=algorithm, passphrase=passphrase,
                             armor=armor, recipients=None)
-        # print(crypt.status)
         return str(crypt)
 
     def symmetric_decrypt(self, data, passphrase):
@@ -604,7 +509,6 @@ class Pgpier():
         gpg = self.gpg
 
         data = gpg.decrypt(data, passphrase=passphrase)
-        # print(data.status)
         return (data.data).decode('utf-8')
 
     def gen_symm_key(self, stringLength=70):
@@ -670,7 +574,7 @@ class Pgpier():
 class KeyRing():
     """Class for managing PGP keyring."""
 
-    def __init__(self, agent_name, email):
+    def __init__(self, agent_name, email, directory=None):
         """Instantiate the class.
 
         Args:
@@ -684,13 +588,23 @@ class KeyRing():
         # Initialize key variables
         self._agent_name = agent_name
         self._wrapper = '({})'.format(agent_name)
-        self._config = Config()
+        config = Config()
+
+        # Associate directories
+        if directory is None:
+            keyring_directory = config.keyring_directory()
+            self._keys_directory = config.keys_directory()
+        else:
+            keyring_directory = '{}{}.keyring'.format(directory, os.sep)
+            self._keys_directory = directory
+            files.mkdir(directory)
+            files.mkdir(keyring_directory)
 
         # Initialize GPG object. Note: options=['--pinentry-mode=loopback']
         # ensures the passphrase can be entered via python and won't prompt
         # the user.
         self.gpg = gnupg.GPG(
-            gnupghome=self._config.keyring_directory(),
+            gnupghome=keyring_directory,
             options=['--pinentry-mode=loopback'])
 
         # Import metadata for managing keys
@@ -700,6 +614,10 @@ class KeyRing():
         if metadata is None:
             metadata = self._generate(email)
             self._export(metadata)
+
+        # Share passphrase
+        self._passphrase = metadata.passphrase
+        self._fingerprint = metadata.fingerprint
 
         # Get the public key ID
         self._public_keyid = self._get_public_keyid(metadata.fingerprint)
@@ -721,7 +639,7 @@ class KeyRing():
         """
         # Initialize key variables
         result = None
-        directory = self._config.keys_directory()
+        directory = self._keys_directory
 
         # Get list of key files whose names end with the wrapper
         key = [_file for _file in os.listdir(
@@ -776,7 +694,7 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
             None
         """
         # Initialize variables
-        directory = self._config.keys_directory()
+        directory = self._keys_directory
         filepath = os.path.abspath(os.path.join(
             directory, '{0}{1}'.format(metadata.fingerprint, self._wrapper)))
 
@@ -857,24 +775,70 @@ Insufficient permissions for writing the file:{}'''.format(filepath))
 class Encryption(KeyRing):
     """Class for managing PGP keypairs."""
 
-    def __init__(self, agent_name, email):
+    def __init__(self, agent_name, email, directory=None):
         """Instantiate the class.
 
         Args:
             agent_name: Name of agent generating the private key
             email: Email address to use for encryption
+            directory: Key storage directory
 
         Returns:
             None
 
         """
-        KeyRing.__init__(self, agent_name, email)
+        KeyRing.__init__(self, agent_name, email, directory=directory)
 
-    def encrypt(self, data, recipients):
-        """Encrypt data.
+    def decrypt(self, data):
+        """Decrypt data using a public key the GnuPG keyring.
 
-        Method to encrypt data using the imported recipient's public
-        key from user's GnuPG keyring
+        Args:
+            data (str): Data in String ASCII to be decrypted
+
+        Returns:
+            result: Decrypted data into string
+
+        """
+        # Return
+        result = self._decrypt(data)
+        return result
+
+    def sdecrypt(self, data, passphrase):
+        """Decrypt data using an existing public key in the GnuPG keyring.
+
+        Args:
+            data (str): Data in ASCII string to be decrypted
+            passphrase (str): Passphrase used in the encryption
+
+        Returns:
+            str: ASCII string of decrypted data
+        """
+        # Return
+        result = self._decrypt(data, passphrase=passphrase)
+        return result
+
+    def _decrypt(self, data, passphrase=None):
+        """Decrypt data using a public key the GnuPG keyring.
+
+        Args:
+            data (str): Data in String ASCII to be decrypted
+            passphrase (str): Passphrase of the user
+
+        Returns:
+            result: Decrypted data into string
+
+        """
+        # Initialize the passphrase
+        if bool(passphrase) is False:
+            passphrase = self._passphrase
+        decrypted = self.gpg.decrypt(data, passphrase=passphrase)
+
+        # Return
+        result = (decrypted.data).decode()
+        return result
+
+    def encrypt(self, data, recipients=None):
+        """Encrypt data using expected key in the user's GnuPG keyring,
 
         Args:
             data (str): Data to be encrypted
@@ -884,30 +848,45 @@ class Encryption(KeyRing):
             result (str): encrypted data in ASCII string
 
         """
+        # Initialize key variables
+        if recipients is None:
+            recipients = self._fingerprint
+
         # Return
-        result = str(self.gpg.encrypt(data, recipients=recipients))
+        result = str(
+            self.gpg.encrypt(
+                data,
+                passphrase=None,
+                recipients=recipients,
+                symmetric=False
+            )
+        )
         return result
 
-    def decrypt(self, data, passphrase=None):
-        """Decrypt data.
+    def sencrypt(self, data, passphrase):
+        """Symmetric encrypt.
 
-        Method to decrypt data using the imported recipient's
-        public key from user's GnuPG keyring
+        Method to encrypt data using symmmetric key encryption
+        using a passphrase and encryption
+        algorithm
 
         Args:
-            data (str): Data in String ASCII to be decrypted
-            passphrase (str): Passphrase of the user
+            data (str): String of data to be encrypted
+            passphrase (str): Passphrase to be used to encrypt the data
 
         Returns:
-            result: Decrypted data into string
-        """
-        # Initialize the passphrase
-        if bool(passphrase) is False:
-            passphrase = self.metadata.passphrase
-        decrypted = self.gpg.decrypt(data, passphrase=passphrase)
+            result: ASCII string of encrypted data
 
+        """
         # Return
-        result = (decrypted.data).decode()
+        result = str(
+            self.gpg.encrypt(
+                data,
+                passphrase=passphrase,
+                recipients=None,
+                symmetric=True
+            )
+        )
         return result
 
     def trust(self, fingerprint, trustlevel='TRUST_ULTIMATE'):
@@ -923,75 +902,8 @@ class Encryption(KeyRing):
         # Apply
         self.gpg.trust_keys(fingerprint, trustlevel)
 
-    def symmetric_encrypt(self, data, passphrase,
-                          algorithm='AES256', armor=True):
-        """Symmetric encrypt.
-
-        Method to encrypt data using symmmetric key encryption
-        using a passphrase and encryption
-        algorithm
-
-        Args:
-            data (str): String of data to be encrypted
-            passphrase (str): String of passphrase to
-            be used to encrypt the data
-            algorithm (str): The type of algorithm to
-            be used to encrypte the data
-            armor (bool): True for the return type to be in ASCII string
-                          False for the return type to be Crypt object
-
-        Returns:
-            result: ASCII string of encrypted data
-
-        """
-        # Return
-        crypt = self.gpg.encrypt(
-            data,
-            symmetric=algorithm,
-            passphrase=passphrase,
-            armor=armor,
-            recipients=None)
-        return str(crypt)
-
-    def gen_symm_key(self, stringLength=70):
-        password_characters = string.ascii_letters + string.digits\
-                              + string.punctuation
-        return ''.join(random.choice(password_characters)
-                       for i in range(stringLength))
-
-    def set_email(self):
-        """Set email.
-
-        Retrieve email from keyring and set the correponding email address from
-        the set fingperprint
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-
-        # Retrieve gnupg object and set fingerprint
-        fp = self.fingerprint
-
-        # Lists keys from keyring
-        for key in self.gpg.list_keys():
-            if key['fingerprint'] == fp:
-                # Removes space from uids value and returns the items in a list
-                uids = key['uids'][0].split(' ')
-                # Gets the email from the items which is
-                # wrapped by "<"<email@example.com>">"
-                wrapped_email = list(filter((lambda item: '<' in item), uids))
-                # Removes "<" and ">" from email
-                email = wrapped_email[0].strip('<>')
-                self.email_addr = email
-
-    def email_to_key(self, email):
-        """Email to fingerprint.
-
-        Method to retrieve fingerprint of associated
-        email address from the GnuPG keyring
+    def fingerprint(self, email):
+        """Get GnuPG keyring fingerprint hat matches an email address.
 
         Args:
             email (str): Email address
@@ -1007,7 +919,7 @@ class Encryption(KeyRing):
         for key in self.gpg.list_keys():
             uids = list(filter((lambda item: email in item), key['uids']))
             if bool(uids) is True:
-                parts = uids[0].split('')
+                parts = uids[0].split()
                 wrapped_email = list(filter((lambda item: '<' in item), parts))
                 unwrapped_email = wrapped_email[0].strip('<>')
                 if unwrapped_email == email:
@@ -1063,3 +975,19 @@ class Encryption(KeyRing):
         """
         # Import
         self.gpg.import_keys(key)
+
+
+def generate_key(length=70):
+    """Generate a random string for use as a encryption key.
+
+    Args:
+        length (str): Maximum length of the key.
+
+    Returns:
+        result: key
+
+    """
+    # Return
+    characters = string.ascii_letters + string.digits + string.punctuation
+    result = ''.join(random.choice(characters) for i in range(length))
+    return result

@@ -8,6 +8,10 @@ import sys
 import shutil
 import stat
 import tempfile
+from random import random, randint
+import hashlib
+from collections import defaultdict
+from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -24,12 +28,12 @@ else:
     sys.exit(2)
 
 # Pattoo imports
-import pattoo_shared.encrypt as pgp
+from pattoo_shared import encrypt
+from tests.libraries.configuration import UnittestConfig
 
 
-class TestEncrypt(unittest.TestCase):
-    """Test all methods of Pgpier class.
-    """
+class TestPGPier(unittest.TestCase):
+    """Test all methods of Pgpier class."""
 
     @classmethod
     def setUpClass(cls):
@@ -57,7 +61,7 @@ class TestEncrypt(unittest.TestCase):
         os.chmod(person1, stat.S_IRWXU)
 
         # Create Pgpier class
-        gpg1 = pgp.Pgpier(person1)
+        gpg1 = encrypt.Pgpier(person1)
 
         # Variables for 1st key pair generation
         # Some variables are saved in the class to
@@ -90,7 +94,7 @@ class TestEncrypt(unittest.TestCase):
         os.chmod(person2, stat.S_IRWXU)
 
         # Create Pgpier class
-        gpg2 = pgp.Pgpier(person2)
+        gpg2 = encrypt.Pgpier(person2)
 
         # Variables for 2nd key pair generation
         # Some variables are saved in the class to
@@ -493,5 +497,173 @@ class TestEncrypt(unittest.TestCase):
         self.assertEqual(self.email_2, set_email2)
 
 
+class TestKeyRing(unittest.TestCase):
+    """Test all methods of KeyRing class."""
+
+    def test___init__(self):
+        """Testing function __init__."""
+        pass
+
+    def test__import(self):
+        """Testing function _import."""
+        pass
+
+    def test__export(self):
+        """Testing function _export."""
+        pass
+
+    def test__generate(self):
+        """Testing function _generate."""
+        pass
+
+    def test__get_public_keyid(self):
+        """Testing function _get_public_keyid."""
+        pass
+
+
+class TestEncrypt(unittest.TestCase):
+    """Test all methods of KeyRing class."""
+
+    def setUp(self):
+        """Run these steps before each test is performed."""
+
+        # Setup encryption instances
+        self.instances = defaultdict(lambda: defaultdict(dict))
+        directory = tempfile.mkdtemp()
+        for item in range(2):
+            agent = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            email = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            self.instances[item]['directory'] = directory
+            self.instances[item]['agent'] = agent
+            self.instances[item]['email'] = email
+            self.instances[item]['instance'] = encrypt.Encryption(
+                agent, email, directory)
+
+    def tearDown(self):
+        """Run these steps after each test is performed."""
+        for _, data_ in self.instances.items():
+            for key, value in data_.items():
+                if key == 'directory':
+                    if os.path.isdir(value) is True:
+                        shutil.rmtree(value)
+
+    # def test___init__(self):
+    #     """Testing function __init__."""
+    #     pass
+    #
+    # def test_decrypt(self):
+    #     """Testing function decrypt."""
+    #     pass
+    #
+    # def test_sdecrypt(self):
+    #     """Testing function sdecrypt."""
+    #     pass
+    #
+    # def test__decrypt(self):
+    #     """Testing function _decrypt."""
+    #     pass
+
+    def test_encrypt(self):
+        """Testing function encrypt."""
+        # Initialize key Variable
+        expected = '{}'.format(random())
+
+        # Decrypting with own fingerprint
+        for _, data_ in self.instances.items():
+            instance = data_['instance']
+            email = data_['email']
+
+            # Encrypt with internal fingerprint
+            encrypted = instance.encrypt(expected)
+
+            # Decrypt
+            result = instance.decrypt(encrypted)
+            self.assertEqual(result, expected)
+
+            # Encrypt with external fingerprint that is the same as the
+            # internal instance fingerprint
+            fingerprint = instance.fingerprint(email)
+            instance.trust(fingerprint)
+            encrypted = instance.encrypt(expected)
+
+            # Decrypt
+            result = instance.decrypt(encrypted)
+            self.assertEqual(result, expected)
+
+        # Decrypting with own fingerprint
+        for _, data_ in self.instances.items():
+            instance = data_['instance']
+            email = data_['email']
+
+            # Encrypt with internal fingerprint
+            encrypted = instance.encrypt(expected)
+
+            # Decrypt
+            result = instance.decrypt(encrypted)
+            self.assertEqual(result, expected)
+
+            # Encrypt with external fingerprint that is the same as the
+            # internal instance fingerprint
+            fingerprint = instance.fingerprint(email)
+            instance.trust(fingerprint)
+            encrypted = instance.encrypt(expected)
+
+            # Decrypt
+            result = instance.decrypt(encrypted)
+            self.assertEqual(result, expected)
+
+        # Decrypting with a random existing fingerprint
+        for _ in range(25):
+            # Chose a random instance
+            offset = randint(0, len(self.instances) - 1)
+            data_ = self.instances[offset]
+            email = data_['email']
+
+            # Encrypt with external fingerprint that is the same as the
+            # internal instance fingerprint
+            new_offset = randint(0, len(self.instances) - 1)
+            data_ = self.instances[new_offset]
+            instance = data_['instance']
+            fingerprint = instance.fingerprint(email)
+            instance.trust(fingerprint)
+            encrypted = instance.encrypt(expected)
+
+            # Decrypt
+            result = instance.decrypt(encrypted)
+            self.assertEqual(result, expected)
+
+    # def test_sencrypt(self):
+    #     """Testing function sencrypt."""
+    #     pass
+    #
+    # def test_trust(self):
+    #     """Testing function trust."""
+    #     pass
+    #
+    # def test_get_key(self):
+    #     """Testing function get_key."""
+    #     pass
+    #
+    # def test_pdelete(self):
+    #     """Testing function pdelete."""
+    #     pass
+    #
+    # def test_pexport(self):
+    #     """Testing function pexport."""
+    #     pass
+    #
+    # def test_pimport(self):
+    #     """Testing function pimport."""
+    #     pass
+    #
+    # def test_generate_key(self):
+    #     """Testing function generate_key."""
+    #     pass
+
+
 if __name__ == '__main__':
+    # Make sure the environment is OK to run unittests
+    UnittestConfig().create()
+
+    # Do the unit test
     unittest.main()
