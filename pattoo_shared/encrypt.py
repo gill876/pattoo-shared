@@ -12,7 +12,7 @@ from collections import namedtuple
 import gnupg
 
 # Pattoo imports
-from pattoo_shared.configuration import Config
+from pattoo_shared import configuration
 from pattoo_shared import log
 from pattoo_shared import files
 
@@ -588,7 +588,8 @@ class KeyRing():
         # Initialize key variables
         self._agent_name = agent_name
         self._wrapper = '({})'.format(agent_name)
-        config = Config()
+        self.email = email
+        config = configuration.Config()
 
         # Associate directories
         if directory is None:
@@ -902,8 +903,8 @@ class Encryption(KeyRing):
         # Apply
         self.gpg.trust_keys(fingerprint, trustlevel)
 
-    def fingerprint(self, email):
-        """Get GnuPG keyring fingerprint hat matches an email address.
+    def fingerprint(self, email=None):
+        """Get GnuPG keyring fingerprint that matches an email address.
 
         Args:
             email (str): Email address
@@ -916,15 +917,19 @@ class Encryption(KeyRing):
         result = None
 
         # Go through each public key
-        for key in self.gpg.list_keys():
-            uids = list(filter((lambda item: email in item), key['uids']))
-            if bool(uids) is True:
-                parts = uids[0].split()
-                wrapped_email = list(filter((lambda item: '<' in item), parts))
-                unwrapped_email = wrapped_email[0].strip('<>')
-                if unwrapped_email == email:
-                    result = key['fingerprint']
-                    break
+        if email is None:
+            result = self._fingerprint
+        else:
+            for key in self.gpg.list_keys():
+                uids = list(filter((lambda item: email in item), key['uids']))
+                if bool(uids) is True:
+                    parts = uids[0].split()
+                    wrapped_email = list(
+                        filter((lambda item: '<' in item), parts))
+                    unwrapped_email = wrapped_email[0].strip('<>')
+                    if unwrapped_email == email:
+                        result = key['fingerprint']
+                        break
 
         return result
 
@@ -939,16 +944,20 @@ class Encryption(KeyRing):
                 public key was not deleted
 
         """
+        # Initialize key variables
+        result = False
+
         # Delete public key
-        _result = self.gpg.delete_keys(fingerprint)
-        result = str(_result).lower() == 'ok'
+        if fingerprint != self._fingerprint:
+            _result = self.gpg.delete_keys(fingerprint)
+            result = str(_result).lower() == 'ok'
         return result
 
-    def pexport(self):
+    def pexport(self, recipient=None):
         """Export the user's public key into ASCII.
 
         Args:
-            None
+            recipient: fingerpint for which public key is required
 
         Returns:
             result: String of ASCII armored public key
@@ -958,7 +967,10 @@ class Encryption(KeyRing):
         result = None
 
         # Return result
-        keyid = self._public_keyid()
+        if recipient is None:
+            keyid = self._public_keyid
+        else:
+            keyid = self._get_public_keyid(recipient)
         if keyid is not None:
             result = self.gpg.export_keys(keyid)
         return result

@@ -11,7 +11,6 @@ import tempfile
 from random import random, randint
 import hashlib
 from collections import defaultdict
-from pprint import pprint
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -547,24 +546,12 @@ class TestEncrypt(unittest.TestCase):
                     if os.path.isdir(value) is True:
                         shutil.rmtree(value)
 
-    # def test___init__(self):
-    #     """Testing function __init__."""
-    #     pass
-    #
-    # def test_decrypt(self):
-    #     """Testing function decrypt."""
-    #     pass
-    #
-    # def test_sdecrypt(self):
-    #     """Testing function sdecrypt."""
-    #     pass
-    #
-    # def test__decrypt(self):
-    #     """Testing function _decrypt."""
-    #     pass
+    def test___init__(self):
+        """Testing function __init__."""
+        pass
 
-    def test_encrypt(self):
-        """Testing function encrypt."""
+    def test_decrypt(self):
+        """Testing function decrypt."""
         # Initialize key Variable
         expected = '{}'.format(random())
 
@@ -583,28 +570,8 @@ class TestEncrypt(unittest.TestCase):
             # Encrypt with external fingerprint that is the same as the
             # internal instance fingerprint
             fingerprint = instance.fingerprint(email)
-            instance.trust(fingerprint)
-            encrypted = instance.encrypt(expected)
-
-            # Decrypt
-            result = instance.decrypt(encrypted)
-            self.assertEqual(result, expected)
-
-        # Decrypting with own fingerprint
-        for _, data_ in self.instances.items():
-            instance = data_['instance']
-            email = data_['email']
-
-            # Encrypt with internal fingerprint
-            encrypted = instance.encrypt(expected)
-
-            # Decrypt
-            result = instance.decrypt(encrypted)
-            self.assertEqual(result, expected)
-
-            # Encrypt with external fingerprint that is the same as the
-            # internal instance fingerprint
-            fingerprint = instance.fingerprint(email)
+            fingerprint_ = instance.fingerprint()
+            self.assertEqual(fingerprint, fingerprint_)
             instance.trust(fingerprint)
             encrypted = instance.encrypt(expected)
 
@@ -632,33 +599,114 @@ class TestEncrypt(unittest.TestCase):
             result = instance.decrypt(encrypted)
             self.assertEqual(result, expected)
 
-    # def test_sencrypt(self):
-    #     """Testing function sencrypt."""
-    #     pass
-    #
-    # def test_trust(self):
-    #     """Testing function trust."""
-    #     pass
-    #
-    # def test_get_key(self):
-    #     """Testing function get_key."""
-    #     pass
-    #
-    # def test_pdelete(self):
-    #     """Testing function pdelete."""
-    #     pass
-    #
-    # def test_pexport(self):
-    #     """Testing function pexport."""
-    #     pass
-    #
-    # def test_pimport(self):
-    #     """Testing function pimport."""
-    #     pass
-    #
-    # def test_generate_key(self):
-    #     """Testing function generate_key."""
-    #     pass
+    def test_sdecrypt(self):
+        """Testing function sdecrypt."""
+        # Initialize key Variable
+        expected = '{}'.format(random())
+
+        # Decrypting with own fingerprint
+        for _, data_ in self.instances.items():
+            passphrase = '{}'.format(random())
+            instance = data_['instance']
+
+            # Encrypt with internal fingerprint
+            encrypted = instance.sencrypt(expected, passphrase)
+
+            # Decrypt
+            result = instance.sdecrypt(encrypted, passphrase)
+            self.assertEqual(result, expected)
+
+    def test__decrypt(self):
+        """Testing function _decrypt."""
+        # Tested by test_decrypt
+        pass
+
+    def test_encrypt(self):
+        """Testing function encrypt."""
+        # Tested by test_decrypt
+        pass
+
+    def test_sencrypt(self):
+        """Testing function sencrypt."""
+        # Tested by test_sdecrypt
+        pass
+
+    def fingerpint(self):
+        """Testing function fingerpint."""
+        # Tested by test_decrypt
+        pass
+
+    def test_trust(self):
+        """Testing function trust."""
+        # Tested by test_decrypt
+        pass
+
+    def test_pdelete(self):
+        """Testing function pdelete."""
+        # Tested by test_pexport
+        pass
+
+    def test_pexport(self):
+        """Testing function pexport."""
+        # Test
+        for _, data_ in self.instances.items():
+            # Get instance information
+            instance = data_['instance']
+            email = data_['email']
+            fingerprint = instance.fingerprint(email)
+
+            # Create a new instance
+            new_agent = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            new_email = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            new_directory = tempfile.mkdtemp()
+            new_instance = encrypt.Encryption(
+                new_agent, new_email, new_directory)
+            new_public_key = new_instance.pexport()
+            new_fingerprint = new_instance.fingerprint(new_email)
+
+            # There should be only one public key
+            public_key = instance.pexport()
+
+            # Import public key
+            instance.pimport(new_public_key)
+            result = instance.pexport(new_fingerprint)
+
+            # There should be a match
+            self.assertEqual(new_public_key, result)
+            self.assertNotEqual(result, public_key)
+
+            # Test deletion of nonexistent fingerprint
+            status = instance.pdelete('foo')
+            self.assertFalse(status)
+
+            # Test deletion of primary fingerprint
+            status = instance.pdelete(fingerprint)
+            self.assertFalse(status)
+
+            # Test deletion of primary fingerprint
+            status = instance.pdelete(new_fingerprint)
+            self.assertTrue(status)
+            result = instance.pexport(new_fingerprint)
+            self.assertIsNone(result)
+
+            # Delete directory
+            shutil.rmtree(new_directory)
+
+    def test_pimport(self):
+        """Testing function pimport."""
+        # Tested by test_pexport
+        pass
+
+
+class TestFunctions(unittest.TestCase):
+    """Test all methods of KeyRing class."""
+
+    def test_generate_key(self):
+        """Testing function generate_key."""
+        # Test
+        result = encrypt.generate_key()
+        self.assertTrue(isinstance(result, str))
+        self.assertEqual(len(result), 70)
 
 
 if __name__ == '__main__':
