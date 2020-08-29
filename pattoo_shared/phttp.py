@@ -320,11 +320,12 @@ class EncryptedPostAgent(EncryptedPost):
     Class to prepare data for posting encrypted
     data to remote pattoo server."""
 
-    def __init__(self, agentdata, gpg):
+    def __init__(self, agentdata, encryption):
         """Initialize the class.
 
         Args:
             agentdata: Agent data
+            encryption: encrypt.Encryption object
 
         Returns:
             None
@@ -343,7 +344,7 @@ class EncryptedPostAgent(EncryptedPost):
             data = None
 
         # Initialize key variables
-        EncryptedPost.__init__(self, identifier, data, gpg)
+        EncryptedPost.__init__(self, identifier, data, encryption)
 
 
 class PassiveAgent():
@@ -514,8 +515,13 @@ def key_exchange(metadata):
     encrypt data that is going to be sent to the API server.
 
     Args:
-        gpg (obj): Pgpier object
-        req_session (obj): Request Session object
+        metadata: _KeyExchange object where:
+            encryption: encrypt.Encryption object
+            session: Requests session object
+            symmetric_key: Symmetric key
+            symmetric_key_url: API URL for symmetric key validation
+            key_exchange_url: URL for key exchanges with the API server
+            identifier: Agent identifier
 
     Returns:
         success: True if successful
@@ -666,9 +672,9 @@ def _send_symmetric_key(
     status = None
 
     # Process API server information
-    api_email = data['data']['api_email']
-    api_key = data['data']['api_key']
-    encrypted_nonce = data['data']['encrypted_nonce']
+    api_email = data['api_email']
+    api_key = data['api_key']
+    encrypted_nonce = data['encrypted_nonce']
 
     # Import API public key
     encryption.pimport(api_key)

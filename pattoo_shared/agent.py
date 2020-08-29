@@ -24,6 +24,7 @@ from gunicorn.app.base import BaseApplication
 # Pattoo libraries
 from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared import files
+from pattoo_shared import encrypt
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
@@ -97,8 +98,10 @@ class EncryptedAgent(Agent):
         # Initialize key variables (Parent)
         Agent.__init__(self, parent, child=child, config=config)
 
-        # Create GPG key for agent
-        self._gpg = files.set_gnupg(parent, config)
+        # Create encryption object
+        self.encryption = encrypt.Encryption(
+            parent, self.config.agent_email_address())
+
 
 
 class _AgentRun():
@@ -407,8 +410,9 @@ class EncryptedAgentAPI(AgentAPI):
         # Instantiate daemon superclass
         AgentAPI.__init__(self, parent, child, app, config=config)
 
-        # Create GPG key for agent
-        files.set_gnupg(parent, config)
+        # Create encryption object
+        self.encryption = encrypt.Encryption(
+            parent, self.config.api_email_address())
 
 
 class _StandaloneApplication(BaseApplication):
