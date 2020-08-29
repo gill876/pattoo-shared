@@ -223,7 +223,7 @@ class TestConfig(unittest.TestCase):
             '{1}{0}.keyring'.format(os.sep, self.config.keys_directory()))
 
         # Test
-        result = self.config.keys_directory()
+        result = self.config.keyring_directory()
         self.assertEqual(result, expected)
 
     def test_keys_directory(self):

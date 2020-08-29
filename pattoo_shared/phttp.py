@@ -21,7 +21,7 @@ from pattoo_shared import encrypt
 # Save items needed for encrypted purging inside a named tuple
 EncryptionSuite = collections.namedtuple(
     'EncryptionSuite',
-    'encrypted_post gpg symmetric_key session')
+    'encrypted_post encryption symmetric_key session')
 
 _KeyExchange = collections.namedtuple(
     '_KeyExchange',
