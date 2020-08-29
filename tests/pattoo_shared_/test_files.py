@@ -418,44 +418,6 @@ class Test_File(unittest.TestCase):
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
 
 
-class Test_GnuPG(unittest.TestCase):
-    """Test Pgpier integration."""
-    # Initialize config object
-    config = Config()
-
-    def test_set_gnupg(self):
-        """Set Pgpier object test for agent."""
-
-        # Agent details
-        agent_name = 'test_agent1'
-        # agent_email = 'test_agent1@example.org'
-
-        # Result
-        result = files.set_gnupg(agent_name, self.config)
-
-        # If a Pgpier object was created, a key ID would
-        # be set of type str
-        self.assertIsNotNone(result.keyid)
-        self.assertIsInstance(result.keyid, str)
-
-    def test_get_gnupg(self):
-        """Test retrieval of Pgpier object."""
-
-        # Create Pgpier object
-        # Agent details
-        agent_name = 'test_agent2'
-        # agent_email = 'test_agent2@example.org'
-
-        # Result
-        files.set_gnupg(agent_name, self.config)
-
-        # Retrieve Pgpier object
-        result = files.get_gnupg(agent_name, self.config)
-
-        # Test if the Pgpier object was retrieved
-        self.assertIsNotNone(result)
-
-
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests
     UnittestConfig().create()

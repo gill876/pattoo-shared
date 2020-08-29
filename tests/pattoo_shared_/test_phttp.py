@@ -231,11 +231,9 @@ class TestEncryptedPost(unittest.TestCase):
                 self.nonce, self.encrypt_agt.fingerprint())
 
             json_response = {
-                'data': {
-                    'api_email': self.api_email,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }
+                'api_email': self.api_email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
             }
 
             # Send data
@@ -363,11 +361,9 @@ class TestEncryptedPost(unittest.TestCase):
 
             # Create a json response
             json_response = {
-                'data': {
-                    'api_email': self.api_email,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }
+                'api_email': self.api_email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
             }
 
             # Send data
@@ -452,7 +448,7 @@ class TestEncryptedPost(unittest.TestCase):
 
             # Run purge
             self.encrypted_post.purge()
-            
+
             # Check that URL's were called
             self.assertEqual(mock_.call_count, 4)
 
@@ -550,11 +546,9 @@ class TestEncryptedPostAgent(unittest.TestCase):
                 self.nonce, self.encrypt_agt.fingerprint())
 
             json_response = {
-                'data': {
-                    'api_email': self.api_email,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }
+                'api_email': self.api_email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
             }
 
             # Send data
