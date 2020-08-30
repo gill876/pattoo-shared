@@ -234,18 +234,19 @@ class BaseConfig():
         # Return
         return value
 
-    def keyring_directory(self):
+    def keyring_directory(self, agent_name):
         """Get keyring_directory.
 
         Args:
-            None
+            agent_name: Name of agent
 
         Returns:
             result: result
 
         """
         # Get result
-        result = '{}/.keyring'.format(self.keys_directory())
+        result = '{0}{1}.keyring'.format(
+            self.keys_directory(agent_name), os.sep)
 
         # Create directory if it doesn't exist
         files.mkdir(result)
@@ -256,18 +257,19 @@ class BaseConfig():
         # Return
         return result
 
-    def keys_directory(self):
+    def keys_directory(self, agent_name):
         """Get keys_directory.
 
         Args:
-            None
+            agent_name: Name of agent
 
         Returns:
             result: result
 
         """
         # Get result
-        result = '{}/keys'.format(self.daemon_directory())
+        result = '{0}{1}keys{1}{2}'.format(
+            self.daemon_directory(), os.sep, agent_name)
 
         # Create directory if it doesn't exist
         files.mkdir(result)
@@ -407,26 +409,6 @@ class Config(BaseConfig):
             result = 20201
         else:
             result = int(intermediate)
-        return result
-
-    def agent_email_address(self):
-        """GET agent email address from yaml file.
-
-        Args:
-            None
-
-        Returns:
-            email (str): Email address of agent
-        """
-        # Initialize key variables
-        key = 'encryption'
-        sub_key = 'agent_email'
-
-        # Get result - This will be placed in the pattoo_agent.yaml file
-        result = search(
-            key, sub_key, self._agent_yaml_configuration, die=True)
-        if result is None:
-            result = 'pattoo_agent@example.org'
         return result
 
     def agent_api_uri(self):

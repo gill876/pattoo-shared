@@ -100,8 +100,7 @@ class EncryptedAgent(Agent):
         Agent.__init__(self, parent, child=child, config=config)
 
         # Create encryption object
-        self.encryption = encrypt.Encryption(
-            parent, self.config.agent_email_address(), directory=directory)
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
 class _AgentRun():
@@ -412,8 +411,7 @@ class EncryptedAgentAPI(AgentAPI):
         AgentAPI.__init__(self, parent, child, app, config=config)
 
         # Create encryption object
-        self.encryption = encrypt.Encryption(
-            parent, self.config.api_email_address(), directory=directory)
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
 class _StandaloneApplication(BaseApplication):

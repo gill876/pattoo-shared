@@ -23,27 +23,26 @@ _METADATA = namedtuple('_METADATA', 'fingerprint passphrase')
 class KeyRing():
     """Class for managing PGP keyring."""
 
-    def __init__(self, agent_name, email, directory=None):
+    def __init__(self, agent_name, directory=None):
         """Instantiate the class.
 
         Args:
             agent_name: Name of agent generating the private key
-            email: Email address to use for encryption
+            directory: Alternative key storage directory
 
         Returns:
             None
 
         """
         # Initialize key variables
-        self._agent_name = agent_name
-        self._wrapper = '({})'.format(agent_name)
-        self.email = email
         config = configuration.Config()
+        self._agent_name = agent_name
+        self.email = files.get_agent_id(agent_name, config)
 
         # Associate directories
         if directory is None:
-            keyring_directory = config.keyring_directory()
-            self._keys_directory = config.keys_directory()
+            keyring_directory = config.keyring_directory(agent_name)
+            self._keys_directory = config.keys_directory(agent_name)
         else:
             keyring_directory = '{}{}.keyring'.format(directory, os.sep)
             self._keys_directory = directory
@@ -62,7 +61,7 @@ class KeyRing():
 
         # Create and store metadata if nonexistent
         if metadata is None:
-            metadata = self._generate(email)
+            metadata = self._generate(self.email)
             self._export(metadata)
 
         # Share passphrase
@@ -93,14 +92,14 @@ class KeyRing():
 
         # Get list of key files whose names end with the wrapper
         key = [_file for _file in os.listdir(
-            directory) if _file.endswith(self._wrapper)]
+            directory) if _file.endswith(self.email)]
 
         # Process data
         count = len(key)
         if count > 1:
             # Die if we have duplicate keys found in the directory
-            log_message = (
-                'More than one {} key-pair stores found'.format(self._wrapper))
+            log_message = '''\
+More than one agent_id "{}" key-pair stores found'''.format(self.email)
             log.log2die(1062, log_message)
 
         elif count == 1:
@@ -123,7 +122,7 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
                 log.log2die(1094, 'Corrupted keyfile:{}'.format(filepath))
 
             # Retrieve fingerprint from the filename
-            fingerprint = filename[0:len(filename) - len(self._wrapper)]
+            fingerprint = filename.split('-')[0]
             result = _METADATA(fingerprint=fingerprint, passphrase=passphrase)
 
         return result
@@ -145,7 +144,7 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
         # Initialize variables
         directory = self._keys_directory
         filepath = os.path.abspath(os.path.join(
-            directory, '{0}{1}'.format(metadata.fingerprint, self._wrapper)))
+            directory, '{0}-{1}'.format(metadata.fingerprint, self.email)))
 
         # Export data
         try:
@@ -251,19 +250,19 @@ class Encryption(KeyRing):
 
     """
 
-    def __init__(self, agent_name, email, directory=None):
+    def __init__(self, agent_name, directory=None):
         """Instantiate the class.
 
         Args:
             agent_name: Name of agent generating the private key
             email: Email address to use for encryption
-            directory: Key storage directory
+            directory: Alternative key storage directory
 
         Returns:
             None
 
         """
-        KeyRing.__init__(self, agent_name, email, directory=directory)
+        KeyRing.__init__(self, agent_name, directory=directory)
 
     def decrypt(self, data):
         """Decrypt data using a public key the GnuPG keyring.

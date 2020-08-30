@@ -27,6 +27,8 @@ else:
 
 # Pattoo imports
 from pattoo_shared import encrypt
+from pattoo_shared import configuration
+from pattoo_shared import files
 from tests.libraries.configuration import UnittestConfig
 
 
@@ -59,18 +61,21 @@ class TestEncrypt(unittest.TestCase):
 
     def setUp(self):
         """Run these steps before each test is performed."""
+        # Initialize key variables
+        config = configuration.BaseConfig()
 
         # Setup encryption instances
         self.instances = defaultdict(lambda: defaultdict(dict))
+
         directory = tempfile.mkdtemp()
         for item in range(2):
             agent = hashlib.md5('{}'.format(random()).encode()).hexdigest()
-            email = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            email = files.get_agent_id(agent, config)
             self.instances[item]['directory'] = directory
             self.instances[item]['agent'] = agent
             self.instances[item]['email'] = email
             self.instances[item]['instance'] = encrypt.Encryption(
-                agent, email, directory)
+                agent, directory)
 
     def tearDown(self):
         """Run these steps after each test is performed."""
@@ -182,6 +187,9 @@ class TestEncrypt(unittest.TestCase):
 
     def test_pexport(self):
         """Testing function pexport."""
+        # Initialize key variables
+        config = configuration.BaseConfig()
+
         # Test
         for _, data_ in self.instances.items():
             # Get instance information
@@ -191,10 +199,9 @@ class TestEncrypt(unittest.TestCase):
 
             # Create a new instance
             new_agent = hashlib.md5('{}'.format(random()).encode()).hexdigest()
-            new_email = hashlib.md5('{}'.format(random()).encode()).hexdigest()
+            new_email = files.get_agent_id(new_agent, config)
             new_directory = tempfile.mkdtemp()
-            new_instance = encrypt.Encryption(
-                new_agent, new_email, new_directory)
+            new_instance = encrypt.Encryption(new_agent, new_directory)
             new_public_key = new_instance.pexport()
             new_fingerprint = new_instance.fingerprint(new_email)
 

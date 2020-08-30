@@ -169,15 +169,12 @@ class TestEncryptedPost(unittest.TestCase):
     nonce = None
 
     # Initialize encrytion keys
-    api_email = hashlib.md5('{}'.format(random.random()).encode()).hexdigest()
     encrypt_agt = encrypt.Encryption(
-        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
         hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
         tempfile.mkdtemp()
     )
     encrypt_api = encrypt.Encryption(
         hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
-        api_email,
         tempfile.mkdtemp()
     )
 
@@ -231,7 +228,7 @@ class TestEncryptedPost(unittest.TestCase):
                 self.nonce, self.encrypt_agt.fingerprint())
 
             json_response = {
-                'api_email': self.api_email,
+                'api_email': self.encrypt_api.email,
                 'api_key': api_publickey,
                 'encrypted_nonce': encrypted_nonce
             }
@@ -361,7 +358,7 @@ class TestEncryptedPost(unittest.TestCase):
 
             # Create a json response
             json_response = {
-                'api_email': self.api_email,
+                'api_email': self.encrypt_api.email,
                 'api_key': api_publickey,
                 'encrypted_nonce': encrypted_nonce
             }
@@ -477,15 +474,12 @@ class TestEncryptedPostAgent(unittest.TestCase):
     """Test EncryptedPostAgent"""
 
     # Initialize key variables
-    api_email = hashlib.md5('{}'.format(random.random()).encode()).hexdigest()
     encrypt_agt = encrypt.Encryption(
-        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
         hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
         tempfile.mkdtemp()
     )
     encrypt_api = encrypt.Encryption(
         hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
-        api_email,
         tempfile.mkdtemp()
     )
 
@@ -546,7 +540,7 @@ class TestEncryptedPostAgent(unittest.TestCase):
                 self.nonce, self.encrypt_agt.fingerprint())
 
             json_response = {
-                'api_email': self.api_email,
+                'api_email': self.encrypt_api.email,
                 'api_key': api_publickey,
                 'encrypted_nonce': encrypted_nonce
             }

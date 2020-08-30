@@ -138,14 +138,6 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_agent_email_address(self):
-        """Test agent email address retrieval"""
-        # Test from yaml file
-        result = self.config.agent_email_address()
-        expected = 'test_agent@example.org'
-
-        self.assertEqual(result, expected)
-
     def test_daemon_directory(self):
         """Testing function daemon_directory."""
         # Nothing should happen. Directory exists in testing.
@@ -219,21 +211,23 @@ class TestConfig(unittest.TestCase):
     def test_keyring_directory(self):
         """Testing function keyring_directory."""
         # Initialize key values
-        expected = (
-            '{1}{0}.keyring'.format(os.sep, self.config.keys_directory()))
+        agent_name = 'b00'
+        expected = '{1}{0}.keyring'.format(
+            os.sep, self.config.keys_directory(agent_name))
 
         # Test
-        result = self.config.keyring_directory()
+        result = self.config.keyring_directory(agent_name)
         self.assertEqual(result, expected)
 
     def test_keys_directory(self):
         """Testing function keys_directory."""
         # Initialize key values
+        agent_name = 'b00'
         expected = (
-            '{1}{0}keys'.format(os.sep, self.config.daemon_directory()))
+            '{1}{0}keys{0}b00'.format(os.sep, self.config.daemon_directory()))
 
         # Test
-        result = self.config.keys_directory()
+        result = self.config.keys_directory(agent_name)
         self.assertEqual(result, expected)
 
 

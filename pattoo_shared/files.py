@@ -15,7 +15,6 @@ import yaml
 # Pattoo libraries
 from pattoo_shared import log
 from pattoo_shared import data
-from pattoo_shared import encrypt
 
 
 class _Directory():
