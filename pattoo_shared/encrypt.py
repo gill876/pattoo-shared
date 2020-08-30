@@ -53,7 +53,7 @@ class KeyRing():
         # Initialize GPG object. Note: options=['--pinentry-mode=loopback']
         # ensures the passphrase can be entered via python and won't prompt
         # the user.
-        self.gpg = gnupg.GPG(
+        self._gpg = gnupg.GPG(
             gnupghome=keyring_directory,
             options=['--pinentry-mode=loopback'])
 
@@ -180,14 +180,14 @@ Insufficient permissions for writing the file:{}'''.format(filepath))
         passphrase = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
 
         # Generate key-pair
-        data_ = self.gpg.gen_key_input(
+        data_ = self._gpg.gen_key_input(
             key_type=key_type,
             key_length=key_length,
             name_real=self._agent_name,
             name_comment=comment,
             name_email=email,
             passphrase=passphrase)
-        key = self.gpg.gen_key(data_)
+        key = self._gpg.gen_key(data_)
         fingerprint = key.fingerprint
 
         # Return results
@@ -209,7 +209,7 @@ Insufficient permissions for writing the file:{}'''.format(filepath))
         """
         # Initialize key variables
         result = None
-        keys = self.gpg.list_keys()
+        keys = self._gpg.list_keys()
 
         # Identify the public key
         for key in keys:
@@ -307,7 +307,7 @@ class Encryption(KeyRing):
         # Initialize the passphrase
         if bool(passphrase) is False:
             passphrase = self._passphrase
-        decrypted = self.gpg.decrypt(data, passphrase=passphrase)
+        decrypted = self._gpg.decrypt(data, passphrase=passphrase)
 
         # Return
         result = (decrypted.data).decode()
@@ -330,7 +330,7 @@ class Encryption(KeyRing):
 
         # Return
         result = str(
-            self.gpg.encrypt(
+            self._gpg.encrypt(
                 data,
                 passphrase=None,
                 recipients=recipients,
@@ -356,7 +356,7 @@ class Encryption(KeyRing):
         """
         # Return
         result = str(
-            self.gpg.encrypt(
+            self._gpg.encrypt(
                 data,
                 passphrase=passphrase,
                 recipients=None,
@@ -376,7 +376,7 @@ class Encryption(KeyRing):
             None
         """
         # Apply
-        self.gpg.trust_keys(fingerprint, trustlevel)
+        self._gpg.trust_keys(fingerprint, trustlevel)
 
     def fingerprint(self, email=None):
         """Get GnuPG keyring fingerprint that matches an email address.
@@ -395,7 +395,7 @@ class Encryption(KeyRing):
         if email is None:
             result = self._fingerprint
         else:
-            for key in self.gpg.list_keys():
+            for key in self._gpg.list_keys():
                 uids = list(filter((lambda item: email in item), key['uids']))
                 if bool(uids) is True:
                     parts = uids[0].split()
@@ -424,7 +424,7 @@ class Encryption(KeyRing):
 
         # Delete public key
         if fingerprint != self._fingerprint:
-            _result = self.gpg.delete_keys(fingerprint)
+            _result = self._gpg.delete_keys(fingerprint)
             result = str(_result).lower() == 'ok'
         return result
 
@@ -447,7 +447,7 @@ class Encryption(KeyRing):
         else:
             keyid = self._get_public_keyid(recipient)
         if keyid is not None:
-            result = self.gpg.export_keys(keyid)
+            result = self._gpg.export_keys(keyid)
         return result
 
     def pimport(self, key):
@@ -461,7 +461,7 @@ class Encryption(KeyRing):
 
         """
         # Import
-        self.gpg.import_keys(key)
+        self._gpg.import_keys(key)
 
 
 def generate_key(length=70):

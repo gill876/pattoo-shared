@@ -501,18 +501,19 @@ Data for identifier "{}" failed to post to server {}\
 def key_exchange(metadata):
     """Exchange point for API and Agent public keys.
 
-    First, post the agent information to the API to process and
-    store the agent's email address and ASCII public key. Secondly,
-    the API server sends the agent it's email address, ASCII pubic
-    key and a nonce encrypted by the agent's public key. The agent
-    decrypts the nonce and encrypts the nonce with a randomly
-    generated symmetric key. The symmetric key is then encrypted by
-    the API server's public key. The encrypted nonce and encrypted
-    symmetric key are sent to the API server. The API server decrypts
-    the two data and checks if nonce that was sent is the same as the
-    nonce decrypted. If both nonces match, the server sends an OK
-    signal to the agent. Lastly, the symmetric key is then used to
-    encrypt data that is going to be sent to the API server.
+    Process:
+        1) Post agent's email address and ASCII public key to API server.
+        2) API server responds with its email address, ASCII pubic
+           key and a nonce encrypted by the agent's public key.
+        3) The agent decrypts the nonce and re-encrypts it with a randomly
+           generated symmetric key.
+        4) The symmetric key is then encrypted by the API server's public key.
+        5) The encrypted nonce and encrypted symmetric key are sent to the API
+           server.
+        6) The API server decrypts this data and checks if nonce that was sent
+           is the same as the nonce decrypted.
+        7) If both nonces match, the server sends an OK signal to the agent.
+        8) The symmetric key is used to encrypt data sent to the API server.
 
     Args:
         metadata: _KeyExchange object where:
@@ -531,7 +532,7 @@ def key_exchange(metadata):
     success = False
 
     # Send the public key
-    status = _send_public_key(
+    status = _send_agent_public_key(
         metadata.session,
         metadata.encryption,
         metadata.key_exchange_url
@@ -540,7 +541,7 @@ def key_exchange(metadata):
         return success
 
     # Get get API server's public key
-    data = _get_public_key(
+    data = _get_api_public_key(
         metadata.session,
         metadata.key_exchange_url
     )
@@ -558,7 +559,7 @@ def key_exchange(metadata):
     return success
 
 
-def _send_public_key(session, encryption, exchange_url):
+def _send_agent_public_key(session, encryption, exchange_url):
     """Send public key to the remote API server.
 
     Args:
@@ -603,7 +604,7 @@ def _send_public_key(session, encryption, exchange_url):
     return success
 
 
-def _get_public_key(session, exchange_url):
+def _get_api_public_key(session, exchange_url):
     """Use previously established session to get the API server's public key.
 
     Args:
@@ -641,20 +642,7 @@ def _get_public_key(session, exchange_url):
 
 def _send_symmetric_key(
         session, encryption, url, symmetric_key, data):
-    """Exchange point for API and Agent public keys.
-
-    First, post the agent information to the API to process and
-    store the agent's email address and ASCII public key. Secondly,
-    the API server sends the agent it's email address, ASCII pubic
-    key and a nonce encrypted by the agent's public key. The agent
-    decrypts the nonce and encrypts the nonce with a randomly
-    generated symmetric key. The symmetric key is then encrypted by
-    the API server's public key. The encrypted nonce and encrypted
-    symmetric key are sent to the API server. The API server decrypts
-    the two data and checks if nonce that was sent is the same as the
-    nonce decrypted. If both nonces match, the server sends an OK
-    signal to the agent. Lastly, the symmetric key is then used to
-    encrypt data that is going to be sent to the API server.
+    """Send symmetric_key to the remote API server.
 
     Args:
         session: Request Session object

@@ -83,13 +83,14 @@ class Agent():
 class EncryptedAgent(Agent):
     """Encrypted Agent class for daemons."""
 
-    def __init__(self, parent, child=None, config=None):
+    def __init__(self, parent, child=None, config=None, directory=None):
         """Initialize the class.
 
         Args:
             parent: Name of parent daemon
             child: Name of child daemon
             config: Config object
+            directory: Override the directory for KeyRing storage if provided.
 
         Returns:
             None
@@ -100,8 +101,7 @@ class EncryptedAgent(Agent):
 
         # Create encryption object
         self.encryption = encrypt.Encryption(
-            parent, self.config.agent_email_address())
-
+            parent, self.config.agent_email_address(), directory=directory)
 
 
 class _AgentRun():
@@ -394,7 +394,7 @@ fix.'''.format(self.pidfile_parent))
 class EncryptedAgentAPI(AgentAPI):
     """Agent class for daemons."""
 
-    def __init__(self, parent, child, app, config=None):
+    def __init__(self, parent, child, app, config=None, directory=None):
         """Initialize the class.
 
         Args:
@@ -402,6 +402,7 @@ class EncryptedAgentAPI(AgentAPI):
             email: Email address used for encryption
             child: Name of child daemon
             config: Config object
+            directory: Override the directory for KeyRing storage if provided.
 
         Returns:
             None
@@ -412,7 +413,7 @@ class EncryptedAgentAPI(AgentAPI):
 
         # Create encryption object
         self.encryption = encrypt.Encryption(
-            parent, self.config.api_email_address())
+            parent, self.config.api_email_address(), directory=directory)
 
 
 class _StandaloneApplication(BaseApplication):
