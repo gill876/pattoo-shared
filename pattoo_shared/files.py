@@ -15,7 +15,6 @@ import yaml
 # Pattoo libraries
 from pattoo_shared import log
 from pattoo_shared import data
-from pattoo_shared import encrypt
 
 
 class _Directory():
@@ -519,77 +518,6 @@ def get_agent_id(agent_name, config):
 
     # Return
     return agent_id
-
-
-def set_gnupg(agent_name, config):
-    """Generate key pair and store credentials
-
-    Args:
-        agent_name (str): Agent name
-        config (obj): Config object
-
-    Returns:
-        gpg (obj): Pgpier object
-
-    """
-    # Do an import to prevent circular imports
-    from pattoo_shared.configuration import Config
-
-    # Uses agent name as wrapper
-    wrapper = '({})'.format(agent_name)
-
-    # Set the email address to be used for encryption
-    if isinstance(config, Config):
-        agent_email = config.agent_email_address()
-    else:
-        agent_email = config.api_email_address()
-
-    # Retrieves key directory
-    d_obj = _Directory(config)
-    key_dir = d_obj.keyring()
-
-    agent_comment = 'Key pair generated for {}'.format(agent_name)
-
-    gpg = encrypt.Pgpier(key_dir)
-    set_values = gpg.set_from_imp(wrapper)
-
-    if set_values is not True:
-        gpg.key_pair(agent_email, agent_name, agent_comment)
-        gpg.exp_main(wrapper)
-
-    gpg.set_keyid()
-    return gpg
-
-
-def get_gnupg(agent_name, config):
-    """Retrieve an already created Pgpier object based the key directory.
-
-    Args:
-        agent_name (str): Agent name
-        config (obj): Config object
-
-    Returns:
-        gpg (obj): Pgpier object if key pair was already generated
-                   for <agent_name>
-        None: If a key pair was not generated for <agent_name>
-    """
-
-    # Uses agent name as wrapper
-    wrapper = '({})'.format(agent_name)
-
-    # Retrieves key directory
-    d_obj = _Directory(config)
-    key_dir = d_obj.keyring()
-
-    gpg = encrypt.Pgpier(key_dir)
-    set_values = gpg.set_from_imp(wrapper)
-
-    # Checks if the Pgpier object of that specific agent was
-    # generated
-    if set_values is True:
-        return gpg
-    else:
-        return None
 
 
 def get_session_cache_dir(config):

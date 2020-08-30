@@ -19,7 +19,7 @@ import yaml
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+_EXPECTED = '{0}pattoo-shared{0}tests{0}pattoo_shared_'.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
@@ -416,44 +416,6 @@ class Test_File(unittest.TestCase):
         filename = files._File(self.config)
         result = filename.agent_id(self.prefix)
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
-
-
-class Test_GnuPG(unittest.TestCase):
-    """Test Pgpier integration."""
-    # Initialize config object
-    config = Config()
-
-    def test_set_gnupg(self):
-        """Set Pgpier object test for agent."""
-
-        # Agent details
-        agent_name = 'test_agent1'
-        # agent_email = 'test_agent1@example.org'
-
-        # Result
-        result = files.set_gnupg(agent_name, self.config)
-
-        # If a Pgpier object was created, a key ID would
-        # be set of type str
-        self.assertIsNotNone(result.keyid)
-        self.assertIsInstance(result.keyid, str)
-
-    def test_get_gnupg(self):
-        """Test retrieval of Pgpier object."""
-
-        # Create Pgpier object
-        # Agent details
-        agent_name = 'test_agent2'
-        # agent_email = 'test_agent2@example.org'
-
-        # Result
-        files.set_gnupg(agent_name, self.config)
-
-        # Retrieve Pgpier object
-        result = files.get_gnupg(agent_name, self.config)
-
-        # Test if the Pgpier object was retrieved
-        self.assertIsNotNone(result)
 
 
 if __name__ == '__main__':

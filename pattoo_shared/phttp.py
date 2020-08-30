@@ -16,11 +16,20 @@ import requests
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared import converter
+from pattoo_shared import encrypt
 
 # Save items needed for encrypted purging inside a named tuple
 EncryptionSuite = collections.namedtuple(
     'EncryptionSuite',
-    'post gpg symmetric_key session')
+    'encrypted_post encryption symmetric_key session')
+
+_KeyExchange = collections.namedtuple(
+    '_KeyExchange',
+    'encryption session key_exchange_url symmetric_key_url symmetric_key')
+
+_EncrypedPost = collections.namedtuple(
+    '_EncrypedPost',
+    'encryption session symmetric_key encryption_url data identifier')
 
 
 class _Post():
@@ -50,7 +59,7 @@ class _Post():
             None
 
         Returns:
-            success (bool): True: if successful
+            None
 
         """
         pass
@@ -158,34 +167,23 @@ class EncryptedPost(_Post):
     the module.
     """
 
-    def __init__(self, identifier, data, gpg):
+    def __init__(self, identifier, data, encryption):
         """Initialize the class.
 
         Args:
-            gpg (obj): Pgpier object to accommodate encryption
+            identifier: Agent identifier
+            data: Data from agent
+            encryption: encrypt.Encryption object
 
         Returns:
             None
-        """
 
+        """
+        # Instantiate Post class
         _Post.__init__(self, identifier, data)
 
-        # Set Pgpier object
-        self._gpg = gpg
-
         # Get URLs for encryption
-        self._exchange_key = self.config.agent_api_key_url()
-        self._validate_key = self.config.agent_api_validation_url()
-        self._encryption = self.config.agent_api_encrypted_url()
-
-        # Get requirements for key exchange
-        self._session = requests.Session()
-        # Turn off HTTP Persistent connection
-        self._session.keep_alive = False
-
-        # Encryption requirements
-        # Random str of len 20
-        self._symmetric_key = self._gpg.gen_symm_key(20)
+        self._encryption = encryption
 
     def purge(self):
         """Purge.
@@ -194,79 +192,97 @@ class EncryptedPost(_Post):
         to the API server.
 
         Args:
-            gpg (obj): Pgpier object to facilitate encryption
+            None
 
         Returns:
             None
 
         """
-        result = False
+        # Initialize key variables
+        success = False
+        key = encrypt.generate_key(20)
 
-        # Check if key was exchanged
-        exchanged = self.set_encryption()
+        # Create a session and post data
+        with requests.Session() as session:
+            # Turn off HTTP Persistent connection
+            session.keep_alive = False
 
-        # If the key exchanged failed, return result
-        if exchanged is False:
-            return result
-
-        # Add data to named tuple for encrypted_post
-        suite = EncryptionSuite(
-            encrypted_post, self._gpg,
-            self._symmetric_key, self._session)
+            # Exchange keys
+            success = key_exchange(
+                _KeyExchange(
+                    encryption=self._encryption,
+                    session=session,
+                    key_exchange_url=self.config.agent_api_key_url(),
+                    symmetric_key_url=self.config.agent_api_validation_url(),
+                    symmetric_key=key
+                )
+            )
 
         # Purge data, encrypt and send to API
-        purge(self._encryption, self._identifier, suite)
+        if success is True:
+            purge(
+                self.config.agent_api_encrypted_url(),
+                self._identifier,
+                suite=EncryptionSuite(
+                    encrypted_post=encrypted_post,
+                    encryption=self._encryption,
+                    symmetric_key=key,
+                    session=session
+                )
+            )
 
     def post(self):
         """Send encrypted data to the API server.
 
         Args:
-            gpg (obj): Pgpier object to facilitate encryption
-
-        Returns (bool): True if data was posted successfully
-                        False if data failed to post
-
-        """
-        # Predefine variables
-        result = False
-
-        # Check if key was exchanged
-        exchanged = self.set_encryption()
-
-        # If the key exchanged failed, return result
-        if exchanged is False:
-            return result
-
-        # Post data
-        if bool(self._data) is True:
-            result = encrypted_post(self._gpg, self._symmetric_key,
-                                    self._session, self._encryption,
-                                    self._data, self._identifier)
-        else:
-            log_message = ('Blank data. No data to post from '
-                           'identifier {}.'.format(self._identifier))
-            log.log2warning(1056, log_message)
-
-        return result
-
-    def set_encryption(self):
-        """Set up encryption.
-
-        Exchanges public keys and
-        sets a symmetric key for encryption
-
-        Args:
-            gpg (obj): Pgpier object to facilitate encryption
+            None
 
         Returns:
-            (bool): True if the exchange was successful
-                    False if the exchange failed
+            success: True if data was posted successfully
+
         """
+        # Initialize key variables
+        success = False
+        key = encrypt.generate_key(20)
 
-        result = key_exchange(self._gpg, self._session, self._exchange_key,
-                              self._validate_key, self._symmetric_key)
+        # Create a session and post data
+        with requests.Session() as session:
+            # Turn off HTTP Persistent connection
+            session.keep_alive = False
 
-        return result
+            # Exchange keys
+            result = key_exchange(
+                _KeyExchange(
+                    encryption=self._encryption,
+                    session=session,
+                    key_exchange_url=self.config.agent_api_key_url(),
+                    symmetric_key_url=self.config.agent_api_validation_url(),
+                    symmetric_key=key
+                )
+            )
+            # Return if exchange failed
+            if result is False:
+                return success
+
+            # Post data
+            if bool(self._data) is True:
+                success = encrypted_post(
+                    _EncrypedPost(
+                        encryption=self._encryption,
+                        session=session,
+                        symmetric_key=key,
+                        encryption_url=self.config.agent_api_encrypted_url(),
+                        data=self._data,
+                        identifier=self._identifier
+                    )
+                )
+
+            else:
+                log_message = '''\
+Blank data. No data to post from identifier {}.'''.format(self._identifier)
+                log.log2warning(1056, log_message)
+
+        return success
 
 
 class PostAgent(Post):
@@ -304,11 +320,12 @@ class EncryptedPostAgent(EncryptedPost):
     Class to prepare data for posting encrypted
     data to remote pattoo server."""
 
-    def __init__(self, agentdata, gpg):
+    def __init__(self, agentdata, encryption):
         """Initialize the class.
 
         Args:
             agentdata: Agent data
+            encryption: encrypt.Encryption object
 
         Returns:
             None
@@ -327,7 +344,7 @@ class EncryptedPostAgent(EncryptedPost):
             data = None
 
         # Initialize key variables
-        EncryptedPost.__init__(self, identifier, data, gpg)
+        EncryptedPost.__init__(self, identifier, data, encryption)
 
 
 class PassiveAgent():
@@ -441,6 +458,9 @@ def post(url, data, identifier, save=True):
         result = requests.post(url, json=data)
         response = True
     except:
+        _exception = sys.exc_info()
+        log_message = ('Data posting failure')
+        log.log2exception(1097, _exception, message=log_message)
         if save is True:
             # Save data to cache
             _save_data(data, identifier)
@@ -478,141 +498,211 @@ Data for identifier "{}" failed to post to server {}\
     return success
 
 
-def key_exchange(gpg, req_session, exchange_url, validation_url,
-                 symmetric_key):
+def key_exchange(metadata):
     """Exchange point for API and Agent public keys.
 
-    First, post the agent information to the API to process and
-    store the agent's email address and ASCII public key. Secondly,
-    the API server sends the agent it's email address, ASCII pubic
-    key and a nonce encrypted by the agent's public key. The agent
-    decrypts the nonce and encrypts the nonce with a randomly
-    generated symmetric key. The symmetric key is then encrypted by
-    the API server's public key. The encrypted nonce and encrypted
-    symmetric key are sent to the API server. The API server decrypts
-    the two data and checks if nonce that was sent is the same as the
-    nonce decrypted. If both nonces match, the server sends an OK
-    signal to the agent. Lastly, the symmetric key is then used to
-    encrypt data that is going to be sent to the API server.
+    Process:
+        1) Post agent's email address and ASCII public key to API server.
+        2) API server responds with its email address, ASCII pubic
+           key and a nonce encrypted by the agent's public key.
+        3) The agent decrypts the nonce and re-encrypts it with a randomly
+           generated symmetric key.
+        4) The symmetric key is then encrypted by the API server's public key.
+        5) The encrypted nonce and encrypted symmetric key are sent to the API
+           server.
+        6) The API server decrypts this data and checks if nonce that was sent
+           is the same as the nonce decrypted.
+        7) If both nonces match, the server sends an OK signal to the agent.
+        8) The symmetric key is used to encrypt data sent to the API server.
 
     Args:
-        gpg (obj): Pgpier object
-        req_session (obj): Request Session object
+        metadata: _KeyExchange object where:
+            encryption: encrypt.Encryption object
+            session: Requests session object
+            symmetric_key: Symmetric key
+            symmetric_key_url: API URL for symmetric key validation
+            key_exchange_url: URL for key exchanges with the API server
+            identifier: Agent identifier
 
     Returns:
-        True: If key exchange was successful
-        False: If the key exchange failed
+        success: True if successful
+
     """
-
     # Predefine failure response
-    general_response = 409
-    general_result = False
+    success = False
 
-    # Set Pgpier key ID
-    gpg.set_keyid()
+    # Send the public key
+    status = _send_agent_public_key(
+        metadata.session,
+        metadata.encryption,
+        metadata.key_exchange_url
+    )
+    if status is False:
+        return success
 
-    # Export public key to ASCII to send over
-    public_key = gpg.exp_pub_key()
+    # Get get API server's public key
+    data = _get_api_public_key(
+        metadata.session,
+        metadata.key_exchange_url
+    )
+    if bool(data) is False:
+        return success
 
-    # Retrieve email address from Pgpier object
-    gpg.set_email()
-    email_addr = gpg.email_addr
+    # Exchange symmetric key
+    success = _send_symmetric_key(
+        metadata.session,
+        metadata.encryption,
+        metadata.symmetric_key_url,
+        metadata.symmetric_key,
+        data
+    )
+    return success
+
+
+def _send_agent_public_key(session, encryption, exchange_url):
+    """Send public key to the remote API server.
+
+    Args:
+        session: Request Session object
+        encryption: Encryption object
+        exchange_url: URL to use for key exchange
+
+    Returns:
+        success: True is successful
+
+    """
+    # Predefine failure response
+    success = False
+    status = None
 
     # Data for POST
-    send_data = {'pattoo_agent_email': email_addr,
-                 'pattoo_agent_key': public_key}
+    send_data = {
+        'pattoo_agent_email': encryption.email,
+        'pattoo_agent_key': encryption.pexport()
+    }
 
     # Convert dict to str
     send_data = json.dumps(send_data)
 
     try:
         # Send over data
-        xch_resp = req_session.post(exchange_url, json=send_data)
+        response = session.post(exchange_url, json=send_data)
+        status = response.status_code
+    except:
+        _exception = sys.exc_info()
+        log_message = ('Key exchange failure')
+        log.log2exception(1077, _exception, message=log_message)
 
-        # Checks that sent data was accepted
-        general_response = xch_resp.status_code
-        if general_response == 202:
-            # Get API information
-            post_resp = req_session.get(exchange_url)
+    # Checks that sent data was accepted
+    if status in [202, 208]:
+        success = True
+    else:
+        log_message = (
+            'Cannot send public key to API server. Status: {}'.format(status))
+        log.log2info(1069, log_message)
 
-            # Checks that the API sent over information
-            general_response = post_resp.status_code
-            if general_response == 200:
-                api_dict = post_resp.json()
-
-                api_email = api_dict['data']['api_email']
-                api_key = api_dict['data']['api_key']
-                encrypted_nonce = api_dict['data']['encrypted_nonce']
-
-                # Import API public key
-                import_msg = gpg.imp_pub_key(api_key)
-                api_fingerprint = gpg.email_to_key(api_email)
-                gpg.trust_key(api_fingerprint)
-                log.log2info(1069, 'Import: {}'.format(import_msg))
-
-                # Decrypt nonce
-                passphrase = gpg.passphrase
-                decrypted_nonce = gpg.decrypt_data(encrypted_nonce,
-                                                   passphrase)
-
-                # Further processing happens out of this nesting
-
-            else:
-                except_msg = 'Could not retrieve GET information.'\
-                             'Status: {}'.format(general_response)
-                raise Exception(except_msg)
-
-            # Futher processing continues here
-
-            # Symmetrically encrypt nonce
-            encrypted_nonce = gpg.symmetric_encrypt(decrypted_nonce,
-                                                    symmetric_key)
-
-            # Encrypt symmetric key
-            encrypted_sym_key = gpg.encrypt_data(symmetric_key,
-                                                 api_fingerprint)
-
-            # Prepare data to send to API
-            validation_data = {'encrypted_nonce': encrypted_nonce,
-                               'encrypted_sym_key': encrypted_sym_key}
-
-            # Convert dict to str
-            validation_data = json.dumps(validation_data)
-
-            # POST data to API
-            validation_resp = req_session.post(validation_url,
-                                               json=validation_data)
-
-            # Check that the transaction was validated
-            general_response = validation_resp.status_code
-            if general_response == 200:
-
-                # The exchange and validation has been successful
-                general_result = True
-            else:
-                except_msg = 'Could not validate information.'\
-                             'Status: {}'.format(general_response)
-                raise Exception(except_msg)
-
-        # Check if a symmetric key was already set at the API
-        elif general_response == 208:
-            general_result = True
-            msg = 'Symmetric key already set'
-            log.log2info(1057, msg)
-
-        else:
-            except_msg = 'Could not send POST information. Status: {}'\
-                         .format(general_response)
-            raise Exception(except_msg)
-    except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1077, log_msg)
-
-    return general_result
+    return success
 
 
-def encrypted_post(gpg, symmetric_key, req_session,
-                   url, data, identifier, save=True):
+def _get_api_public_key(session, exchange_url):
+    """Use previously established session to get the API server's public key.
+
+    Args:
+        session: Request Session object
+        exchange_url: URL to use for key exchange
+
+    Returns:
+        result: JSON key data from API server
+
+    """
+    # Predefine failure response
+    result = None
+    status = None
+
+    # Get API information
+    try:
+        response = session.get(exchange_url)
+        status = response.status_code
+    except:
+        _exception = sys.exc_info()
+        log_message = ('Key exchange failure')
+        log.log2exception(1106, _exception, message=log_message)
+
+    # Checks that the API sent over information
+    if status == 200:
+        # Process API server response
+        result = response.json()
+    else:
+        log_message = (
+            'Cannot get public key from API server. Status: {}'.format(status))
+        log.log2info(1057, log_message)
+
+    return result
+
+
+def _send_symmetric_key(
+        session, encryption, url, symmetric_key, data):
+    """Send symmetric_key to the remote API server.
+
+    Args:
+        session: Request Session object
+        encryption: Encryption object
+        url: URL to use for exchanging the symmetric key
+        symmetric_key: Symmetric key
+        data: Data to post
+
+    Returns:
+        success: True if successful
+
+    """
+    # Predefine failure response
+    success = False
+    status = None
+
+    # Process API server information
+    api_email = data['api_email']
+    api_key = data['api_key']
+    encrypted_nonce = data['encrypted_nonce']
+
+    # Import API public key
+    encryption.pimport(api_key)
+    api_fingerprint = encryption.fingerprint(api_email)
+    encryption.trust(api_fingerprint)
+
+    # Decrypt nonce
+    decrypted_nonce = encryption.decrypt(encrypted_nonce)
+
+    # Create JSON to post
+    data_ = json.dumps(
+        {
+            'encrypted_nonce': encryption.sencrypt(
+                decrypted_nonce, symmetric_key),
+            'encrypted_sym_key': encryption.encrypt(
+                symmetric_key, api_fingerprint)
+        }
+    )
+
+    # POST data to API
+    try:
+        response = session.post(url, json=data_)
+        status = response.status_code
+    except:
+        _exception = sys.exc_info()
+        log_message = ('Symmetric key exchange failure')
+        log.log2exception(1098, _exception, message=log_message)
+
+    # Check that the transaction was validated
+    if status == 200:
+        success = True
+    else:
+        log_message = '''\
+Cannot exchange symmetric keys with API server. Status: {}'''.format(status)
+        log.log2info(1099, log_message)
+
+    return success
+
+
+def encrypted_post(metadata, save=True):
     """Post encrypted data to the API server.
 
     First, the data is checked for its validity. Sencondly,
@@ -626,69 +716,72 @@ def encrypted_post(gpg, symmetric_key, req_session,
     was received and decrypted successfully.
 
     Args:
-        gpg (obj): Pgpier object to accommodate encryption
-        symmetric_key (str): Symmetric key used to encrypt data
-        req_session (obj): Request session used to remember the session
-                           used to communicate with the API server
-        url (str): API URL to post the data to
-        data (dict): Data to be posted to the API server
-        identifier (str): The agent identification
-        save (bool): True to save data to cache directory if
-                     posting fails
+        metadata: _EncrypedPost object where:
+            encryption: encrypt.Encryption object
+            session: Requests session object
+            symmetric_key: Symmetric key
+            encryption_url: API URL to post the data to
+            data: Data to post as a dict
+            identifier: Agent identifier
+        save: If True, save data to cache if API server is inaccessible
 
     Returns:
-        general_result (bool)
+        success: True if successful
 
     """
     # Initialize key variables
-    general_result = False
+    success = False
+    status = None
 
     # Fail if nothing to post
-    if isinstance(data, dict) is False or bool(data) is False:
-        return general_result
+    if isinstance(metadata.data, dict) is False or bool(
+            metadata.data) is False:
+        return success
 
-    # Prepare and encrypt data
-    raw_data = {"data": data, "source": identifier}
-    # Convert dictionary to string for encryption
-    prep_data = json.dumps(raw_data)
+    # Prepare data for posting
+    data = json.dumps(
+        {
+            'data': metadata.data,
+            'source': metadata.identifier
+        }
+    )
+
     # Symmetrically encrypt data
-    encrypted_data = gpg.symmetric_encrypt(prep_data, symmetric_key)
-    post_data = {"encrypted_data": encrypted_data}
-    post_data = json.dumps(post_data)
+    encrypted_data = metadata.encryption.sencrypt(data, metadata.symmetric_key)
 
     # Post data save to cache if this fails
-    response_code = None
     try:
-        response = req_session.post(url, json=post_data)
-        response_code = response.status_code
-    except Exception as e:
-        log_msg = 'Error encountered: >>>{}<<<'.format(e)
-        log.log2warning(1075, log_msg)
+        response = metadata.session.post(
+            metadata.encryption_url,
+            json=json.dumps({'encrypted_data': encrypted_data})
+        )
+        status = response.status_code
+    except:
+        _exception = sys.exc_info()
+        log_message = ('Encrypted posting failure')
+        log.log2exception(1075, _exception, message=log_message)
         if save is True:
             # Save data to cache
-            _save_data(data, identifier)
+            _save_data(metadata.data, metadata.identifier)
         else:
             # Proceed normally if there is a failure.
             # This will be logged later
             pass
 
     # Checks if data was posted successfully
-    if response_code == 202:
-        log_message = ('Posted to API. Response "{}".'
-                       'from URL: "{}"'
-                       .format(response_code, url)
-                       )
+    if status == 202:
+        log_message = 'Posted to API. Response "{}" from URL: "{}"'.format(
+            status, metadata.encryption_url)
         log.log2debug(1059, log_message)
+
         # The data was accepted successfully
-        general_result = True
+        success = True
     else:
-        log_message = ('Error posting. Response "{}".'
-                       'from URL: "{}"'
-                       .format(response_code, url)
-                       )
+        log_message = 'Error posting. Response "{}" from URL: "{}"'.format(
+            status, metadata.encryption_url)
         log.log2warning(1058, log_message)
 
-    return general_result
+    return success
 
 
 def purge(url, identifier, suite=post):
@@ -697,10 +790,10 @@ def purge(url, identifier, suite=post):
     Args:
         url: URL to receive posted data
         identifier: Unique identifier for the source of the data. (AgentID)
-        suite (function)/ (EncryptionSuite): If function, this will
-        proceed to use the normal post function for unencrypted posting.
-        If EncryptionSuite, the necessary variables from the named tuple will
-        be used along with the encrypted_post function for encrypted posting
+        suite: If a function, this will proceed to use the normal post function
+            for unencrypted posting. If EncryptionSuite, the necessary
+            variables from the named tuple will be used along with the
+            encrypted_post function for encrypted posting
 
     Returns:
         None
@@ -755,9 +848,16 @@ Deleting corrupted cache file {} for identifier {}.\
             success = suite(url, data, identifier, save=False)
         elif isinstance(suite, EncryptionSuite):  # Is it EncryptionSuite?
             # Post encrypted data
-            success = suite.post(
-                suite.gpg, suite.symmetric_key, suite.session,
-                url, data, identifier, save=False)
+            success = suite.encrypted_post(
+                _EncrypedPost(
+                    encryption=suite.encryption,
+                    session=suite.session,
+                    symmetric_key=suite.symmetric_key,
+                    encryption_url=url,
+                    data=data,
+                    identifier=identifier
+                )
+            )
 
         # Delete file if successful
         if success is True:
