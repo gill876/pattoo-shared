@@ -37,10 +37,18 @@ class KeyRing():
         # Initialize key variables
         config = configuration.Config()
         self._agent_name = agent_name
+
+        # Use the agent_id as the email address because it is a unique
+        # identifier across all agents. This allows multiple agents with the
+        # same name to have indepenent sessions.
         self.email = files.get_agent_id(agent_name, config)
 
         # Associate directories
         if directory is None:
+            # Store keys and keyrings in directories named after the agent.
+            # If the same directory were universally used there could be
+            # conflicts in cases where the API daemon and agents run on the
+            # same server This eliminates this risk.
             keyring_directory = config.keyring_directory(agent_name)
             self._keys_directory = config.keys_directory(agent_name)
         else:
