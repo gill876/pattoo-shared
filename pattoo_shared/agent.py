@@ -24,6 +24,7 @@ from gunicorn.app.base import BaseApplication
 # Pattoo libraries
 from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared import files
+from pattoo_shared import encrypt
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
@@ -82,13 +83,14 @@ class Agent():
 class EncryptedAgent(Agent):
     """Encrypted Agent class for daemons."""
 
-    def __init__(self, parent, child=None, config=None):
+    def __init__(self, parent, child=None, config=None, directory=None):
         """Initialize the class.
 
         Args:
             parent: Name of parent daemon
             child: Name of child daemon
             config: Config object
+            directory: Override the directory for KeyRing storage if provided.
 
         Returns:
             None
@@ -97,8 +99,8 @@ class EncryptedAgent(Agent):
         # Initialize key variables (Parent)
         Agent.__init__(self, parent, child=child, config=config)
 
-        # Create GPG key for agent
-        self._gpg = files.set_gnupg(parent, config)
+        # Create encryption object
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
 class _AgentRun():
@@ -391,7 +393,7 @@ fix.'''.format(self.pidfile_parent))
 class EncryptedAgentAPI(AgentAPI):
     """Agent class for daemons."""
 
-    def __init__(self, parent, child, app, config=None):
+    def __init__(self, parent, child, app, config=None, directory=None):
         """Initialize the class.
 
         Args:
@@ -399,6 +401,7 @@ class EncryptedAgentAPI(AgentAPI):
             email: Email address used for encryption
             child: Name of child daemon
             config: Config object
+            directory: Override the directory for KeyRing storage if provided.
 
         Returns:
             None
@@ -407,8 +410,8 @@ class EncryptedAgentAPI(AgentAPI):
         # Instantiate daemon superclass
         AgentAPI.__init__(self, parent, child, app, config=config)
 
-        # Create GPG key for agent
-        files.set_gnupg(parent, config)
+        # Create encryption object
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
 class _StandaloneApplication(BaseApplication):

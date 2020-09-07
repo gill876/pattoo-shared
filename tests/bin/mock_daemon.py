@@ -23,7 +23,7 @@ from pattoo_shared.daemon import Daemon
 from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 
-from tests.test_pattoo_shared.test_daemon import MockDaemon
+from tests.pattoo_shared_.test_daemon import MockDaemon
 
 
 def main():
