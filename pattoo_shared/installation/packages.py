@@ -67,8 +67,10 @@ def install_package(package, verbose=False):
     # Get installed version
     current_version = installed_version(package)
 
-    # Do nothing if installed and proposed versions match
-    if bool(current_version) is True:
+    # Update if there is a '<' or '>' in the desired package.
+    if bool(current_version) is True and bool(details.inequality) is False:
+        # Do nothing if installed and proposed versions match,
+        # or no desired version specified
         if (current_version == details.version) or (details.version is None):
             return
 
@@ -143,13 +145,16 @@ def package_details(package):
 
     """
     # Initialize key variables
-    Package = namedtuple('Package', 'name version')
+    Package = namedtuple('Package', 'name version inequality')
 
     # Get desired package name and version
     nodes = re.split('=|<|>|~', package)
     _ = nodes.append(None) if len(nodes) == 1 else nodes
     (name, version) = nodes[0: 2]
 
+    # Determine whether there is an inequality in the string
+    inequality = '<' in package or '>' in package
+
     # Return
-    result = Package(name=name, version=version)
+    result = Package(name=name, version=version, inequality=inequality)
     return result
