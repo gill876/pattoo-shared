@@ -31,7 +31,7 @@ def run_script(cli_string, die=True, verbose=True):
         print('Running Command: "{}"'.format(cli_string))
 
     # Run update_targets script
-    do_command_list = list(cli_string.split(' '))
+    do_command_list = cli_string.split()
 
     # Create the subprocess object
     try:

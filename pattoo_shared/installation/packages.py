@@ -2,65 +2,48 @@
 # Standard imports
 import os
 import getpass
+import re
+from collections import namedtuple
 
 # Import pattoo related libraries
 from pattoo_shared.installation import shared
 from pattoo_shared import log
 
 
-def get_package_version(package_name):
+def installed_version(package):
     """Retrieve installed pip package version.
 
     Args:
-        package_name: The name of the package
+        package: The name of the package
 
     Returns:
         version: The version of the package if the package is installed.
         None: If the package is not installed
 
     """
+    # Initialize key variable
+    version = None
+    output = ''
+
+    # Get desired package name and version
+    details = package_details(package)
+
+    # Get version from OS
     try:
-        raw_description = shared.run_script('pip3 show {}'.format(package_name))[1]
-    except SystemExit:
-        return None
-    pkg_description = raw_description.decode().split('\n')
-    version = pkg_description[1].replace(' ', '').split(':')
-    return version[1]
+        (_, output, __) = shared.run_script(
+            'python3 -m pip show {}'.format(details.name),
+            verbose=False)
+    except:
+        return version
+
+    # Process data
+    lines = output.decode().strip().split('\n')
+    if bool(lines):
+        version = lines[1].split(':')[1].strip()
+    return version
 
 
-def check_outdated_packages(packages, verbose=False):
-    """Check for outdated packages and reinstall them.
-
-    Args:
-        packages: A list of pip packages parsed from the requirement file
-
-    Returns:
-        None
-
-    """
-    # Say what we are doing
-    if verbose:
-        print('Checking for outdated packages')
-    for package in packages:
-        # Get packages with versions from pip_requirements.txt
-        delimiters = ['==', '<=', '>=', '<', '>', '~=']
-        requirement_package = package
-        for delimiter in delimiters:
-            if delimiter in package:
-                requirement_package = package.split(delimiter, 1)
-                break
-        if len(requirement_package) == 2:
-            installed_version = get_package_version(requirement_package[0])
-            # Reinstall package if incorrect version is installed and
-            # install if it didn't get installed
-            if installed_version is None:
-                install_missing_pip3(package, verbose=verbose)
-
-            if installed_version != requirement_package[1]:
-                install_missing_pip3(package, verbose=verbose)
-
-
-def install_missing_pip3(package, verbose=False):
+def install_package(package, verbose=False):
     """Automatically Install missing pip3 packages.
 
     Args:
@@ -70,8 +53,26 @@ def install_missing_pip3(package, verbose=False):
         None
 
     """
-    # Intitialize key variables
-    command = 'python3 -m pip install {0} -U --force-reinstall'.format(package)
+    # Initialize key variables
+    command = (
+        'python3 -m pip install --force-reinstall {0}'.format(package))
+
+    # Get desired package name and version
+    details = package_details(package)
+
+    # Return if there is no package
+    if bool(details.name) is False:
+        return
+
+    # Get installed version
+    current_version = installed_version(package)
+
+    # Do nothing if installed and proposed versions match
+    if bool(current_version) is True:
+        if (current_version == details.version) or (details.version is None):
+            return
+
+    # Install
     try:
         shared.run_script(command, verbose=verbose)
     except SystemExit:
@@ -79,14 +80,13 @@ def install_missing_pip3(package, verbose=False):
         log.log2die_safe(1088, message)
 
 
-def install(requirements_dir, install_dir, verbose=False, update_packages=True):
+def install(requirements_dir, install_dir, verbose=False):
     """Ensure PIP3 packages are installed correctly.
 
     Args:
         requirements_dir: The directory with the pip_requirements file.
         install_dir: Directory where packages must be installed.
         verbose: Print status messages if True
-        update_packages: Boolean value to toggle the updating of the packages
 
     Returns:
         True if pip3 packages are installed successfully
@@ -110,38 +110,18 @@ Insufficient permissions for reading the file: {}. \
 Ensure the file has read-write permissions and try again'''.format(filepath))
     else:
         with _fp:
-            line = _fp.readline()
-            while line:
-                # Strip line
-                _line = line.strip()
-                # Read line
-                if True in [_line.startswith('#'), bool(_line) is False]:
-                    pass
-                else:
+            lines = _fp.readlines()
 
-                    # Append package with version and package name to list
-                    lines.append(_line)
-                line = _fp.readline()
+    # Strip unprintable characters from ends
+    lines = [_.strip() for _ in lines]
+
+    # Remove comments and blank lines
+    packages = [
+        _ for _ in lines if (_.startswith('#') is False) and (bool(_) is True)]
+
     # Process each line of the file
-    for line in lines:
-        # Determine the package
-        package = line.split('=', 1)[0]
-        package = package.split('>', 1)[0]
-
-        # If verbose is true, the package being checked is shown
-        if verbose:
-            print('Installing package {}'.format(package))
-        command = 'python3 -m pip show {}'.format(package)
-        (returncode, _, _) = shared.run_script(
-            command, verbose=verbose, die=False)
-
-        # Install any missing pip3 package
-        if bool(returncode) is True:
-            install_missing_pip3(package, verbose=verbose)
-
-    # Check for outdated packages
-    if update_packages is True:
-        check_outdated_packages(lines, verbose=verbose)
+    for package in packages:
+        install_package(package, verbose=verbose)
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
@@ -150,3 +130,26 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
                 install_dir), verbose=verbose)
 
     print('pip3 packages successfully installed')
+
+
+def package_details(package):
+    """Get package details.
+
+    Args:
+        package: The pip3 package to be installed
+
+    Returns:
+        result: Named tuple of package name and version
+
+    """
+    # Initialize key variables
+    Package = namedtuple('Package', 'name version')
+
+    # Get desired package name and version
+    nodes = re.split('=|<|>|~', package)
+    _ = nodes.append(None) if len(nodes) == 1 else nodes
+    (name, version) = nodes[0: 2]
+
+    # Return
+    result = Package(name=name, version=version)
+    return result

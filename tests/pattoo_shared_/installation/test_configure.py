@@ -8,13 +8,17 @@ import unittest
 import unittest.mock
 import sys
 import tempfile
-import yaml
 import io
+from copy import deepcopy
+
+import yaml
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(os.path.join(
-    os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
+ROOT_DIR = os.path.abspath(os.path.join(
+    os.path.abspath(os.path.join(
+        os.path.abspath(os.path.join(
+            EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
 _EXPECTED = '''\
 {0}pattoo-shared{0}tests{0}pattoo_shared_{0}installation'''.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
@@ -46,14 +50,11 @@ class TestConfigure(unittest.TestCase):
         cls.default_config = {
             'pattoo': {
                 'language': 'en',
-                'log_directory': (
-                    '/var/log/pattoo'),
+                'log_directory': cls._log_directory,
                 'log_level': 'debug',
-                'cache_directory': (
-                    '/opt/pattoo-cache'),
-                'daemon_directory': (
-                    '/opt/pattoo-daemon'),
-                'system_daemon_directory': '/var/run/pattoo'
+                'cache_directory': cls._cache_directory,
+                'daemon_directory': cls._daemon_directory,
+                'system_daemon_directory': cls._system_daemon_directory
             },
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.1',
@@ -65,30 +66,9 @@ class TestConfigure(unittest.TestCase):
             }
         }
 
-        cls.custom_config = {
-            'encryption': {
-                'api_email': 'api_email@example.org',
-            },
-            'pattoo': {
-                'language': 'en',
-                'log_directory': (
-                    '/var/log/pattoo'),
-                'log_level': 'debug',
-                'cache_directory': (
-                    '/opt/pattoo-cache'),
-                'daemon_directory': (
-                    '/opt/pattoo-daemon'),
-                'system_daemon_directory': '/var/run/pattoo'
-            },
-            'pattoo_agent_api': {
-                'ip_address': '127.0.0.1',
-                'ip_bind_port': 20201
-            },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.1',
-                'ip_bind_port': 20202,
-            }
-        }
+        cls.updated_config = deepcopy(cls.default_config)
+        cls.updated_config['encryption'] = {
+            'api_email': 'api_email@example.org'}
 
         cls.default_server_config = {
             'pattoo_db': {
@@ -156,22 +136,28 @@ class TestConfigure(unittest.TestCase):
 
         # Create temporary directory using the temp file package
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "pattoo_temp_config.yaml")
+            file_path = os.path.join(temp_dir, 'pattoo_temp_config.yaml')
+
+            # Delete file if already exists
+            if os.path.exists(file_path) is True:
+                os.remove(file_path)
+            self.assertFalse(os.path.isfile(file_path))
 
             # Dumps default configuration to file in temp directory
             with open(file_path, 'w+') as temp_config:
                 yaml.dump(expected, temp_config, default_flow_style=False)
-            config = configure.read_config(file_path, expected)
-            self.assertEqual(config, expected)
+            result = configure.read_config(file_path, expected)
+            self.assertEqual(result, expected)
 
-            # Test find and replace
+            # Test updating the configuration
             with self.subTest():
-                expected = self.custom_config
-                config = configure.read_config(file_path, expected)
-                self.assertEqual(config, expected)
+                expected = self.updated_config
+                result = configure.read_config(file_path, expected)
+                for key, value in result.items():
+                    self.assertEqual(expected[key], value)
 
     def test_pattoo_config_server(self):
-        """Unittest to test the pattoo_config function for the pattoo server."""
+        """Test the pattoo_config function for the pattoo server."""
         # Initialize key variables
         expected = '''\
 pattoo_api_agentd:
@@ -194,12 +180,11 @@ pattoo_ingesterd:
 
         # Initialize temporary directory
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "pattoo_server.yaml")
+            file_path = os.path.join(temp_dir, 'pattoo_server.yaml')
 
             # Create config file
-            configure.pattoo_config('pattoo_server',
-                                    temp_dir,
-                                    self.default_server_config)
+            configure.pattoo_config(
+                'pattoo_server', temp_dir, self.default_server_config)
 
             with open(file_path, 'r') as temp_config:
 
@@ -212,22 +197,24 @@ pattoo_ingesterd:
         # Initialize key variables
         expected = '''\
 pattoo:
-  cache_directory: /opt/pattoo-cache
-  daemon_directory: /opt/pattoo-daemon
+  cache_directory: {}
+  daemon_directory: {}
   language: en
-  log_directory: /var/log/pattoo
+  log_directory: {}
   log_level: debug
-  system_daemon_directory: /var/run/pattoo
+  system_daemon_directory: {}
 pattoo_agent_api:
   ip_address: 127.0.0.1
   ip_bind_port: 20201
 pattoo_web_api:
   ip_address: 127.0.0.1
   ip_bind_port: 20202
-'''
+'''.format(
+    self._cache_directory, self._daemon_directory,
+    self._log_directory, self._system_daemon_directory)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, "pattoo.yaml")
+            file_path = os.path.join(temp_dir, 'pattoo.yaml')
 
             # Create config file
             configure.pattoo_config('pattoo', temp_dir, self.default_config)
@@ -240,13 +227,16 @@ pattoo_web_api:
             self.assertEqual(result, expected)
 
     def test_pattoo_config_custom_dict(self):
-        """Unittest to test the pattoo_config function with custom dictionary."""
+        """Test the pattoo_config function with custom dictionary."""
         # Initialize key variables
+        prefix = 'pattoo'
+        default_expected = self.updated_config
+
         with tempfile.TemporaryDirectory() as temp_dir:
             log_dir = os.path.join(temp_dir, 'pattoo/log')
             cache_dir = os.path.join(temp_dir, 'pattoo/cache')
             daemon_dir = os.path.join(temp_dir, 'pattoo/daemon')
-            expected = {
+            original = {
                 'pattoo': {
                     'log_directory': log_dir,
                     'log_level': 'debug',
@@ -259,43 +249,66 @@ pattoo_web_api:
                     'ip_address': '127.0.0.6',
                     'ip_bind_port': 50505,
                 },
-                'pattoo_web_api': {
-                    'ip_address': '127.0.0.3',
-                    'ip_bind_port': 30303,
+                'dummy_0': {
+                    'dummy_1': 'dummy_2',
+                    'dummy_3': 'dummy_4',
                 }
             }
 
-            file_path = os.path.join(temp_dir, "pattoo.yaml")
+            expected = {
+                'dummy_0': {'dummy_1': 'dummy_2', 'dummy_3': 'dummy_4'},
+                'encryption': {'api_email': 'api_email@example.org'},
+                'pattoo': {
+                    'cache_directory': cache_dir,
+                    'daemon_directory': daemon_dir,
+                    'language': 'xyz',
+                    'log_directory': log_dir,
+                    'log_level': 'debug',
+                    'system_daemon_directory': self._system_daemon_directory},
+                'pattoo_agent_api': {
+                    'ip_address': '127.0.0.6', 'ip_bind_port': 50505},
+                'pattoo_web_api': {
+                    'ip_address': '127.0.0.1', 'ip_bind_port': 20202}
+            }
+
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(prefix))
 
             # Create config file
-            configure.pattoo_config('pattoo', temp_dir, expected)
+            configure.pattoo_config(prefix, temp_dir, original)
 
             # Test for directories
+            result = os.path.isdir(cache_dir)
             with self.subTest():
-                result = os.path.isdir(cache_dir)
                 self.assertTrue(result)
 
+            result = os.path.isdir(log_dir)
             with self.subTest():
-                result = os.path.isdir(log_dir)
                 self.assertTrue(result)
 
+            result = os.path.isdir(daemon_dir)
             with self.subTest():
-                result = os.path.isdir(daemon_dir)
                 self.assertTrue(result)
 
             # Retrieve config dict from yaml file
-            result = configure.read_config(file_path, expected)
-            self.assertEqual(result, expected)
-
-            # Test if file gets overwritten
+            result = configure.read_config(file_path, original)
             with self.subTest():
-                expected = self.custom_config
-                # Create config file
-                configure.pattoo_config('pattoo', temp_dir, expected)
+                self.assertEqual(result, original)
 
-                # Retrieve config dict from yaml file
-                result = configure.read_config(file_path, expected)
-                self.assertEqual(result, expected)
+            ########################
+            # Test overwriting file
+            ########################
+
+            # Delete old version of file
+            os.remove(file_path)
+
+            # Create new version of config file
+            configure.pattoo_config('pattoo', temp_dir, original)
+
+            # Apply updated configuration to that read from the
+            # new configuration file
+            result = configure.read_config(file_path, default_expected)
+            with self.subTest():
+                self.assertEqual(sorted(result), sorted(expected))
 
     # Using mock patch to capture output
     @unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
@@ -322,7 +335,7 @@ pattoo_web_api:
         }
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            config_file = os.path.join(temp_dir, "pattoo.yaml")
+            config_file = os.path.join(temp_dir, 'pattoo.yaml')
 
             # Initializing expected output from stdout
             expected = '''\
