@@ -98,7 +98,7 @@ def install(requirements_dir, install_dir, verbose=False):
     # Initialize key variables
     lines = []
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
-    path = environment.PIPpath('{}/bin'.format(install_dir))
+    path = environment.PIPpath('{}{}bin'.format(install_dir, os.sep))
 
     # Say what we are doing
     print('Checking pip3 packages')
