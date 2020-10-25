@@ -93,6 +93,50 @@ Ensure that its created using the module "virtualenv"
             del os.environ['VIRTUAL_ENV']
 
 
+class PIPpath():
+    """Set PIP paths for installations."""
+
+    def __init__(self, directory):
+        """Initialize the class.
+
+        Args:
+            directory: Virtual Environment directory
+
+        Returns:
+            None
+
+        """
+        # Initialize key variables
+        self._directory = directory
+        self._path = os.environ.get('PATH')
+
+    def set(self):
+        """Set path to view PIP packages installed in venv.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Set the 'PATH' variable
+        os.environ['PATH'] = '{}:{}'.format(self._directory, self._path)
+
+    def reset(self):
+        """Set path to view PIP packages installed in venv.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Reset the 'PATH' variable
+        os.environ['PATH'] = self._path
+
+
 def environment_setup(directory):
     """Create and activate virtual environment.
 

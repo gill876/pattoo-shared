@@ -7,6 +7,7 @@ from collections import namedtuple
 
 # Import pattoo related libraries
 from pattoo_shared.installation import shared
+from pattoo_shared.installation import environment
 from pattoo_shared import log
 
 
@@ -97,6 +98,7 @@ def install(requirements_dir, install_dir, verbose=False):
     # Initialize key variables
     lines = []
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
+    path = environment.PIPpath('{}/bin'.format(install_dir))
 
     # Say what we are doing
     print('Checking pip3 packages')
@@ -123,7 +125,12 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
 
     # Process each line of the file
     for package in packages:
+        # We need to pre-pend the install_dir to the OS path for venv version
+        # of Python3 pip to correctly identify packages installed in the
+        # venv environment
+        path.set()
         install_package(package, verbose=verbose)
+        path.reset()
 
     # Set ownership of any newly installed python packages to pattoo user
     if getpass.getuser() == 'root':
