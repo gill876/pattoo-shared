@@ -35,7 +35,7 @@ setuptools.setup(
     python_requires='>=3.6',
 
     # Set up the version
-    version='0.0.99',
+    version='0.0.100',
 
     # Dependencies
     install_requires=[
