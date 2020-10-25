@@ -4,6 +4,7 @@ import os
 import grp
 import pwd
 import getpass
+import tempfile
 
 # Import dependendices
 import yaml
@@ -83,15 +84,19 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
                 yaml_string = f_handle.read()
                 config = yaml.safe_load(yaml_string)
 
-        # Find and replace dictionary values
-        # for default_key, default_value in default_config.items():
-        #     if isinstance(default_value, dict)
-        #     for key in config:
-        #         if key == default_key:
-        #             config[key] = default_config.get(default_key)
-        #     # Add new entries to config dict if they aren't in the file
-        #     if default_key not in config:
-        #         config[default_key] = default_config.get(default_key)
+        # Create a temporary file
+        filename = tempfile.NamedTemporaryFile(delete=False)
+
+        # Create two concatenated yaml strings. The default yaml first.
+        output = '{}\n{}'.format(
+            yaml.dump(default_config, default_flow_style=False),
+            yaml.dump(config, default_flow_style=False)
+        )
+        with open(filename.name, 'w') as fh_:
+            fh_.write(output)
+        with open(filename.name, 'r') as fh_:
+            config = yaml.safe_load(fh_)
+        os.remove(filename.name)
 
     else:
         config = default_config

@@ -5,14 +5,17 @@ import os
 import unittest
 import sys
 import tempfile
+from random import random
+
 import yaml
 import distro
-from random import random
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(os.path.join(
-    os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
+ROOT_DIR = os.path.abspath(os.path.join(
+    os.path.abspath(os.path.join(
+        os.path.abspath(os.path.join(
+            EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
 _EXPECTED = '''\
 {0}pattoo-shared{0}tests{0}pattoo_shared_{0}installation'''.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
@@ -77,13 +80,10 @@ class Test_Systemd(unittest.TestCase):
         default_config = {
             'pattoo': {
                 'language': 'en',
-                'log_directory': (
-                    '/var/log/pattoo'),
+                'log_directory': '/var/log/pattoo',
                 'log_level': 'debug',
-                'cache_directory': (
-                    '/opt/pattoo-cache'),
-                'daemon_directory': (
-                    '/opt/pattoo-daemon'),
+                'cache_directory': '/opt/pattoo-cache',
+                'daemon_directory': '/opt/pattoo-daemon',
                 'system_daemon_directory': '/var/run/pattoo'
             },
             'pattoo_agent_api': {
@@ -119,16 +119,13 @@ class Test_Systemd(unittest.TestCase):
         # Initialize key variables
         fake_config = {
             'pattoo': {
-                    'language': 'en',
-                    'log_directory': (
-                        '/var/log/pattoo'),
-                    'log_level': 'debug',
-                    'cache_directory': (
-                        '/opt/pattoo-cache'),
-                    'daemon_directory': (
-                        '/opt/pattoo-daemon')
-                }
+                'language': 'en',
+                'log_directory': '/var/log/pattoo',
+                'log_level': 'debug',
+                'cache_directory': '/opt/pattoo-cache',
+                'daemon_directory': '/opt/pattoo-daemon'
             }
+        }
 
         # Retrieve runtime directory from temp directory
         with tempfile.TemporaryDirectory() as temp_dir:

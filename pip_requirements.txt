@@ -7,3 +7,4 @@ PyYAML
 ipaddress
 python-gnupg==0.4.6
 requests-mock
+distro

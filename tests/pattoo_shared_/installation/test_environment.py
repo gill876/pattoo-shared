@@ -1,14 +1,15 @@
 """Test pattoo shared environment."""
 import os
 import unittest
-from random import random
 import sys
 import tempfile
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(os.path.join(
-    os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
+ROOT_DIR = os.path.abspath(os.path.join(
+    os.path.abspath(os.path.join(
+        os.path.abspath(os.path.join(
+            EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
 _EXPECTED = '''\
 {0}pattoo-shared{0}tests{0}pattoo_shared_{0}installation'''.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
@@ -37,49 +38,59 @@ def pip_helper(package):
     return package.decode().split('==')[0]
 
 
-class TestEnvironment(unittest.TestCase):
+class TestVenv(unittest.TestCase):
     """Checks all functions for the Pattoo environment script."""
 
-    @classmethod
-    def setUpClass(cls):
-        """Declare class attributes for Unittesting."""
-        cls.venv_dir = tempfile.mkdtemp()
-
-    # test_environment_setup tests both make_venv and activate_venv
-    # by creating and activating the venv
-    def test_make_venv(self):
-        """Unittest to test the make_venv function."""
+    def test___init__(self):
+        """Testing function __init__."""
         pass
 
-    def test_activate_venv(self):
-        """Unittest to test the activate_venv function."""
+    def test_create(self):
+        """Testing function create."""
         pass
+
+    def test_activate(self):
+        """Testing function activate."""
+        pass
+
+    def test_deactivate(self):
+        """Testing function deactivate."""
+        pass
+
+
+class TestFunctions(unittest.TestCase):
+    """Checks all functions for the Pattoo environment script."""
+
+    def setUp(self):
+        """Prepare each test for testing."""
+        self.venv_dir = tempfile.mkdtemp()
+        self.venv = environment.environment_setup(self.venv_dir)
+
+    def tearDown(self):
+        """Cleanup each test after testing."""
+        self.venv.deactivate()
 
     def test_environment_setup(self):
         """Unittest to test the environment_setup function."""
-        # Set up venv
-        environment.environment_setup(self.venv_dir)
 
         # Ensure that there are no packages
-        with self.subTest():
-            pip_packages = shared.run_script('python3 -m pip freeze')[1]
+        pip_packages = shared.run_script('python3 -m pip freeze')[1]
 
-            # Retrieve packages without version
-            installed_packages = [
-                pip_helper(package) for package in pip_packages.split()]
-            result = installed_packages == []
-            self.assertTrue(result)
+        # Retrieve packages without version
+        installed_packages = [
+            pip_helper(package) for package in pip_packages.split()]
+        result = installed_packages == []
+        self.assertTrue(result)
 
         # Test with installing a package to the venv
-        with self.subTest():
-            packages.install_missing_pip3('matplotlib', verbose=False)
-            pip_packages = shared.run_script('python3 -m pip freeze')[1]
+        packages.install_package('matplotlib', verbose=False)
+        pip_packages = shared.run_script('python3 -m pip freeze')[1]
 
-            # Retrieve packages without version
-            installed_packages = [
-                pip_helper(package) for package in pip_packages.split()]
-            result = 'matplotlib' in installed_packages
-            self.assertTrue(result)
+        # Retrieve packages without version
+        installed_packages = [
+            pip_helper(package) for package in pip_packages.split()]
+        result = 'matplotlib' in installed_packages
+        self.assertTrue(result)
 
 
 if __name__ == '__main__':
