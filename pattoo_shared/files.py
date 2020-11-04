@@ -5,7 +5,6 @@ import os
 import time
 import sys
 import json
-import stat
 from random import random
 import subprocess
 
