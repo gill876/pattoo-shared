@@ -122,6 +122,7 @@ class PIPpath():
         """
         # Set the 'PATH' variable
         os.environ['PATH'] = '{}:{}'.format(self._directory, self._path)
+        print(os.environ['PATH'])
 
     def reset(self):
         """Set path to view PIP packages installed in venv.
