@@ -170,12 +170,14 @@ class TestConfigure(unittest.TestCase):
 
         # Test
         result = configure._merge_config(default, modified)
+        self.assertTrue(isinstance(result, dict))
         self.assertEqual(sorted(result), sorted(expected))
 
         # Test with key not found in default
         modified['test'] = 'test'
         new_expected['test'] = 'test'
         result = configure._merge_config(default, modified)
+        self.assertTrue(isinstance(result, dict))
         self.assertEqual(sorted(result), sorted(new_expected))
 
     def test_group_exists(self):
