@@ -35,12 +35,11 @@ setuptools.setup(
     python_requires='>=3.6',
 
     # Set up the version
-    version='0.0.101',
+    version='0.0.102',
 
     # Dependencies
     install_requires=[
         'PyYaml',
-        'python-gnupg==0.4.6',
         'distro',
         'virtualenv==20.0.30'
     ]

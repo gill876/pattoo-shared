@@ -179,9 +179,9 @@ def read_yaml_files(config_directory):
     # requires a logfile location from the configuration directory to work
     # properly
     if yaml_found is False:
-        log_message = (
-            'No configuration files found in directory "{}" with ".yaml" '
-            'extension.'.format(config_directory))
+        log_message = '''\
+No configuration files found in directory "{}" with ".yaml" extension.\
+'''.format(config_directory)
         log.log2die_safe(1015, log_message)
 
     # Return
@@ -213,12 +213,12 @@ def read_yaml_file(filepath, as_string=False, die=True):
             with open(filepath, 'r') as file_handle:
                 yaml_from_file = file_handle.read()
         except:
-            log_message = (
-                'Error reading file {}. Check permissions, '
-                'existence and file syntax.'
-                ''.format(filepath))
+            _exception = sys.exc_info()
+            log_message = '''\
+Error reading file {}. Check permissions, existence and file syntax.\
+'''.format(filepath)
             if bool(die) is True:
-                log.log2die_safe(1006, log_message)
+                log.log2die_safe_exception(1006, _exception, log_message)
             else:
                 log.log2debug(1014, log_message)
                 return {}
@@ -228,12 +228,12 @@ def read_yaml_file(filepath, as_string=False, die=True):
             try:
                 result = yaml.safe_load(yaml_from_file)
             except:
-                log_message = (
-                    'Error reading file {}. Check permissions, '
-                    'existence and file syntax.'
-                    ''.format(filepath))
+                _exception = sys.exc_info()
+                log_message = '''\
+Error reading file {}. Check permissions, existence and file syntax.\
+'''.format(filepath)
                 if bool(die) is True:
-                    log.log2die_safe(1001, log_message)
+                    log.log2die_safe_exception(1001, _exception, log_message)
                 else:
                     log.log2debug(1002, log_message)
                     return {}
@@ -319,9 +319,9 @@ Error reading file {}. Ignoring.'''.format(filepath))
     # requires a logfile location from the configuration directory to work
     # properly
     if (json_found is False) and (bool(die) is True):
-        log_message = (
-            'No valid JSON files found in directory "{}" with ".json" '
-            'extension.'.format(_directory))
+        log_message = '''\
+No valid JSON files found in directory "{}" with ".json" extension.\
+'''.format(_directory)
         log.log2die_safe(1060, log_message)
 
     # Return
@@ -346,11 +346,12 @@ def read_json_file(filepath, die=True):
             with open(filepath, 'r') as file_handle:
                 result = json.load(file_handle)
         except:
+            _exception = sys.exc_info()
             log_message = ('''\
 Error reading file {}. Check permissions, existence and file syntax.\
 '''.format(filepath))
             if bool(die) is True:
-                log.log2die_safe(1012, log_message)
+                log.log2die_safe_exception(1012, _exception, log_message)
             else:
                 log.log2debug(1013, log_message)
                 return {}
