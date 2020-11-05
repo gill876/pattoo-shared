@@ -4,6 +4,7 @@ import os
 import grp
 import pwd
 import getpass
+from collections import defaultdict
 
 # Import dependendices
 import yaml
@@ -11,6 +12,39 @@ import yaml
 # Import pattoo related libraries
 from pattoo_shared import files, log
 from pattoo_shared.installation import shared
+
+
+def _merge_config(default, modified):
+    """Merge two lambda dicts together.
+
+    Args:
+        default: Default dict
+        modified: Modified dict
+
+    Returns:
+        result: Merged dictionary
+
+    """
+    # Initialize key variables
+    result = defaultdict(lambda: defaultdict(dict))
+
+    # Merge configurations
+    for key, value in default.items():
+        if key in modified:
+            if isinstance(value, dict):
+                for _key, _value in modified[key].items():
+                    result[key][_key] = _value
+            else:
+                result[key] = value
+        else:
+            result[key] = value
+
+    # Merge the other way around
+    for key, value in modified.items():
+        if key not in result:
+            result[key] = value
+
+    return result
 
 
 def create_user(user_name, directory, shell, verbose):
@@ -52,7 +86,7 @@ def group_exists(group_name):
 
     Returns
         True if the group exists and False if it does not
-        
+
     """
     try:
         # Gets group name
@@ -89,11 +123,7 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
                 file_config = yaml.safe_load(yaml_string)
 
         # Merge configurations
-        for key, value in default_config.items():
-            config[key] = value
-            if key in file_config:
-                for _key, _value in file_config[key].items():
-                    config[key][_key] = _value
+        config = _merge_config(default_config, file_config)
     else:
         config = default_config
     return config
@@ -219,6 +249,7 @@ def configure_component(component_name, config_dir, config_dict):
 
     Returns:
         None
+
     """
     # Create configuration
     config_file = pattoo_config(component_name, config_dir, config_dict)
