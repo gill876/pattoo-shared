@@ -226,6 +226,13 @@ Error reading file {}. Check permissions, existence and file syntax.\
         # Get result
         if as_string is False:
             try:
+                print('''\
+-------
+Yaml:
+
+-->{}<--
+-------
+'''.format(yaml_from_file))
                 result = yaml.safe_load(yaml_from_file)
             except:
                 _exception = sys.exc_info()
