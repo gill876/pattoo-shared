@@ -226,7 +226,7 @@ Error reading file {}. Check permissions, existence and file syntax.\
         # Get result
         if as_string is False:
             try:
-                result = yaml.safe_load(yaml_from_file)
+                result = yaml.load(yaml_from_file, Loader=yaml.SafeLoader)
             except:
                 _exception = sys.exc_info()
                 log_message = '''\
