@@ -94,8 +94,92 @@ class TestConfigure(unittest.TestCase):
             }
         }
 
+    def test__merge_config(self):
+        """Unittest to test the _merge_config function."""
+        # Initialize key variables
+        default = {
+            'pattoo_api_agentd': {
+                'api_encryption_email': 'test_api@example.org',
+                'ip_bind_port': 20201,
+                'ip_listen_address': '0.0.0.0'},
+            'pattoo_apid': {
+                'access_token_exp': '15_m',
+                'ip_bind_port': 20202,
+                'ip_listen_address': '0.0.0.0',
+                'jwt_secret_key': '9uBqwWTc-02c2aaK99ULdQ',
+                'refresh_token_exp': '1_D'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 20,
+                'db_name': 'pattoo',
+                'db_password': 'password',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'batch_size': 500,
+                'graceful_timeout': 10,
+                'ingester_interval': 3600},
+            'boo': 'boo'
+        }
+
+        modified = {
+            'pattoo_api_agentd': {
+                'ip_bind_port': 60601,
+                'ip_listen_address': '::1'},
+            'pattoo_apid': {
+                'ip_bind_port': 60602,
+                'ip_listen_address': '::3'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 100,
+                'db_name': 'pattoo',
+                'db_password': 'n5PaNcV85vR6jmW3',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'ingester_interval': 3600,
+                'multiprocessing': True}
+        }
+
+        expected = {
+            'pattoo_api_agentd': {
+                'api_encryption_email': 'test_api@example.org',
+                'ip_bind_port': 60601,
+                'ip_listen_address': '::1'},
+            'pattoo_apid': {
+                'access_token_exp': '15_m',
+                'ip_bind_port': 60602,
+                'ip_listen_address': '::3',
+                'jwt_secret_key': '9uBqwWTc-02c2aaK99ULdQ',
+                'refresh_token_exp': '1_D'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 100,
+                'db_name': 'pattoo',
+                'db_password': 'n5PaNcV85vR6jmW3',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'batch_size': 500,
+                'graceful_timeout': 10,
+                'ingester_interval': 3600,
+                'multiprocessing': True},
+            'boo': 'boo'
+            }
+        new_expected = expected.copy()
+
+        # Test
+        result = configure._merge_config(default, modified)
+        self.assertEqual(sorted(result), sorted(expected))
+
+        # Test with key not found in default
+        modified['test'] = 'test'
+        new_expected['test'] = 'test'
+        result = configure._merge_config(default, modified)
+        self.assertEqual(sorted(result), sorted(new_expected))
+
     def test_group_exists(self):
-        """Unittest to test the group exists function."""
+        """Unittest to test the group_exists function."""
         # Test case for when the group does not exist
         with self.subTest():
             expected = False
@@ -230,13 +314,12 @@ pattoo_web_api:
         """Test the pattoo_config function with custom dictionary."""
         # Initialize key variables
         prefix = 'pattoo'
-        default_expected = self.updated_config
 
         with tempfile.TemporaryDirectory() as temp_dir:
             log_dir = os.path.join(temp_dir, 'pattoo/log')
             cache_dir = os.path.join(temp_dir, 'pattoo/cache')
             daemon_dir = os.path.join(temp_dir, 'pattoo/daemon')
-            original = {
+            default = {
                 'pattoo': {
                     'log_directory': log_dir,
                     'log_level': 'debug',
@@ -249,15 +332,20 @@ pattoo_web_api:
                     'ip_address': '127.0.0.6',
                     'ip_bind_port': 50505,
                 },
-                'dummy_0': {
-                    'dummy_1': 'dummy_2',
-                    'dummy_3': 'dummy_4',
-                }
+            }
+
+            modified = {
+                'dummy_0': {'dummy_1': 'dummy_2', 'dummy_3': 'dummy_4'},
+                'encryption': {'api_email': 'modified@example.org'},
+                'pattoo_agent_api': {
+                    'ip_address': '127.0.0.61', 'ip_bind_port': 50505},
+                'pattoo_web_api': {
+                    'ip_address': '127.0.0.1', 'ip_bind_port': 30303}
             }
 
             expected = {
                 'dummy_0': {'dummy_1': 'dummy_2', 'dummy_3': 'dummy_4'},
-                'encryption': {'api_email': 'api_email@example.org'},
+                'encryption': {'api_email': 'modified@example.org'},
                 'pattoo': {
                     'cache_directory': cache_dir,
                     'daemon_directory': daemon_dir,
@@ -266,15 +354,15 @@ pattoo_web_api:
                     'log_level': 'debug',
                     'system_daemon_directory': self._system_daemon_directory},
                 'pattoo_agent_api': {
-                    'ip_address': '127.0.0.6', 'ip_bind_port': 50505},
+                    'ip_address': '127.0.0.61', 'ip_bind_port': 50505},
                 'pattoo_web_api': {
-                    'ip_address': '127.0.0.1', 'ip_bind_port': 20202}
+                    'ip_address': '127.0.0.1', 'ip_bind_port': 30303}
             }
 
             file_path = os.path.join(temp_dir, '{}.yaml'.format(prefix))
 
             # Create config file
-            configure.pattoo_config(prefix, temp_dir, original)
+            configure.pattoo_config(prefix, temp_dir, default)
 
             # Test for directories
             result = os.path.isdir(cache_dir)
@@ -290,9 +378,9 @@ pattoo_web_api:
                 self.assertTrue(result)
 
             # Retrieve config dict from yaml file
-            result = configure.read_config(file_path, original)
+            result = configure.read_config(file_path, default)
             with self.subTest():
-                self.assertEqual(result, original)
+                self.assertEqual(result, default)
 
             ########################
             # Test overwriting file
@@ -302,11 +390,11 @@ pattoo_web_api:
             os.remove(file_path)
 
             # Create new version of config file
-            configure.pattoo_config('pattoo', temp_dir, original)
+            configure.pattoo_config('pattoo', temp_dir, default)
 
             # Apply updated configuration to that read from the
             # new configuration file
-            result = configure.read_config(file_path, default_expected)
+            result = configure.read_config(file_path, modified)
             with self.subTest():
                 self.assertEqual(sorted(result), sorted(expected))
 

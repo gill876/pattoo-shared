@@ -58,7 +58,7 @@ class Test_Systemd(unittest.TestCase):
         linux_distro = distro.linux_distribution()[0].lower()
         etc_dir = '/etc/systemd/system/multi-user.target.wants'
 
-        if linux_distro == 'ubuntu':
+        if linux_distro in ['ubuntu', 'kubuntu']:
             expected = '/lib/systemd/system'
         else:
             # Expected directory for CentOS
@@ -153,7 +153,7 @@ class Test_Systemd(unittest.TestCase):
             # Create service files
             for daemon in daemons:
                 daemon_path = os.path.join(
-                                target_dir, '{}.service'.format(daemon))
+                    target_dir, '{}.service'.format(daemon))
                 with open(daemon_path, 'w'):
                     pass
 

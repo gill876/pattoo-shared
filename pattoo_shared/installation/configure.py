@@ -1,10 +1,10 @@
-"""Functions for configuring pattoo components"""
+"""Functions for configuring pattoo components."""
 # Standard imports
 import os
 import grp
 import pwd
 import getpass
-import tempfile
+from collections import defaultdict
 
 # Import dependendices
 import yaml
@@ -12,6 +12,39 @@ import yaml
 # Import pattoo related libraries
 from pattoo_shared import files, log
 from pattoo_shared.installation import shared
+
+
+def _merge_config(default, modified):
+    """Merge two lambda dicts together.
+
+    Args:
+        default: Default dict
+        modified: Modified dict
+
+    Returns:
+        result: Merged dictionary
+
+    """
+    # Initialize key variables
+    result = defaultdict(lambda: defaultdict(dict))
+
+    # Merge configurations
+    for key, value in default.items():
+        if key in modified:
+            if isinstance(value, dict):
+                for _key, _value in modified[key].items():
+                    result[key][_key] = _value
+            else:
+                result[key] = value
+        else:
+            result[key] = value
+
+    # Merge the other way around
+    for key, value in modified.items():
+        if key not in result:
+            result[key] = value
+
+    return result
 
 
 def create_user(user_name, directory, shell, verbose):
@@ -26,6 +59,7 @@ def create_user(user_name, directory, shell, verbose):
 
     Returns:
         None
+
     """
     # Ensure user has sudo privileges
     if getpass.getuser() == 'root':
@@ -52,6 +86,7 @@ def group_exists(group_name):
 
     Returns
         True if the group exists and False if it does not
+
     """
     try:
         # Gets group name
@@ -72,6 +107,9 @@ def read_config(filepath, default_config):
         config: Dict of configuration
 
     """
+    # Initialize key variables
+    config = {}
+
     # Read config
     if os.path.isfile(filepath) is True:
         try:
@@ -82,25 +120,12 @@ Insufficient permissions for reading the file:{}'''.format(filepath))
         else:
             with f_handle:
                 yaml_string = f_handle.read()
-                config = yaml.safe_load(yaml_string)
+                file_config = yaml.safe_load(yaml_string)
 
-        # Create a temporary file
-        filename = tempfile.NamedTemporaryFile(delete=False)
-
-        # Create two concatenated yaml strings. The default yaml first.
-        output = '{}\n{}'.format(
-            yaml.dump(default_config, default_flow_style=False),
-            yaml.dump(config, default_flow_style=False)
-        )
-        with open(filename.name, 'w') as fh_:
-            fh_.write(output)
-        with open(filename.name, 'r') as fh_:
-            config = yaml.safe_load(fh_)
-        os.remove(filename.name)
-
+        # Merge configurations
+        config = _merge_config(default_config, file_config)
     else:
         config = default_config
-
     return config
 
 
@@ -201,15 +226,15 @@ def pattoo_config(file_name, config_directory, config_dict):
                     if getpass.getuser() == 'root':
                         shared.chown(full_directory)
 
-        # Write file
-        try:
-            f_handle = open(config_file, 'w')
-        except PermissionError:
-            log.log2die(1076, '''\
+    # Write file
+    try:
+        f_handle = open(config_file, 'w')
+    except PermissionError:
+        log.log2die(1076, '''\
 Insufficient permissions for creating the file:{}'''.format(config_file))
-        else:
-            with f_handle:
-                yaml.dump(config, f_handle, default_flow_style=False)
+    else:
+        with f_handle:
+            yaml.dump(config, f_handle, default_flow_style=False)
 
     return config_file
 
@@ -224,6 +249,7 @@ def configure_component(component_name, config_dir, config_dict):
 
     Returns:
         None
+
     """
     # Create configuration
     config_file = pattoo_config(component_name, config_dir, config_dict)
