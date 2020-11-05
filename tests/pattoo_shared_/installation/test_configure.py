@@ -10,6 +10,7 @@ import sys
 import tempfile
 import io
 from copy import deepcopy
+from collections import defaultdict
 
 import yaml
 
@@ -171,6 +172,7 @@ class TestConfigure(unittest.TestCase):
         # Test
         result = configure._merge_config(default, modified)
         self.assertTrue(isinstance(result, dict))
+        self.assertFalse(isinstance(result, defaultdict))
         self.assertEqual(sorted(result), sorted(expected))
 
         # Test with key not found in default
@@ -178,6 +180,7 @@ class TestConfigure(unittest.TestCase):
         new_expected['test'] = 'test'
         result = configure._merge_config(default, modified)
         self.assertTrue(isinstance(result, dict))
+        self.assertFalse(isinstance(result, defaultdict))
         self.assertEqual(sorted(result), sorted(new_expected))
 
     def test_group_exists(self):

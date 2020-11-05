@@ -226,7 +226,7 @@ Error reading file {}. Check permissions, existence and file syntax.\
         # Get result
         if as_string is False:
             try:
-                result = yaml.load(yaml_from_file, Loader=yaml.SafeLoader)
+                result = yaml.safe_load(yaml_from_file)
             except:
                 _exception = sys.exc_info()
                 log_message = '''\
@@ -495,7 +495,7 @@ def execute(command, die=True):
     returncode = 1
 
     # Run update_targets script
-    do_command_list = list(command.split(' '))
+    do_command_list = list(command.split())
 
     # Create the subprocess object
     try:
