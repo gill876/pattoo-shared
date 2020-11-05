@@ -44,6 +44,8 @@ def _merge_config(default, modified):
         if key not in result:
             result[key] = value
 
+    # Convert to dict to facilitate YAML file processing
+    result = dict(result)
     return result
 
 
