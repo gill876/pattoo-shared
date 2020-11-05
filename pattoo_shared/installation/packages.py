@@ -156,8 +156,10 @@ def package_details(package):
 
     # Get desired package name and version
     nodes = re.split('=|<|>|~', package)
+    nodes = [_ for _ in nodes if bool(_) is True]
     _ = nodes.append(None) if len(nodes) == 1 else nodes
     (name, version) = nodes[0: 2]
+    print(name, version, nodes)
 
     # Determine whether there is an inequality in the string
     inequality = '<' in package or '>' in package
