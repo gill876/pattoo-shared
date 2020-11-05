@@ -167,7 +167,7 @@ class TestPackages(unittest.TestCase):
             'Flask-Session',
             'PyMySQL',
             'SQLAlchemy',
-            'graphene',
+            'graphene <= 2.7',
             'Flask',
             'Flask-CORS',
             'Flask-GraphQL',
@@ -190,7 +190,7 @@ class TestPackages(unittest.TestCase):
             Package(name='Flask-Session', version=None, inequality=False),
             Package(name='PyMySQL', version=None, inequality=False),
             Package(name='SQLAlchemy', version=None, inequality=False),
-            Package(name='graphene', version=None, inequality=False),
+            Package(name='graphene', version='2.7', inequality=True),
             Package(name='Flask', version=None, inequality=False),
             Package(name='Flask-CORS', version=None, inequality=False),
             Package(name='Flask-GraphQL', version=None, inequality=False),
@@ -205,7 +205,7 @@ class TestPackages(unittest.TestCase):
             Package(name='psutil', version=None, inequality=False),
             Package(name='tblib', version=None, inequality=False),
             Package(name='distro', version=None, inequality=False),
-            Package(name='python-gnupg', version='0.4.6', inequality=False),
+            Package(name='python-gnupg', version='0.4.6', inequality=True),
         ]
 
         # Test
