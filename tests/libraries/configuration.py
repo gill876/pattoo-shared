@@ -190,8 +190,10 @@ class UnittestConfig():
     Insufficient permissions for creating the file: {}'''.format(filename))
             else:
                 with fh_:
+                    # Convert to dict, just in case as defaultdict
+                    # isn't supported by yaml.safe_dump
                     yaml.safe_dump(
-                        content, stream=fh_, default_flow_style=False)
+                        dict(content), stream=fh_, default_flow_style=False)
 
         # Return
         return self._config_directory

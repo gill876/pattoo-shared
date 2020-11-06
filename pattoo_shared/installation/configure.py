@@ -236,7 +236,10 @@ def pattoo_config(file_name, config_directory, config_dict):
 Insufficient permissions for creating the file:{}'''.format(config_file))
     else:
         with f_handle:
-            yaml.safe_dump(config, stream=f_handle, default_flow_style=False)
+            # Convert to dict, just in case as defaultdict
+            # isn't supported by yaml.safe_dump
+            yaml.safe_dump(
+                dict(config), stream=f_handle, default_flow_style=False)
 
     return config_file
 
