@@ -33,6 +33,7 @@ else:
 
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
+from tests.libraries import general
 from pattoo_shared.installation import configure
 from pattoo_shared import files
 
@@ -190,7 +191,7 @@ class TestConfigure(unittest.TestCase):
             expected = False
 
             # Generating random string
-            result = configure.group_exists(str(os.urandom(5)))
+            result = configure.group_exists(general.random_string())
             self.assertEqual(result, expected)
 
         # Test case for when the group exists
@@ -209,7 +210,7 @@ class TestConfigure(unittest.TestCase):
             expected = False
 
             # Generating random string
-            result = configure.user_exists(str(os.urandom(5)))
+            result = configure.user_exists(general.random_string())
             self.assertEqual(result, expected)
 
         # Test case for when the user does exist
@@ -449,7 +450,7 @@ OK: Configuration parameter check passed.
     def test_configure_component(self):
         """Unittest to test the configure_component function."""
         # Initialize key variables
-        test_name = str(os.urandom(5))
+        test_name = general.random_string()
         expected = {
             'polling_interval': 300,
         }

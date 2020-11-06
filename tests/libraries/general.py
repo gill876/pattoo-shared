@@ -10,6 +10,21 @@ from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, TargetDataPoints, AgentPolledData)
 
 
+def random_string():
+    """Creates random string.
+
+    Args:
+        None
+
+    Return:
+        result: string
+
+    """
+    # Return
+    result = random_agent_name()
+    return result
+
+
 def random_agent_name():
     """Creates random agent name.
 
