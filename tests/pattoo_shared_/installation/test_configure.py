@@ -232,7 +232,7 @@ class TestConfigure(unittest.TestCase):
     def test_read_config(self):
         """Unittest to test the read_server_config function."""
         # Initialize key variables
-        expected = self.default_config
+        default = self.default_config
 
         # Create temporary directory using the temp file package
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -245,9 +245,9 @@ class TestConfigure(unittest.TestCase):
 
             # Dumps default configuration to file in temp directory
             with open(file_path, 'w+') as fh_:
-                yaml.safe_dump(expected, stream=fh_, default_flow_style=False)
-            result = configure.read_config(file_path, expected)
-            self.assertEqual(result, expected)
+                yaml.safe_dump(default, stream=fh_, default_flow_style=False)
+            result = configure.read_config(file_path, default)
+            self.assertEqual(result, default)
 
             # Test updating the configuration
             with self.subTest():
