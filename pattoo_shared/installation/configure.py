@@ -238,14 +238,6 @@ Insufficient permissions for creating the file:{}'''.format(config_file))
         with f_handle:
             # Convert to dict, just in case as defaultdict
             # isn't supported by yaml.safe_dump
-
-            from pprint import pprint
-            print('\n\n')
-            pprint(config)
-            print('\n\n')
-            print(type(config))
-            print('\n\n')
-
             yaml.safe_dump(
                 dict(config), stream=f_handle, default_flow_style=False)
 
