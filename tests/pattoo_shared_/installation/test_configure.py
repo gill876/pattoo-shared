@@ -233,8 +233,8 @@ class TestConfigure(unittest.TestCase):
             self.assertFalse(os.path.isfile(file_path))
 
             # Dumps default configuration to file in temp directory
-            with open(file_path, 'w+') as temp_config:
-                yaml.dump(expected, temp_config, default_flow_style=False)
+            with open(file_path, 'w+') as fh_:
+                yaml.safe_dump(expected, stream=fh_, default_flow_style=False)
             result = configure.read_config(file_path, expected)
             self.assertEqual(result, expected)
 

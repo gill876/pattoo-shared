@@ -77,7 +77,7 @@ class Test_Systemd(unittest.TestCase):
     def test__get_runtime_directory_default(self):
         """Testing method or function named "_get_runtime_directory"."""
         # Initialize key variables
-        default_config = {
+        default = {
             'pattoo': {
                 'language': 'en',
                 'log_directory': '/var/log/pattoo',
@@ -102,8 +102,8 @@ class Test_Systemd(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
 
             # Test with default system daemon directory
-            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as config:
-                yaml.dump(default_config, config, default_flow_style=False)
+            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as fh_:
+                yaml.safe_dump(default, stream=fh_, default_flow_style=False)
                 result = _get_runtime_directory(temp_dir)
             self.assertEqual(expected, result)
 
@@ -117,7 +117,7 @@ class Test_Systemd(unittest.TestCase):
     def test__get_runtime_directory_no_systemd(self):
         """Testing method or function named "_get_runtime_directory"."""
         # Initialize key variables
-        fake_config = {
+        fake = {
             'pattoo': {
                 'language': 'en',
                 'log_directory': '/var/log/pattoo',
@@ -129,8 +129,8 @@ class Test_Systemd(unittest.TestCase):
 
         # Retrieve runtime directory from temp directory
         with tempfile.TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as config:
-                yaml.dump(fake_config, config, default_flow_style=False)
+            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as fh_:
+                yaml.safe_dump(fake, stream=fh_, default_flow_style=False)
 
             # Test without system daemon directory
             with self.assertRaises(SystemExit) as cm_:
