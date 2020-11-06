@@ -176,6 +176,11 @@ class TestConfigure(unittest.TestCase):
         self.assertFalse(isinstance(result, defaultdict))
         self.assertEqual(sorted(result), sorted(expected))
 
+        # Make sure there are no defaultdict objects in the result.
+        # yaml.safe_dump doesn't work correctly if defaultdicts are present.
+        for _, value in result.items():
+            self.assertFalse(isinstance(value, defaultdict))
+
         # Test with key not found in default
         modified['test'] = 'test'
         new_expected['test'] = 'test'
@@ -183,6 +188,11 @@ class TestConfigure(unittest.TestCase):
         self.assertTrue(isinstance(result, dict))
         self.assertFalse(isinstance(result, defaultdict))
         self.assertEqual(sorted(result), sorted(new_expected))
+
+        # Make sure there are no defaultdict objects in the result.
+        # yaml.safe_dump doesn't work correctly if defaultdicts are present.
+        for _, value in result.items():
+            self.assertFalse(isinstance(value, defaultdict))
 
     def test_group_exists(self):
         """Unittest to test the group_exists function."""
