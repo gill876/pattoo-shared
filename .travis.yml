@@ -1,5 +1,6 @@
 # Run on ubuntu
 dist: bionic
+os: linux
 
 # Don't use
 sudo: false
