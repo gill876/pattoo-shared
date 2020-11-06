@@ -25,8 +25,8 @@ def _merge_config(default, modified):
         result: Merged dictionary
 
     """
-    # Initialize key variables
-    result = defaultdict(lambda: defaultdict(dict))
+    # All components of 'result' must be dicts.
+    result = defaultdict(lambda: {})
 
     # Merge configurations
     for key, value in default.items():
