@@ -45,7 +45,6 @@ class TestPackages(unittest.TestCase):
 
     def test_install_package(self):
         """Unittest to test the install_package function."""
-        return  ###
         # Test with expected behaviour
         with self.subTest():
             # Attempt to install a test package
@@ -69,6 +68,13 @@ class TestPackages(unittest.TestCase):
         # Test with outdated package version
         with self.subTest():
             packages.install_package('matplotlib==3.3.0', False)
+            expected = '3.3.0'
+            result = packages.installed_version('matplotlib')
+            self.assertEqual(result, expected)
+
+        # Try reinstalling the previous version
+        with self.subTest():
+            packages.install_package('matplotlib', False)
             expected = '3.3.0'
             result = packages.installed_version('matplotlib')
             self.assertEqual(result, expected)
@@ -109,7 +115,6 @@ class TestPackages(unittest.TestCase):
 
     def test_install(self):
         """Unittest to test the install function."""
-        return  ###
         # Test with undefined requirements directory
         with self.subTest():
             with self.assertRaises(SystemExit) as cm_:
@@ -138,7 +143,6 @@ class TestPackages(unittest.TestCase):
 
     def test_installed_version(self):
         """Unittest to test the installed_version function."""
-        return  ###
         package = 'PattooShared'
 
         with self.subTest():

@@ -67,12 +67,16 @@ def install_package(package, verbose=False):
 
     # Get installed version
     current_version = installed_version(package)
+    already_installed = bool(current_version)
 
     # Update if there is a '<' or '>' in the desired package.
-    if bool(current_version) is True and bool(details.inequality) is False:
-        # Do nothing if installed and proposed versions match,
-        # or no desired version specified
-        if (current_version == details.version) or (details.version is None):
+    if already_installed is True:
+        # Do nothing if installed and proposed versions match
+        if (current_version == details.version) and bool(
+                details.inequality) is False:
+            return
+        # Do nothing if no version is specified
+        elif bool(details.version) is False:
             return
 
     # Install
