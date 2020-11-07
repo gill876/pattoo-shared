@@ -34,17 +34,15 @@ else:
 from tests.libraries.configuration import UnittestConfig
 from tests.libraries import general
 from pattoo_shared.installation import configure
-from pattoo_shared import files
 
 
 class Test_Config(unittest.TestCase):
     """Checks all functions for the Pattoo config script."""
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """Declare class attributes for Unittesting."""
         # Initialize key variables
-        cls.modifications = {
+        self.modifications = {
             'pattoo_api_agentd': {
                 'ip_bind_port': 60601,
                 'ip_listen_address': '::1'},
@@ -62,7 +60,7 @@ class Test_Config(unittest.TestCase):
                 'multiprocessing': True}
         }
 
-        cls.default = {
+        self.default = {
             'pattoo_api_agentd': {
                 'api_encryption_email': 'test_api@example.org',
                 'ip_bind_port': 20201,
@@ -87,7 +85,7 @@ class Test_Config(unittest.TestCase):
             'boo': 'boo'
         }
 
-        cls.existing = {
+        self.existing = {
             'pattoo_api_agentd': {
                 'api_encryption_email': 'test_api@example.org',
                 'ip_bind_port': 60601,
@@ -96,7 +94,6 @@ class Test_Config(unittest.TestCase):
                 'access_token_exp': '15_m',
                 'ip_bind_port': 60602,
                 'ip_listen_address': '::3',
-                'jwt_secret_key': '9uBqwWTc-02c2aaK99ULdQ',
                 'refresh_token_exp': '1_D'},
             'pattoo_db': {
                 'db_hostname': 'localhost',
@@ -109,7 +106,7 @@ class Test_Config(unittest.TestCase):
                 'multiprocessing': True},
             }
 
-        cls.expected = {
+        self.expected = {
             'pattoo_api_agentd': {
                 'api_encryption_email': 'test_api@example.org',
                 'ip_bind_port': 60601,
@@ -205,8 +202,6 @@ class Test_Config(unittest.TestCase):
         existing = deepcopy(self.existing)
         filename = 'pattoo_temp_config'
         key = 'pattoo_apid'
-
-        self.maxDiff = None
 
         # Test with no existing configuration
         with tempfile.TemporaryDirectory() as temp_dir:
