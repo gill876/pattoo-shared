@@ -202,16 +202,15 @@ def _create_directories(config):
     # Iterate over config dict
     for _, value in sorted(config.items()):
         if isinstance(value, dict) is True:
-            for secondary_key in value.keys():
+            for key in value.keys():
                 # Directory parameter found
-                if 'directory' in secondary_key:
-                    if os.sep not in value.get(secondary_key):
+                if 'directory' in key:
+                    if os.sep not in value.get(key):
                         log.log2die_safe(1006,
                                          'Invalid directory {}'.format(value))
 
                     # Attempt to create directory
-                    full_directory = os.path.expanduser(
-                        value.get(secondary_key))
+                    full_directory = os.path.expanduser(value.get(key))
                     if os.path.isdir(full_directory) is False:
                         files.mkdir(full_directory)
 

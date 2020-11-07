@@ -384,16 +384,13 @@ def mkdir(directory):
         try:
             os.makedirs(directory, mode=0o775)
         except:
-            log_message = (
-                'Cannot create directory {}.'
-                ''.format(directory))
-            log.log2die(1090, log_message)
+            _exception = sys.exc_info()
+            log_message = 'Cannot create directory {}.'.format(directory)
+            log.log2die_safe_exception(1090, _exception, log_message)
 
     # Fail if not a directory
     if os.path.isdir(directory) is False:
-        log_message = (
-            '{} is not a directory.'
-            ''.format(directory))
+        log_message = '{} is not a directory.'.format(directory)
         log.log2die(1043, log_message)
 
 
