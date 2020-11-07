@@ -1,9 +1,7 @@
-# Run on ubuntu
+# Run on an ubuntu VM
 dist: bionic
 os: linux
-
-# Don't use
-sudo: false
+virt: vm
 
 # Define the language and versions that application is written in
 language: python

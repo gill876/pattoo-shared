@@ -265,6 +265,7 @@ def configure_component(component_name, config_dir, default):
     """
     # Initialize key variables
     filepath = os.path.join(config_dir, '{}.yaml'.format(component_name))
+    print('Configuring file {}'.format(filepath))
 
     # Create configuration file
     config = _Config(filepath, default)
