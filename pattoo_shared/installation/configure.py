@@ -1,10 +1,10 @@
-"""Functions for configuring pattoo components"""
+"""Functions for configuring pattoo components."""
 # Standard imports
 import os
 import grp
 import pwd
 import getpass
-import tempfile
+from collections import defaultdict
 
 # Import dependendices
 import yaml
@@ -12,6 +12,114 @@ import yaml
 # Import pattoo related libraries
 from pattoo_shared import files, log
 from pattoo_shared.installation import shared
+
+
+class _Config():
+    """Installation configuration file manipulation class."""
+
+    def __init__(self, filepath, default):
+        """Initialize the class.
+
+        Args:
+            filepath: Configuration filename
+            default: Default configuration
+
+        Returns:
+            None
+
+        """
+        # Read data
+        self._filepath = filepath
+        self._default = {} if isinstance(default, dict) is False else default
+
+    def update(self):
+        """Create configuration file.
+
+        Args:
+            None
+
+        Returns:
+            The path to the configuration file
+
+        """
+        # Get configuration
+        config = self.read()
+        filepath = self._filepath
+
+        # Check validity of directories, if any
+        if bool(config) is False:
+            # Set default
+            config = self._default
+
+        # Create directories found in configuration
+        _create_directories(config)
+
+        # Update the configuration
+        try:
+            f_handle = open(filepath, 'w')
+        except PermissionError:
+            log.log2die(1076, '''\
+Insufficient permissions for creating the file:{}'''.format(filepath))
+        else:
+            with f_handle:
+                # Convert to dict, just in case as defaultdict
+                # isn't supported by yaml.safe_dump
+                yaml.safe_dump(
+                    dict(config), stream=f_handle, default_flow_style=False)
+
+    def read(self):
+        """Read configuration file and replace default values.
+
+        Args:
+            None
+
+        Returns:
+            config: Dict of configuration
+
+        """
+        # Initialize key variables
+        filepath = self._filepath
+        default = self._default
+        config = {}
+
+        # Read config
+        if os.path.isfile(filepath) is True:
+            try:
+                f_handle = open(filepath, 'r')
+            except PermissionError:
+                log.log2die_safe(1078, '''\
+Insufficient permissions for reading the file:{}'''.format(filepath))
+            else:
+                with f_handle:
+                    yaml_string = f_handle.read()
+                    existing = yaml.safe_load(yaml_string)
+
+            # Merge configurations
+            config = _merge_config(default, existing)
+        else:
+            config = default
+        return config
+
+    def validate(self):
+        """Do basic configuration validation.
+
+        Args:
+            None
+
+        Returns:
+            res
+
+        """
+        # Read configuration
+        config = self.read()
+
+        # Check main keys
+        for primary in self._default.keys():
+            if primary not in config:
+                log_message = ('''\
+Section "{}" not found in configuration file {}. Please fix.\
+'''.format(primary, self._filepath))
+                log.log2die_safe(1055, log_message)
 
 
 def create_user(user_name, directory, shell, verbose):
@@ -26,6 +134,7 @@ def create_user(user_name, directory, shell, verbose):
 
     Returns:
         None
+
     """
     # Ensure user has sudo privileges
     if getpass.getuser() == 'root':
@@ -42,99 +151,6 @@ def create_user(user_name, directory, shell, verbose):
     else:
         # Die if not root
         shared.log('You are currently not running the script as root')
-
-
-def group_exists(group_name):
-    """Check if the group already exists.
-
-    Args:
-        group_name: The name of the group
-
-    Returns
-        True if the group exists and False if it does not
-    """
-    try:
-        # Gets group name
-        grp.getgrnam(group_name)
-        return True
-    except KeyError:
-        return False
-
-
-def read_config(filepath, default_config):
-    """Read configuration file and replace default values.
-
-    Args:
-        filepath: Name of configuration file
-        default_config: Default configuration dict
-
-    Returns:
-        config: Dict of configuration
-
-    """
-    # Read config
-    if os.path.isfile(filepath) is True:
-        try:
-            f_handle = open(filepath, 'r')
-        except PermissionError:
-            log.log2die_safe(1078, '''\
-Insufficient permissions for reading the file:{}'''.format(filepath))
-        else:
-            with f_handle:
-                yaml_string = f_handle.read()
-                config = yaml.safe_load(yaml_string)
-
-        # Create a temporary file
-        filename = tempfile.NamedTemporaryFile(delete=False)
-
-        # Create two concatenated yaml strings. The default yaml first.
-        output = '{}\n{}'.format(
-            yaml.dump(default_config, default_flow_style=False),
-            yaml.dump(config, default_flow_style=False)
-        )
-        with open(filename.name, 'w') as fh_:
-            fh_.write(output)
-        with open(filename.name, 'r') as fh_:
-            config = yaml.safe_load(fh_)
-        os.remove(filename.name)
-
-    else:
-        config = default_config
-
-    return config
-
-
-def check_config(config_file, config_dict):
-    """Ensure agent configuration exists.
-
-    Args:
-        config: The name of the configuration file
-        config_dict: A dictionary containing the primary configuration keys
-        and a list of the secondary keys
-
-    Returns:
-        None
-
-    """
-    # Initialize key variables
-    config_directory = os.environ['PATTOO_CONFIGDIR']
-
-    # Print Status
-    print('??: Checking configuration parameters.')
-
-    # Retrieve config dict
-    config = files.read_yaml_file(config_file)
-
-    # Check main keys
-    for primary in config_dict.keys():
-        if primary not in config:
-            log_message = ('''\
-Section "{}" not found in configuration file {} in directory {}. Please fix.\
-    '''.format(primary, config_file, config_directory))
-            log.log2die_safe(1055, log_message)
-
-    # Print Status
-    print('OK: Configuration parameter check passed.')
 
 
 def user_exists(user_name):
@@ -155,78 +171,103 @@ def user_exists(user_name):
         return False
 
 
-def pattoo_config(file_name, config_directory, config_dict):
-    """Create configuration file.
+def group_exists(group_name):
+    """Check if the group already exists.
 
     Args:
-        file_name: Name of the configuration file without its file extension
-        config_directory: Full path to the configuration directory
-        config_dict: A dictionary containing the configuration values.
+        group_name: The name of the group
 
-    Returns:
-        The path to the configuration file
+    Returns
+        True if the group exists and False if it does not
 
     """
-    # Initialize key variables
-    config_file = os.path.join(config_directory, '{}.yaml'.format(file_name))
+    try:
+        # Gets group name
+        grp.getgrnam(group_name)
+        return True
+    except KeyError:
+        return False
 
-    # Say what we are doing
-    print('\nConfiguring {} file.\n'.format(config_file))
 
-    # Get configuration
-    config = read_config(config_file, config_dict)
+def _create_directories(config):
+    """Create directories found in configuration file.
 
-    # Check validity of directories, if any
-    if bool(config) is False:
-        # Set default
-        config = config_dict
+    Args:
+        None
 
+    Returns:
+        None
+
+    """
     # Iterate over config dict
     for _, value in sorted(config.items()):
         if isinstance(value, dict) is True:
-            for secondary_key in value.keys():
-                if 'directory' in secondary_key:
-                    if os.sep not in value.get(secondary_key):
-                        log.log2die_safe(
-                            1019, '{} is an invalid directory'.format(value))
+            for key in value.keys():
+                # Directory parameter found
+                if 'directory' in key:
+                    if os.sep not in value.get(key):
+                        log.log2die_safe(1006,
+                                         'Invalid directory {}'.format(value))
 
                     # Attempt to create directory
-                    full_directory = os.path.expanduser(
-                        value.get(secondary_key))
+                    full_directory = os.path.expanduser(value.get(key))
                     if os.path.isdir(full_directory) is False:
-                        print('Creating: {}'.format(full_directory))
                         files.mkdir(full_directory)
 
                     # Recursively set file ownership to pattoo user and group
                     if getpass.getuser() == 'root':
                         shared.chown(full_directory)
 
-        # Write file
-        try:
-            f_handle = open(config_file, 'w')
-        except PermissionError:
-            log.log2die(1076, '''\
-Insufficient permissions for creating the file:{}'''.format(config_file))
-        else:
-            with f_handle:
-                yaml.dump(config, f_handle, default_flow_style=False)
 
-    return config_file
+def _merge_config(default, updates):
+    """Merge two lambda dicts together.
+
+    Args:
+        default: Default dict
+        updates: Dict with updates for the default
+
+    Returns:
+        result: Merged dictionary
+
+    """
+    # All components of 'result' must be dicts.
+    result = defaultdict(lambda: {})
+
+    # Merge configurations
+    for key, value in default.items():
+        result[key] = value
+        if key in updates:
+            if isinstance(value, dict):
+                for _key, _value in updates[key].items():
+                    result[key][_key] = _value
+
+    # Merge the other way around
+    for key, value in updates.items():
+        if key not in result:
+            result[key] = value
+
+    # Convert to dict to facilitate YAML file processing
+    result = dict(result)
+    return result
 
 
-def configure_component(component_name, config_dir, config_dict):
+def configure_component(component_name, config_dir, default):
     """Configure individual pattoo related components and check configuration.
 
     Args:
         component_name: The file name for the component being configured
         config_dir: The directory with the configuration files
-        config_dict: A dictionary containing the configuration values
+        default: A dictionary containing the default configuration values
 
     Returns:
         None
-    """
-    # Create configuration
-    config_file = pattoo_config(component_name, config_dir, config_dict)
 
-    # Check if configuration is valid
-    check_config(config_file, config_dict)
+    """
+    # Initialize key variables
+    filepath = os.path.join(config_dir, '{}.yaml'.format(component_name))
+    print('Configuring file {}'.format(filepath))
+
+    # Create configuration file
+    config = _Config(filepath, default)
+    config.update()
+    config.validate()

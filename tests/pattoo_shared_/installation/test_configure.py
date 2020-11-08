@@ -8,7 +8,7 @@ import unittest
 import unittest.mock
 import sys
 import tempfile
-import io
+from collections import defaultdict
 from copy import deepcopy
 
 import yaml
@@ -32,76 +32,327 @@ else:
 
 # Pattoo imports
 from tests.libraries.configuration import UnittestConfig
+from tests.libraries import general
 from pattoo_shared.installation import configure
-from pattoo_shared import files
 
 
-class TestConfigure(unittest.TestCase):
+class Test_Config(unittest.TestCase):
     """Checks all functions for the Pattoo config script."""
 
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         """Declare class attributes for Unittesting."""
         # Initialize key variables
-        cls._log_directory = tempfile.mkdtemp()
-        cls._cache_directory = tempfile.mkdtemp()
-        cls._daemon_directory = tempfile.mkdtemp()
-        cls._system_daemon_directory = tempfile.mkdtemp()
-        cls.default_config = {
-            'pattoo': {
-                'language': 'en',
-                'log_directory': cls._log_directory,
-                'log_level': 'debug',
-                'cache_directory': cls._cache_directory,
-                'daemon_directory': cls._daemon_directory,
-                'system_daemon_directory': cls._system_daemon_directory
-            },
-            'pattoo_agent_api': {
-                'ip_address': '127.0.0.1',
-                'ip_bind_port': 20201
-            },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.1',
-                'ip_bind_port': 20202,
-            }
-        }
-
-        cls.updated_config = deepcopy(cls.default_config)
-        cls.updated_config['encryption'] = {
-            'api_email': 'api_email@example.org'}
-
-        cls.default_server_config = {
-            'pattoo_db': {
-                'db_pool_size': 10,
-                'db_max_overflow': 20,
-                'db_hostname': 'localhost',
-                'db_username': 'pattoo',
-                'db_password': 'password',
-                'db_name': 'pattoo'
-            },
+        self.modifications = {
             'pattoo_api_agentd': {
-                'ip_listen_address': '0.0.0.0',
-                'ip_bind_port': 20201,
-            },
+                'ip_bind_port': 60601,
+                'ip_listen_address': '::1'},
             'pattoo_apid': {
-                'ip_listen_address': '0.0.0.0',
-                'ip_bind_port': 20202,
-            },
+                'ip_bind_port': 60602,
+                'ip_listen_address': '::3'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 100,
+                'db_name': 'pattoo',
+                'db_password': 'n5PaNcV85vR6jmW3',
+                'db_username': 'pattoo'},
             'pattoo_ingesterd': {
                 'ingester_interval': 3600,
-                'batch_size': 500,
-                'graceful_timeout': 10
-            }
+                'multiprocessing': True}
         }
 
+        self.default = {
+            'pattoo_api_agentd': {
+                'api_encryption_email': 'test_api@example.org',
+                'ip_bind_port': 20201,
+                'ip_listen_address': '0.0.0.0'},
+            'pattoo_apid': {
+                'access_token_exp': '15_m',
+                'ip_bind_port': 20202,
+                'ip_listen_address': '0.0.0.0',
+                'jwt_secret_key': '9uBqwWTc-02c2aaK99ULdQ',
+                'refresh_token_exp': '1_D'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 20,
+                'db_name': 'pattoo',
+                'db_password': 'password',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'batch_size': 500,
+                'graceful_timeout': 10,
+                'ingester_interval': 3600},
+            'boo': 'boo'
+        }
+
+        self.existing = {
+            'pattoo_api_agentd': {
+                'api_encryption_email': 'test_api@example.org',
+                'ip_bind_port': 60601,
+                'ip_listen_address': '::1'},
+            'pattoo_apid': {
+                'access_token_exp': '15_m',
+                'ip_bind_port': 60602,
+                'ip_listen_address': '::3',
+                'refresh_token_exp': '1_D'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 100,
+                'db_name': 'pattoo',
+                'db_password': 'n5PaNcV85vR6jmW3',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'multiprocessing': True},
+            }
+
+        self.expected = {
+            'pattoo_api_agentd': {
+                'api_encryption_email': 'test_api@example.org',
+                'ip_bind_port': 60601,
+                'ip_listen_address': '::1'},
+            'pattoo_apid': {
+                'access_token_exp': '15_m',
+                'ip_bind_port': 60602,
+                'ip_listen_address': '::3',
+                'jwt_secret_key': '9uBqwWTc-02c2aaK99ULdQ',
+                'refresh_token_exp': '1_D'},
+            'pattoo_db': {
+                'db_hostname': 'localhost',
+                'db_max_overflow': 100,
+                'db_name': 'pattoo',
+                'db_password': 'n5PaNcV85vR6jmW3',
+                'db_pool_size': 10,
+                'db_username': 'pattoo'},
+            'pattoo_ingesterd': {
+                'batch_size': 500,
+                'graceful_timeout': 10,
+                'ingester_interval': 3600,
+                'multiprocessing': True},
+            'boo': 'boo'
+            }
+
+    def test__merge_config(self):
+        """Unittest to test the _merge_config function."""
+        # Initialize key variables
+        default = deepcopy(self.default)
+        modifications = deepcopy(self.modifications)
+        expected = deepcopy(self.expected)
+        new_expected = deepcopy(expected)
+
+        # Test
+        result = configure._merge_config(default, modifications)
+        self.assertTrue(isinstance(result, dict))
+        self.assertFalse(isinstance(result, defaultdict))
+        self.assertEqual(sorted(result), sorted(expected))
+
+        # Make sure there are no defaultdict objects in the result.
+        # yaml.safe_dump doesn't work correctly if defaultdicts are present.
+        for _, value in result.items():
+            self.assertFalse(isinstance(value, defaultdict))
+
+        # Test with key not found in default
+        modifications['test'] = 'test'
+        new_expected['test'] = 'test'
+        result = configure._merge_config(default, modifications)
+        self.assertTrue(isinstance(result, dict))
+        self.assertFalse(isinstance(result, defaultdict))
+        self.assertEqual(sorted(result), sorted(new_expected))
+
+        # Make sure there are no defaultdict objects in the result.
+        # yaml.safe_dump doesn't work correctly if defaultdicts are present.
+        for _, value in result.items():
+            self.assertFalse(isinstance(value, defaultdict))
+
+    def test_read(self):
+        """Unittest to test the read method."""
+        # Initialize key variables
+        default = deepcopy(self.default)
+        expected = deepcopy(self.expected)
+        existing = deepcopy(self.existing)
+
+        # Create temporary directory using the temp file package
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, 'pattoo_temp_config.yaml')
+
+            # Delete file if already exists
+            if os.path.exists(file_path) is True:
+                os.remove(file_path)
+            self.assertFalse(os.path.isfile(file_path))
+
+            # Create configuration file
+            with open(file_path, 'w') as fh_:
+                yaml.safe_dump(existing, stream=fh_, default_flow_style=False)
+            config = configure._Config(file_path, existing)
+            result = config.read()
+            self.assertEqual(result, existing)
+
+            # Test updating the configuration
+            config = configure._Config(file_path, default)
+            result = config.read()
+            for key, value in result.items():
+                self.assertEqual(expected[key], value)
+            self.assertEqual(sorted(result), sorted(expected))
+
+    def test_update(self):
+        """Test the update method."""
+        # Initialize key variables
+        default = deepcopy(self.default)
+        expected = deepcopy(self.expected)
+        existing = deepcopy(self.existing)
+        filename = 'pattoo_temp_config'
+        key = 'pattoo_apid'
+
+        # Test with no existing configuration
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Configuration file should not exist
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(filename))
+            self.assertFalse(os.path.isfile(file_path))
+
+            # Test
+            config = configure._Config(file_path, default)
+            config.update()
+            self.assertTrue(os.path.isfile(file_path))
+
+            # Test to make sure the configuration was created
+            result = config.read()
+            self.assertEqual(result, default)
+
+        # Test with existing configuration
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Configuration file should not exist
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(filename))
+            self.assertFalse(os.path.isfile(file_path))
+
+            # Create configuration file
+            with open(file_path, 'w') as fh_:
+                yaml.safe_dump(
+                    existing, stream=fh_, default_flow_style=False)
+
+            # Configuration file should exist
+            self.assertTrue(os.path.isfile(file_path))
+
+            # Test
+            config = configure._Config(file_path, default)
+            config.update()
+            with open(file_path, 'r') as fh_:
+                result = yaml.safe_load(fh_.read())
+
+            # self.assertEqual(result, existing)
+            self.assertEqual(result, expected)
+
+        # Test with existing configuration with directory
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Configuration file should not exist
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(filename))
+            self.assertFalse(os.path.isfile(file_path))
+
+            # Create and delete a temporary directory
+            new_dir = tempfile.mkdtemp()
+            os.rmdir(new_dir)
+            self.assertFalse(os.path.isdir(new_dir))
+
+            # Update the configuration
+            new_default = deepcopy(default)
+            new_expected = deepcopy(expected)
+            new_default[key]['dummy_directory'] = new_dir
+            new_expected[key]['dummy_directory'] = new_dir
+
+            # Create configuration file
+            with open(file_path, 'w') as fh_:
+                yaml.safe_dump(
+                    existing, stream=fh_, default_flow_style=False)
+
+            # Configuration file should exist
+            self.assertTrue(os.path.isfile(file_path))
+
+            # Test
+            config = configure._Config(file_path, new_default)
+            config.update()
+            with open(file_path, 'r') as fh_:
+                result = yaml.safe_load(fh_.read())
+            self.assertEqual(result, new_expected)
+
+            # Verify the creation of the new directory
+            self.assertTrue(os.path.isdir(new_dir))
+            os.rmdir(new_dir)
+            self.assertFalse(os.path.isdir(new_dir))
+
+    def test_validate(self):
+        """Test the update method."""
+        # Initialize key variables
+        key = 'pattoo_apid'
+        default = deepcopy(self.default)
+        existing = deepcopy(self.existing)
+        existing.pop(key)
+
+        # Create temporary directory using the temp file package
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, 'pattoo_temp_config.yaml')
+
+            # Delete file if already exists
+            if os.path.exists(file_path) is True:
+                os.remove(file_path)
+            self.assertFalse(os.path.isfile(file_path))
+
+            # Create configuration file
+            with open(file_path, 'w') as fh_:
+                yaml.safe_dump(existing, stream=fh_, default_flow_style=False)
+
+            # Test, nothing should happen
+            config = configure._Config(file_path, default)
+            config.validate()
+
+    def test__create_directories(self):
+        """Unittest to test the _create_directories function."""
+        # Initialize key variables
+        key = 'pattoo_apid'
+        default = deepcopy(self.default)
+        directory = tempfile.mkdtemp()
+        os.rmdir(directory)
+        default[key]['test_directory'] = directory
+
+        # Test
+        self.assertFalse(os.path.isdir(directory))
+        configure._create_directories(default)
+        self.assertTrue(os.path.isdir(directory))
+        os.rmdir(directory)
+        self.assertFalse(os.path.isdir(directory))
+
+    def test_configure_component(self):
+        """Unittest to test the configure_component function."""
+        # Initialize key variables
+        test_name = general.random_string()
+        expected = {
+            'polling_interval': 300,
+        }
+        with tempfile.TemporaryDirectory() as temp_dir:
+            file_path = os.path.join(temp_dir, '{}.yaml'.format(test_name))
+
+            # Create config file
+            configure.configure_component(test_name, temp_dir, expected)
+
+            # Retrieve config dict from yaml file
+            config = configure._Config(file_path, expected)
+            result = config.read()
+            self.assertEqual(result, expected)
+
+
+class TestUserFunctions(unittest.TestCase):
+    """Checks all functions for the Pattoo config script."""
+
+    def test_create_user(self):
+        """Unittest to test the create_user function."""
+        pass
+
     def test_group_exists(self):
-        """Unittest to test the group exists function."""
+        """Unittest to test the group_exists function."""
         # Test case for when the group does not exist
         with self.subTest():
             expected = False
 
             # Generating random string
-            result = configure.group_exists(str(os.urandom(5)))
+            result = configure.group_exists(general.random_string())
             self.assertEqual(result, expected)
 
         # Test case for when the group exists
@@ -120,254 +371,13 @@ class TestConfigure(unittest.TestCase):
             expected = False
 
             # Generating random string
-            result = configure.user_exists(str(os.urandom(5)))
+            result = configure.user_exists(general.random_string())
             self.assertEqual(result, expected)
 
         # Test case for when the user does exist
         with self.subTest():
             expected = True
             result = configure.user_exists(getpass.getuser())
-            self.assertEqual(result, expected)
-
-    def test_read_config(self):
-        """Unittest to test the read_server_config function."""
-        # Initialize key variables
-        expected = self.default_config
-
-        # Create temporary directory using the temp file package
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, 'pattoo_temp_config.yaml')
-
-            # Delete file if already exists
-            if os.path.exists(file_path) is True:
-                os.remove(file_path)
-            self.assertFalse(os.path.isfile(file_path))
-
-            # Dumps default configuration to file in temp directory
-            with open(file_path, 'w+') as temp_config:
-                yaml.dump(expected, temp_config, default_flow_style=False)
-            result = configure.read_config(file_path, expected)
-            self.assertEqual(result, expected)
-
-            # Test updating the configuration
-            with self.subTest():
-                expected = self.updated_config
-                result = configure.read_config(file_path, expected)
-                for key, value in result.items():
-                    self.assertEqual(expected[key], value)
-
-    def test_pattoo_config_server(self):
-        """Test the pattoo_config function for the pattoo server."""
-        # Initialize key variables
-        expected = '''\
-pattoo_api_agentd:
-  ip_bind_port: 20201
-  ip_listen_address: 0.0.0.0
-pattoo_apid:
-  ip_bind_port: 20202
-  ip_listen_address: 0.0.0.0
-pattoo_db:
-  db_hostname: localhost
-  db_max_overflow: 20
-  db_name: pattoo
-  db_password: password
-  db_pool_size: 10
-  db_username: pattoo
-pattoo_ingesterd:
-  batch_size: 500
-  graceful_timeout: 10
-  ingester_interval: 3600'''
-
-        # Initialize temporary directory
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, 'pattoo_server.yaml')
-
-            # Create config file
-            configure.pattoo_config(
-                'pattoo_server', temp_dir, self.default_server_config)
-
-            with open(file_path, 'r') as temp_config:
-
-                # Remove all whitespace
-                result = temp_config.read().strip()
-            self.assertEqual(result, expected)
-
-    def test_pattoo_config_default(self):
-        """Unittest to test the pattoo_config function with default values."""
-        # Initialize key variables
-        expected = '''\
-pattoo:
-  cache_directory: {}
-  daemon_directory: {}
-  language: en
-  log_directory: {}
-  log_level: debug
-  system_daemon_directory: {}
-pattoo_agent_api:
-  ip_address: 127.0.0.1
-  ip_bind_port: 20201
-pattoo_web_api:
-  ip_address: 127.0.0.1
-  ip_bind_port: 20202
-'''.format(
-    self._cache_directory, self._daemon_directory,
-    self._log_directory, self._system_daemon_directory)
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, 'pattoo.yaml')
-
-            # Create config file
-            configure.pattoo_config('pattoo', temp_dir, self.default_config)
-
-            # Open config file for reading
-            with open(file_path, 'r') as temp_config:
-
-                # Remove all whitespace
-                result = temp_config.read()
-            self.assertEqual(result, expected)
-
-    def test_pattoo_config_custom_dict(self):
-        """Test the pattoo_config function with custom dictionary."""
-        # Initialize key variables
-        prefix = 'pattoo'
-        default_expected = self.updated_config
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            log_dir = os.path.join(temp_dir, 'pattoo/log')
-            cache_dir = os.path.join(temp_dir, 'pattoo/cache')
-            daemon_dir = os.path.join(temp_dir, 'pattoo/daemon')
-            original = {
-                'pattoo': {
-                    'log_directory': log_dir,
-                    'log_level': 'debug',
-                    'language': 'xyz',
-                    'cache_directory': cache_dir,
-                    'daemon_directory': daemon_dir,
-                    'system_daemon_directory': self._system_daemon_directory,
-                },
-                'pattoo_agent_api': {
-                    'ip_address': '127.0.0.6',
-                    'ip_bind_port': 50505,
-                },
-                'dummy_0': {
-                    'dummy_1': 'dummy_2',
-                    'dummy_3': 'dummy_4',
-                }
-            }
-
-            expected = {
-                'dummy_0': {'dummy_1': 'dummy_2', 'dummy_3': 'dummy_4'},
-                'encryption': {'api_email': 'api_email@example.org'},
-                'pattoo': {
-                    'cache_directory': cache_dir,
-                    'daemon_directory': daemon_dir,
-                    'language': 'xyz',
-                    'log_directory': log_dir,
-                    'log_level': 'debug',
-                    'system_daemon_directory': self._system_daemon_directory},
-                'pattoo_agent_api': {
-                    'ip_address': '127.0.0.6', 'ip_bind_port': 50505},
-                'pattoo_web_api': {
-                    'ip_address': '127.0.0.1', 'ip_bind_port': 20202}
-            }
-
-            file_path = os.path.join(temp_dir, '{}.yaml'.format(prefix))
-
-            # Create config file
-            configure.pattoo_config(prefix, temp_dir, original)
-
-            # Test for directories
-            result = os.path.isdir(cache_dir)
-            with self.subTest():
-                self.assertTrue(result)
-
-            result = os.path.isdir(log_dir)
-            with self.subTest():
-                self.assertTrue(result)
-
-            result = os.path.isdir(daemon_dir)
-            with self.subTest():
-                self.assertTrue(result)
-
-            # Retrieve config dict from yaml file
-            result = configure.read_config(file_path, original)
-            with self.subTest():
-                self.assertEqual(result, original)
-
-            ########################
-            # Test overwriting file
-            ########################
-
-            # Delete old version of file
-            os.remove(file_path)
-
-            # Create new version of config file
-            configure.pattoo_config('pattoo', temp_dir, original)
-
-            # Apply updated configuration to that read from the
-            # new configuration file
-            result = configure.read_config(file_path, default_expected)
-            with self.subTest():
-                self.assertEqual(sorted(result), sorted(expected))
-
-    # Using mock patch to capture output
-    @unittest.mock.patch('sys.stdout', new_callable=io.StringIO)
-    def test_check_config(self, mock_stdout):
-        # Initialize key variables
-        """Unittest to test the check_config function."""
-        config = {
-            'pattoo': {
-                'log_directory': self._log_directory,
-                'log_level': 'debug',
-                'language': 'xyz',
-                'cache_directory': self._cache_directory,
-                'daemon_directory': self._daemon_directory,
-                'system_daemon_directory': self._system_daemon_directory,
-            },
-            'pattoo_agent_api': {
-                'ip_address': '127.0.0.6',
-                'ip_bind_port': 50505,
-            },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.3',
-                'ip_bind_port': 30303,
-            }
-        }
-
-        with tempfile.TemporaryDirectory() as temp_dir:
-            config_file = os.path.join(temp_dir, 'pattoo.yaml')
-
-            # Initializing expected output from stdout
-            expected = '''\
-
-Configuring {} file.
-
-??: Checking configuration parameters.
-OK: Configuration parameter check passed.
-'''.format(config_file)
-
-            # Create config file
-            configure.pattoo_config('pattoo', temp_dir, config)
-
-            # Run configuration
-            configure.check_config(config_file, config)
-            self.assertEqual(mock_stdout.getvalue(), expected)
-
-    def test_configure_component(self):
-        """Unittest to test the configure_component function."""
-        # Initialize key variables
-        test_name = str(os.urandom(5))
-        expected = {
-            'polling_interval': 300,
-        }
-        with tempfile.TemporaryDirectory() as temp_dir:
-            file_path = os.path.join(temp_dir, '{}.yaml'.format(test_name))
-
-            # Create config file
-            configure.configure_component(test_name, temp_dir, expected)
-
-            # Retrieve config dict from yaml file
-            result = configure.read_config(file_path, expected)
             self.assertEqual(result, expected)
 
 

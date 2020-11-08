@@ -67,12 +67,16 @@ def install_package(package, verbose=False):
 
     # Get installed version
     current_version = installed_version(package)
+    already_installed = bool(current_version)
 
     # Update if there is a '<' or '>' in the desired package.
-    if bool(current_version) is True and bool(details.inequality) is False:
-        # Do nothing if installed and proposed versions match,
-        # or no desired version specified
-        if (current_version == details.version) or (details.version is None):
+    if already_installed is True:
+        # Do nothing if installed and proposed versions match
+        if (current_version == details.version) and bool(
+                details.inequality) is False:
+            return
+        # Do nothing if no version is specified
+        elif bool(details.version) is False:
             return
 
     # Install
@@ -98,7 +102,7 @@ def install(requirements_dir, install_dir, verbose=False):
     # Initialize key variables
     lines = []
     filepath = '{}{}pip_requirements.txt'.format(requirements_dir, os.sep)
-    path = environment.PIPpath('{}/bin'.format(install_dir))
+    path = environment.PIPpath('{}{}bin'.format(install_dir, os.sep))
 
     # Say what we are doing
     print('Checking pip3 packages')
@@ -141,26 +145,33 @@ Ensure the file has read-write permissions and try again'''.format(filepath))
     print('pip3 packages successfully installed')
 
 
-def package_details(package):
+def package_details(package_):
     """Get package details.
 
     Args:
-        package: The pip3 package to be installed
+        package_: The pip3 package to be installed
 
     Returns:
         result: Named tuple of package name and version
 
     """
     # Initialize key variables
+    package = ''.join(package_.split())
     Package = namedtuple('Package', 'name version inequality')
+    ideal_length = 3
+    inequalities = ['=', '<', '>', '~']
+    inequality = False
 
     # Get desired package name and version
-    nodes = re.split('=|<|>|~', package)
-    _ = nodes.append(None) if len(nodes) == 1 else nodes
-    (name, version) = nodes[0: 2]
+    nodes = re.split('|'.join(inequalities), package)
+    nodes.extend([None] * (ideal_length - len(nodes)))
+    name = nodes[0]
+    version = nodes[2]
 
     # Determine whether there is an inequality in the string
-    inequality = '<' in package or '>' in package
+    for item in inequalities:
+        if item in package:
+            inequality = True
 
     # Return
     result = Package(name=name, version=version, inequality=inequality)

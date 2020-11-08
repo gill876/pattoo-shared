@@ -92,8 +92,8 @@ class TestBasicFunctions(unittest.TestCase):
             '{}{}file_2.yaml'.format(directory, os.sep): dict_2
         }
         for filename, data_dict in filenames.items():
-            with open(filename, 'w') as filehandle:
-                yaml.dump(data_dict, filehandle, default_flow_style=False)
+            with open(filename, 'w') as fh_:
+                yaml.safe_dump(data_dict, stream=fh_, default_flow_style=False)
 
         # Get Results
         result = files.read_yaml_files(directory)
@@ -133,8 +133,8 @@ class TestBasicFunctions(unittest.TestCase):
         for item in file_data:
             filename = item[0]
             data_dict = item[1]
-            with open(filename, 'w') as filehandle:
-                yaml.dump(data_dict, filehandle, default_flow_style=False)
+            with open(filename, 'w') as fh_:
+                yaml.safe_dump(data_dict, stream=fh_, default_flow_style=False)
 
             # Get Results
             result = files.read_yaml_file(filename)

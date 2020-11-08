@@ -640,7 +640,7 @@ def search(key, sub_key, config_dict, die=True):
     if result is None and die is True:
         log_message = (
             '{}:{} not defined in configuration dict {}'.format(
-                                                    key, sub_key, config_dict))
+                key, sub_key, config_dict))
         log.log2die_safe(1016, log_message)
 
     # Return
