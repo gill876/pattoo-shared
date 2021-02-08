@@ -6,15 +6,15 @@ import unittest
 import os
 import subprocess
 import sys
-from io import StringIO
-from unittest.mock import patch
+import shlex
+from time import sleep
 
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+_EXPECTED = '{0}pattoo-shared{0}tests{0}pattoo_shared_'.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
@@ -30,39 +30,116 @@ from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared.agent import Agent
 from pattoo_shared.configuration import Config
 from tests.libraries.configuration import UnittestConfig
+from tests.libraries import general
 
-# TEST CONSTANTS
-AGENT_NAME = 'parent'
-_config = Config()
 
-def handle_daemon(command):
+def _create_agent():
+    """Creates new test agent.
+
+    Args:
+        None
+
+    Return:
+        result: new agent for testing
+
+    """
+    # Return
+    config = Config()
+    name = general.random_agent_name()
+    result = Agent(name, config=config)
+    return result
+
+
+def _script(_agent, action):
+    """Start test daemon.
+
+    Args:
+        _agent: Agent object
+        action: Action to take
+
+    Return:
+        result: Script to run
+
+    """
+    # Run script
+    _path = os.path.join(ROOT_DIR, 'tests/bin/mock_daemon.py')
+    result = 'python3 {} --{} --agent_name={}'.format(
+        _path, action, _agent.name())
+    return result
+
+
+def _start(_agent):
+    """Start test daemon.
+
+    Args:
+        _agent: Agent object
+
+    Return:
+        None
+
+    """
+    # Run script
+    _daemonizer(_script(_agent, 'start'))
+
+
+def _stop(_agent):
+    """Stop test daemon.
+
+    Args:
+        _agent: Agent object
+
+    Return:
+        None
+
+    """
+    # Run script
+    _daemonizer(_script(_agent, 'stop'))
+
+
+def _restart(_agent):
+    """Restart test daemon.
+
+    Args:
+        _agent: Agent object
+
+    Return:
+        None
+
+    """
+    # Run script
+    _daemonizer(_script(_agent, 'restart'))
+
+
+def _status(_agent):
+    """Get daemon status.
+
+    Args:
+        _agent: Agent object
+
+    Return:
+        None
+
+    """
+    # Run script
+    _daemonizer(_script(_agent, 'status'))
+
+
+def _daemonizer(arguments):
     """Allows for the daemon start
 
     Args:
-        command: either --start/--restart to test
+        arguments: CLI arguments
 
     Return:
         None
 
     """
-    daemon_start_script_path = os.path.join(EXEC_DIR, 'daemon_start_test_script.py')
-    subprocess.call(['python', daemon_start_script_path, command])
+    # Execute
+    subprocess.call(shlex.split(arguments))
 
-def create_agent():
-    """Creates new agent for use in testing start and restart
 
-    Args:
-        None
-
-    Return:
-        _agent: new agent for testing
-
-    """
-    _agent = Agent(parent=AGENT_NAME, config=_config)
-    return _agent
-
-class MockDaemonMixin():
-    """Mixin definging run functoin for MockDaemon and MockGracefulDaemon"""
+class _Run():
+    """Class for creating a run method."""
 
     def run(self, loop=True):
         """Overriding Daemon run method
@@ -70,34 +147,56 @@ class MockDaemonMixin():
         Prints to standard output
 
         Args:
-            loop: determines looping functionality is needed, used to test
-            daemon start
+            loop: True when looping functionality is needed. Looping must be
+                disabled when testing the run function, to avoid waiting for
+                an infinite loop to end.
 
         Return:
             None
 
         """
-        print('Running')
+        # Loop
         while loop:
-            pass
+            sleep(60)
+        return True
 
 
-class MockDaemon(MockDaemonMixin, Daemon):
-    """Mock Daemon used to test Daemon class
+class MockGracefulDaemon(_Run, GracefulDaemon):
+    """Class to create graceful daemon for testing."""
 
-    Built to provide minimal functionality to test Daemon run method
+    def __init__(self, _agent):
+        """Initialize the class.
 
-    """
+        Args:
+            _agent: Agent
 
-class MockGracefulDaemon(MockDaemonMixin, GracefulDaemon):
-    """Mock Graceful Daemon used to test Graceful Daemon class
+        Returns:
+            None
 
-    Built to provide minimal functionality to test Graceful Daemon run method
+        """
+        # Setting up MockDaemon and starting process for testing
+        GracefulDaemon.__init__(self, _agent)
 
-    """
+
+class MockDaemon(_Run, Daemon):
+    """Class to create daemon for testing."""
+
+    def __init__(self, _agent):
+        """Initialize the class.
+
+        Args:
+            _agent: Agent
+
+        Returns:
+            None
+
+        """
+        # Setting up MockDaemon and starting process for testing
+        Daemon.__init__(self, _agent)
+
 
 class TestDaemon(unittest.TestCase):
-    """Checks all functions and methods."""
+    """Test all Daemon class methods."""
 
     #########################################################################
     # General object setup
@@ -105,42 +204,28 @@ class TestDaemon(unittest.TestCase):
 
     def setUp(self):
         """Test setup"""
-
         # Setup base config and agent
-        self._agent = create_agent()
-        self._config = _config
+        self._config = Config()
+        self._agent = _create_agent()
 
         # Instantiation of test daemon
         self._daemon = MockDaemon(self._agent)
 
     def tearDown(self):
         """Test clean up"""
-        self._config = None
-        self._agent = None
-
-        # Removing any relate lock file
-        if os.path.exists(self._daemon.lockfile):
-            os.remove(self._daemon.lockfile)
-        if os.path.exists(self._daemon.pidfile):
-            os.remove(self._daemon.pidfile)
-
-        self._daemon = None
+        _stop(self._agent)
 
     def test___init__(self):
         """Testing function __init__."""
         # Check daemon name matches agent name
-        self.assertEqual(self._daemon.name, AGENT_NAME)
-
-        # Checking daemon config
-        self.assertEqual(self._daemon._config, self._config)
-        self.assertEqual(self._daemon._config, self._config)
+        self.assertEqual(self._daemon.name, self._agent.name())
 
         # Checking daemon pid_file
-        expected = files.pid_file(AGENT_NAME, self._config)
+        expected = files.pid_file(self._agent.name(), self._config)
         self.assertEqual(self._daemon.pidfile, expected)
 
         # Checking daemon lock_file
-        expected = files.lock_file(AGENT_NAME, self._config)
+        expected = files.lock_file(self._agent.name(), self._config)
         self.assertEqual(self._daemon.lockfile, expected)
 
     def test__daemonize(self):
@@ -179,14 +264,16 @@ class TestDaemon(unittest.TestCase):
 
     def test_start(self):
         """Testing function start."""
-        handle_daemon('--start')
+        # Test starting
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        _start(self._agent)
         self.assertTrue(os.path.exists(self._daemon.pidfile))
 
     def test_force(self):
         """Testing function force."""
-
-        # Staring Daemon
-        handle_daemon('--start')
+        # Test starting
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        _start(self._agent)
         self.assertTrue(os.path.exists(self._daemon.pidfile))
 
         # Calling force stop
@@ -195,95 +282,100 @@ class TestDaemon(unittest.TestCase):
 
     def test_stop(self):
         """Testing function stop."""
-
-        # Staring Daemon
-        handle_daemon('--start')
+        # Test starting
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        _start(self._agent)
         self.assertTrue(os.path.exists(self._daemon.pidfile))
-        os.mknod(self._daemon.lockfile)
 
-        # Calling force stop
+        # Calling stop
+        os.mknod(self._daemon.lockfile)
         self._daemon.stop()
         self.assertFalse(os.path.exists(self._daemon.pidfile))
         self.assertFalse(os.path.exists(self._daemon.lockfile))
 
     def test_restart(self):
         """Testing function restart."""
+        # Initialize key variables
+        sleep_time = 0.1
 
-        # Creating daemon pidfile
-        with open(self._daemon.pidfile, 'w') as f:
-            f.write('99999')
+        # Test restarting from stop
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        _restart(self._agent)
         self.assertTrue(os.path.exists(self._daemon.pidfile))
 
-        # Checking daemon restarting, pidfile should exist
-        handle_daemon('--restart')
+        # Sleep
+        _start = os.stat(self._daemon.pidfile).st_mtime
+        sleep(sleep_time)
+
+        # Test restarting from start
+        _restart(self._agent)
         self.assertTrue(os.path.exists(self._daemon.pidfile))
+
+        # Test age of PID file
+        _stop = os.stat(self._daemon.pidfile).st_mtime
+        self.assertTrue(_stop > _start)
+        self.assertTrue(_stop - _start >= sleep_time)
 
     def test_status(self):
         """Testing function status."""
+        # Test starting
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
+        _start(self._agent)
+        self.assertTrue(os.path.exists(self._daemon.pidfile))
 
-        # Test status while daemon is running
-        handle_daemon('--start')
-        expected = 'Daemon is running - {}\n'.format(AGENT_NAME)
+        # Test stopping
+        # Test start
+        result = self._daemon.status()
+        self.assertTrue(result)
 
-        with patch('sys.stdout', new = StringIO()) as result:
-            self._daemon.status()
-            self.assertEqual(result.getvalue(), expected)
+        _stop(self._agent)
+        self.assertFalse(os.path.exists(self._daemon.pidfile))
 
-        # Test status when daemon has been stopped
-        os.remove(self._daemon.pidfile)
-        expected = 'Daemon is stopped - {}\n'.format(AGENT_NAME)
-
-        with patch('sys.stdout', new = StringIO()) as result:
-            self._daemon.status()
-            self.assertEqual(result.getvalue(), expected)
+        # Test start
+        result = self._daemon.status()
+        self.assertFalse(result)
 
     def test_run(self):
         """Testing function run."""
-        expected = 'Running\n'
-        with patch('sys.stdout', new = StringIO()) as result:
-            self._daemon.run(loop=False)
-            self.assertEqual(result.getvalue(), expected)
+        # Test
+        result = self._daemon.run(loop=False)
+        self.assertTrue(result)
+
 
 class TestGracefulDaemon(TestDaemon):
-    """
-
-    Checks that daemon start/stop commands confirm to graceful shutdown
-
-    """
+    """Test all GracefulDaemon class methods."""
 
     def setUp(self):
         """Test setup"""
-
         # Setup base config and agent
-        self._agent = create_agent()
-        self._config = _config
+        self._config = Config()
+        self._agent = _create_agent()
 
         # Instantiation of test daemon
         self._daemon = MockGracefulDaemon(self._agent)
 
     def graceful_fn(self, callback):
-        """Sets up and executes test callback that should implement graceful
-        shutdown
+        """Set up and execute test callback to implement graceful shutdown.
 
         Args:
             callback: function that implements graceful shutdown functionality
 
         Return:
-            wrapper: implements setup before using callback and making
+            wrapper: Implements setup before using callback and making
             assertions
 
         """
         def wrapper():
             """Wrapper function to be returned by graceful_fn"""
-            # Testing proper graceful shutdown by creating lock file to simulate
-            # that a process is currently handling data.
-            handle_daemon('--start')
+            # Testing proper graceful shutdown by creating lock file to
+            # simulate that a process is currently handling data.
+            _start(self._agent)
             os.mknod(self._daemon.lockfile)
             self.assertTrue(os.path.exists(self._daemon.lockfile))
             callback()
 
-            # Checking that both daemon pidfile and lockfile do not exist, which
-            # indicates successful stoppage of daemon.
+            # Checking that both daemon pidfile and lockfile do not exist,
+            # which indicates successful stoppage of daemon.
             self.assertFalse(os.path.exists(self._daemon.lockfile))
             self.assertFalse(os.path.exists(self._daemon.pidfile))
 
@@ -291,7 +383,6 @@ class TestGracefulDaemon(TestDaemon):
 
     def test_stop(self):
         """Testing graceful stop function"""
-
         # Test base Daemon stop functionality
         # When lock file does not exist
         super(TestGracefulDaemon, self).test_stop()
@@ -307,7 +398,8 @@ class TestGracefulDaemon(TestDaemon):
         super(TestGracefulDaemon, self).test_restart()
 
         # Graceful stop testing
-        self.graceful_fn(handle_daemon('--restart'))
+        self.graceful_fn(_restart(self._agent))
+
 
 if __name__ == '__main__':
     # Make sure the environment is OK to run unittests

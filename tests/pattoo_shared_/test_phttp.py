@@ -2,21 +2,25 @@
 """Test the phttp module."""
 
 # Standard imports
-import unittest
-import requests_mock
-from unittest.mock import patch
 import json
 import hashlib
 import uuid
 import os
+import random
+import tempfile
 import sys
 from time import time
+import unittest
+from unittest.mock import patch
+
+# PIP imports
+import requests_mock
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+_EXPECTED = '{0}pattoo-shared{0}tests{0}pattoo_shared_'.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
@@ -30,10 +34,10 @@ else:
 from pattoo_shared import phttp
 from pattoo_shared import data
 from pattoo_shared import converter
-from pattoo_shared.files import set_gnupg, get_gnupg
-from pattoo_shared.configuration import Config
+from pattoo_shared import files
+from pattoo_shared import encrypt
 from tests.libraries.configuration import UnittestConfig
-from tests.resources import test_agent as ta
+from tests.libraries import general as ta
 
 
 class Test_Post(unittest.TestCase):
@@ -140,7 +144,7 @@ class TestPost(unittest.TestCase):
             mock_post.assert_called_with(
                 '''http://127.0.0.6:50505/pattoo/api/v1/agent/receive/{}'''
                 .format(self.identifier), json=self.mod_data
-                )
+            )
 
 
 class TestEncryptedPost(unittest.TestCase):
@@ -164,39 +168,23 @@ class TestEncryptedPost(unittest.TestCase):
     symmetric_key = None
     nonce = None
 
-    # Initialize
-    # Create Pgpier objects
-    agent_gpg = set_gnupg(
-        'test_agent0', Config(), 'test_agent0@example.org'
-            )
-    api_gpg = set_gnupg(
-        'test_api0', Config(), 'test_api0@example.org'
-            )
+    # Initialize encrytion keys
+    encrypt_agt = encrypt.Encryption(
+        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
+        tempfile.mkdtemp()
+    )
+    encrypt_api = encrypt.Encryption(
+        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
+        tempfile.mkdtemp()
+    )
+
     # Create EncryptedPost object
-    encrypted_post = phttp.EncryptedPost(identifier, data, agent_gpg)
+    encrypted_post = phttp.EncryptedPost(identifier, data, encrypt_agt)
 
     def test___init__(self):
         """Testing method or function named __init__."""
-
         # Test variables
-        expected_exchange_key = \
-            '''http://127.0.0.6:50505/pattoo/api/v1/agent/key'''
-        result_exchange_key = self.encrypted_post._exchange_key
-
-        expected_validate_key = \
-            '''http://127.0.0.6:50505/pattoo/api/v1/agent/validation'''
-        result_validate_key = self.encrypted_post._validate_key
-
-        expected_encryption = \
-            '''http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted'''
-        result_encryption = self.encrypted_post._encryption
-
-        # Test URL's
-        self.assertEqual(result_exchange_key, expected_exchange_key)
-        self.assertEqual(result_validate_key, expected_validate_key)
-        self.assertEqual(result_encryption, expected_encryption)
-        # Test that Pgpier object is valid
-        self.assertIsInstance(self.encrypted_post._gpg.keyid, str)
+        pass
 
     def test_post(self):
         """Test EncryptedPost's post"""
@@ -214,14 +202,15 @@ class TestEncryptedPost(unittest.TestCase):
             self.agent_email = json_dict['pattoo_agent_email']
 
             # Import agent public key
-            self.api_gpg.imp_pub_key(self.agent_publickey)
+            self.encrypt_api.pimport(self.agent_publickey)
+
             # Trust public keys to enable encryption with traded keys
-            agent_fp = self.api_gpg.email_to_key(self.agent_email)
-            self.api_gpg.trust_key(agent_fp)
+            agent_fp = self.encrypt_api.fingerprint(self.agent_email)
+            self.encrypt_api.trust(agent_fp)
 
             # Send accepted response
             context.status_code = 202
-            return "Noted"
+            return 'Noted'
 
         # Key exchange callback for post request to process key exchange
         def exchange_get_callback(request, context):
@@ -232,19 +221,17 @@ class TestEncryptedPost(unittest.TestCase):
             self.nonce = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
 
             # Prepare API info to send to agent
-            api_publickey = self.api_gpg.exp_pub_key()
-            self.api_gpg.set_email()
-            api_email_addr = self.api_gpg.email_addr
+            api_publickey = self.encrypt_api.pexport()
 
             # Encrypt nonce
-            encrypted_nonce = self.api_gpg.encrypt_data(
-                self.nonce, self.agent_gpg.fingerprint)
+            encrypted_nonce = self.encrypt_api.encrypt(
+                self.nonce, self.encrypt_agt.fingerprint())
 
-            json_response = {'data': {
-                    'api_email': api_email_addr,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }}
+            json_response = {
+                'api_email': self.encrypt_api.email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
+            }
 
             # Send data
             return json_response
@@ -261,11 +248,8 @@ class TestEncryptedPost(unittest.TestCase):
             # Validate by decrypting the encrypted symmetric key
             # then using the symmetric key to decrypt the nonce
             # and check if it is the same as the one that was sent
-            passphrase = self.api_gpg.passphrase
-            symmetric_key = self.api_gpg.decrypt_data(
-                encrypted_sym_key, passphrase)
-            nonce = self.api_gpg.symmetric_decrypt(
-                encrypted_nonce, symmetric_key)
+            symmetric_key = self.encrypt_api.decrypt(encrypted_sym_key)
+            nonce = self.encrypt_api.sdecrypt(encrypted_nonce, symmetric_key)
 
             if nonce == self.nonce:
                 self.symmetric_key = symmetric_key
@@ -283,7 +267,7 @@ class TestEncryptedPost(unittest.TestCase):
             json_dict = json.loads(json_data)
             encrypted_data = json_dict['encrypted_data']
             # Decrypt data
-            decrypted_data = self.api_gpg.symmetric_decrypt(
+            decrypted_data = self.encrypt_api.sdecrypt(
                 encrypted_data, self.symmetric_key)
             # Unload
             data_dict = json.loads(decrypted_data)
@@ -292,35 +276,36 @@ class TestEncryptedPost(unittest.TestCase):
             # Check that decrypted data is the same as the received
             # The two dictionaries are hashed then the values are compared
             agent_data = self.data
-            if (hashlib.sha256(str(
-                json.dumps(agent_data)).encode()).hexdigest()) == \
-                    (hashlib.sha256(str(
-                        json.dumps(recv_data)).encode()).hexdigest()):
+            agent_hash = hashlib.sha256(
+                str(json.dumps(agent_data)).encode()).hexdigest()
+            recv_hash = hashlib.sha256(
+                str(json.dumps(recv_data)).encode()).hexdigest()
+            if agent_hash == recv_hash:
                 # Data received and decrypted successfully
                 context.status_code = 202
             else:
                 # Decryption failed
                 context.status_code = 409
 
-            return "Noted"
+            return 'Noted'
 
         # Mock each requests
-        with requests_mock.Mocker() as m:
+        with requests_mock.Mocker() as mock_:
             # Mock agent sending info to API server
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 text=exchange_post_callback)
             # Mock agent receiving API info
-            m.get(
+            mock_.get(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 json=exchange_get_callback)
             # Mock agent validation
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/validation',
                 text=validation_callback
             )
 
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted',
                 text=encrypted_callback
             )
@@ -347,14 +332,14 @@ class TestEncryptedPost(unittest.TestCase):
             self.agent_email = json_dict['pattoo_agent_email']
 
             # Import agent public key
-            self.api_gpg.imp_pub_key(self.agent_publickey)
+            self.encrypt_api.pimport(self.agent_publickey)
             # Trust public keys to enable encryption with traded keys
-            agent_fp = self.api_gpg.email_to_key(self.agent_email)
-            self.api_gpg.trust_key(agent_fp)
+            agent_fp = self.encrypt_api.fingerprint(self.agent_email)
+            self.encrypt_api.trust(agent_fp)
 
             # Send accepted response
             context.status_code = 202
-            return "Noted"
+            return 'Noted'
 
         # Key exchange callback for post request to process key exchange
         def exchange_get_callback(request, context):
@@ -365,19 +350,18 @@ class TestEncryptedPost(unittest.TestCase):
             self.nonce = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
 
             # Prepare API info to send to agent
-            api_publickey = self.api_gpg.exp_pub_key()
-            self.api_gpg.set_email()
-            api_email_addr = self.api_gpg.email_addr
+            api_publickey = self.encrypt_api.pexport()
 
             # Encrypt nonce
-            encrypted_nonce = self.api_gpg.encrypt_data(
-                self.nonce, self.agent_gpg.fingerprint)
+            encrypted_nonce = self.encrypt_api.encrypt(
+                self.nonce, self.encrypt_agt.fingerprint())
 
-            json_response = {'data': {
-                    'api_email': api_email_addr,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }}
+            # Create a json response
+            json_response = {
+                'api_email': self.encrypt_api.email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
+            }
 
             # Send data
             return json_response
@@ -394,11 +378,8 @@ class TestEncryptedPost(unittest.TestCase):
             # Validate by decrypting the encrypted symmetric key
             # then using the symmetric key to decrypt the nonce
             # and check if it is the same as the one that was sent
-            passphrase = self.api_gpg.passphrase
-            symmetric_key = self.api_gpg.decrypt_data(
-                encrypted_sym_key, passphrase)
-            nonce = self.api_gpg.symmetric_decrypt(
-                encrypted_nonce, symmetric_key)
+            symmetric_key = self.encrypt_api.decrypt(encrypted_sym_key)
+            nonce = self.encrypt_api.sdecrypt(encrypted_nonce, symmetric_key)
 
             if nonce == self.nonce:
                 self.symmetric_key = symmetric_key
@@ -416,7 +397,7 @@ class TestEncryptedPost(unittest.TestCase):
             json_dict = json.loads(json_data)
             encrypted_data = json_dict['encrypted_data']
             # Decrypt data
-            decrypted_data = self.api_gpg.symmetric_decrypt(
+            decrypted_data = self.encrypt_api.sdecrypt(
                 encrypted_data, self.symmetric_key)
             # Unload
             data_dict = json.loads(decrypted_data)
@@ -425,45 +406,48 @@ class TestEncryptedPost(unittest.TestCase):
             # Check that decrypted data is the same as the received
             # The two dictionaries are hashed then the values are compared
             agent_data = self.data
-            if (hashlib.sha256(str(
-                json.dumps(agent_data)).encode()).hexdigest()) == \
-                    (hashlib.sha256(str(
-                        json.dumps(recv_data)).encode()).hexdigest()):
+            agent_hash = hashlib.sha256(str(
+                json.dumps(agent_data)).encode()).hexdigest()
+            recv_hash = hashlib.sha256(str(
+                json.dumps(recv_data)).encode()).hexdigest()
+            if agent_hash == recv_hash:
                 # Data received and decrypted successfully
                 context.status_code = 202
             else:
                 # Decryption failed
                 context.status_code = 409
 
-            return "Noted"
+            return 'Noted'
 
         # Mock each requests
-        with requests_mock.Mocker() as m:
+        with requests_mock.Mocker() as mock_:
             # Mock agent sending info to API server
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 text=exchange_post_callback)
             # Mock agent receiving API info
-            m.get(
+            mock_.get(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 json=exchange_get_callback)
             # Mock agent validation
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/validation',
                 text=validation_callback
             )
 
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted',
                 text=encrypted_callback
             )
 
             # Save data to cache
             phttp._save_data(self.data, self.identifier)
+
             # Run purge
             self.encrypted_post.purge()
+
             # Check that URL's were called
-            self.assertEqual(m.call_count, 4)
+            self.assertEqual(mock_.call_count, 4)
 
 
 class TestPassiveAgent(unittest.TestCase):
@@ -489,14 +473,15 @@ class TestPassiveAgent(unittest.TestCase):
 class TestEncryptedPostAgent(unittest.TestCase):
     """Test EncryptedPostAgent"""
 
-    # Initialize
-    # Create Pgpier objects
-    agent_gpg = set_gnupg(
-        'test_agent0', Config(), 'test_agent0@example.org'
-            )
-    api_gpg = set_gnupg(
-        'test_api0', Config(), 'test_api0@example.org'
-            )
+    # Initialize key variables
+    encrypt_agt = encrypt.Encryption(
+        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
+        tempfile.mkdtemp()
+    )
+    encrypt_api = encrypt.Encryption(
+        hashlib.md5('{}'.format(random.random()).encode()).hexdigest(),
+        tempfile.mkdtemp()
+    )
 
     # Variables that will be modified by callback functions
     agent_publickey = None
@@ -512,11 +497,10 @@ class TestEncryptedPostAgent(unittest.TestCase):
 
         # Get agent variables
         _data = converter.agentdata_to_post(agentdata)
-        data = converter.posting_data_points(_data)
+        data2post = converter.posting_data_points(_data)
 
         # Create agent
-        encrypted_agent = phttp.EncryptedPostAgent(
-            agentdata, self.agent_gpg)
+        encrypted_agent = phttp.EncryptedPostAgent(agentdata, self.encrypt_agt)
 
         # Define callback functions
 
@@ -531,14 +515,14 @@ class TestEncryptedPostAgent(unittest.TestCase):
             self.agent_email = json_dict['pattoo_agent_email']
 
             # Import agent public key
-            self.api_gpg.imp_pub_key(self.agent_publickey)
+            self.encrypt_api.pimport(self.agent_publickey)
             # Trust public keys to enable encryption with traded keys
-            agent_fp = self.api_gpg.email_to_key(self.agent_email)
-            self.api_gpg.trust_key(agent_fp)
+            agent_fp = self.encrypt_api.fingerprint(self.agent_email)
+            self.encrypt_api.trust(agent_fp)
 
             # Send accepted response
             context.status_code = 202
-            return "Noted"
+            return 'Noted'
 
         # Key exchange callback for post request to process key exchange
         def exchange_get_callback(request, context):
@@ -549,19 +533,17 @@ class TestEncryptedPostAgent(unittest.TestCase):
             self.nonce = hashlib.sha256(str(uuid.uuid4()).encode()).hexdigest()
 
             # Prepare API info to send to agent
-            api_publickey = self.api_gpg.exp_pub_key()
-            self.api_gpg.set_email()
-            api_email_addr = self.api_gpg.email_addr
+            api_publickey = self.encrypt_api.pexport()
 
             # Encrypt nonce
-            encrypted_nonce = self.api_gpg.encrypt_data(
-                self.nonce, self.agent_gpg.fingerprint)
+            encrypted_nonce = self.encrypt_api.encrypt(
+                self.nonce, self.encrypt_agt.fingerprint())
 
-            json_response = {'data': {
-                    'api_email': api_email_addr,
-                    'api_key': api_publickey,
-                    'encrypted_nonce': encrypted_nonce
-                }}
+            json_response = {
+                'api_email': self.encrypt_api.email,
+                'api_key': api_publickey,
+                'encrypted_nonce': encrypted_nonce
+            }
 
             # Send data
             return json_response
@@ -578,11 +560,8 @@ class TestEncryptedPostAgent(unittest.TestCase):
             # Validate by decrypting the encrypted symmetric key
             # then using the symmetric key to decrypt the nonce
             # and check if it is the same as the one that was sent
-            passphrase = self.api_gpg.passphrase
-            symmetric_key = self.api_gpg.decrypt_data(
-                encrypted_sym_key, passphrase)
-            nonce = self.api_gpg.symmetric_decrypt(
-                encrypted_nonce, symmetric_key)
+            symmetric_key = self.encrypt_api.decrypt(encrypted_sym_key)
+            nonce = self.encrypt_api.sdecrypt(encrypted_nonce, symmetric_key)
 
             if nonce == self.nonce:
                 self.symmetric_key = symmetric_key
@@ -599,16 +578,18 @@ class TestEncryptedPostAgent(unittest.TestCase):
             json_data = request.json()
             json_dict = json.loads(json_data)
             encrypted_data = json_dict['encrypted_data']
+
             # Decrypt data
-            decrypted_data = self.api_gpg.symmetric_decrypt(
+            decrypted_data = self.encrypt_api.sdecrypt(
                 encrypted_data, self.symmetric_key)
+
             # Unload
             data_dict = json.loads(decrypted_data)
             recv_data = data_dict['data']
 
             # Check that decrypted data is the same as the received
             # The two dictionaries are hashed then the values are compared
-            agent_data = data
+            agent_data = data2post
             if len(agent_data) == len(recv_data):
                 # Data received and decrypted successfully
                 context.status_code = 202
@@ -616,25 +597,27 @@ class TestEncryptedPostAgent(unittest.TestCase):
                 # Decryption failed
                 context.status_code = 409
 
-            return "Noted"
+            return 'Noted'
 
         # Mock each requests
-        with requests_mock.Mocker() as m:
+        with requests_mock.Mocker() as mock_:
             # Mock agent sending info to API server
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 text=exchange_post_callback)
+
             # Mock agent receiving API info
-            m.get(
+            mock_.get(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/key',
                 json=exchange_get_callback)
+
             # Mock agent validation
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/validation',
                 text=validation_callback
             )
 
-            m.post(
+            mock_.post(
                 'http://127.0.0.6:50505/pattoo/api/v1/agent/encrypted',
                 text=encrypted_callback
             )
@@ -649,14 +632,14 @@ class TestEncryptedPostAgent(unittest.TestCase):
             identifier = agentdata.agent_id
 
             # Save data to cache
-            phttp._save_data(data, identifier)
+            phttp._save_data(data2post, identifier)
 
             # Encrypted purge
             encrypted_agent.purge()
-            
+
             # Check that both the post and purge exchanged keys and
             # send data
-            self.assertEqual(m.call_count, 8)
+            self.assertEqual(mock_.call_count, 8)
 
 
 class TestBasicFunctions(unittest.TestCase):

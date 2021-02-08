@@ -24,6 +24,7 @@ from gunicorn.app.base import BaseApplication
 # Pattoo libraries
 from pattoo_shared.daemon import Daemon, GracefulDaemon
 from pattoo_shared import files
+from pattoo_shared import encrypt
 from pattoo_shared import log
 from pattoo_shared.configuration import Config
 from pattoo_shared.variables import AgentAPIVariable
@@ -78,38 +79,32 @@ class Agent():
         # Do nothing
         pass
 
-    def set_email(self, email):
-        """Set email address of the agent
+
+class EncryptedAgent(Agent):
+    """Encrypted Agent class for daemons."""
+
+    def __init__(self, parent, child=None, config=None, directory=None):
+        """Initialize the class.
 
         Args:
-            email (str): Agent email address
+            parent: Name of parent daemon
+            child: Name of child daemon
+            config: Config object
+            directory: Override the directory for KeyRing storage if provided.
 
         Returns:
             None
+
         """
-        self.email = email
+        # Initialize key variables (Parent)
+        Agent.__init__(self, parent, child=child, config=config)
 
-    def set_gnupg(self):
-        """Get Pgpier class of the agent
-
-        Args:
-            None
-
-        Returns:
-            gpg (obj): Pgpier object
-        """
-        agent_name = self.parent
-        agent_config = self.config
-        agent_email = self.email
-
-        gpg = files.set_gnupg(agent_name, agent_config, agent_email)
-        self.gpg = gpg
-
-        return gpg
+        # Create encryption object
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
-class AgentDaemonRunMixin(Daemon):
-    """Class that defines basic run function for AgentDaemons"""
+class _AgentRun():
+    """Class that defines basic run function for AgentDaemons."""
 
     def run(self):
         """Start Polling
@@ -126,7 +121,7 @@ class AgentDaemonRunMixin(Daemon):
             self.agent.query()
 
 
-class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
+class AgentDaemon(_AgentRun, Daemon):
     """Class that manages base agent daemonization"""
 
     def __init__(self, agent):
@@ -146,8 +141,9 @@ class BaseAgentDaemon(AgentDaemonRunMixin, Daemon):
         Daemon.__init__(self, agent)
 
 
-class GracefulAgentDaemon(AgentDaemonRunMixin, GracefulDaemon):
-    """Class that manages graceful agent daemonization"""
+class GracefulAgentDaemon(_AgentRun, GracefulDaemon):
+    """Class that manages graceful agent daemonization."""
+
     def __init__(self, agent):
         """Initialize the class.
 
@@ -272,7 +268,7 @@ class AgentCLI():
 
         # Instantiate agent daemon
         if graceful is False:
-            _daemon = BaseAgentDaemon(agent)
+            _daemon = AgentDaemon(agent)
         else:
             _daemon = GracefulAgentDaemon(agent)
 
@@ -334,16 +330,6 @@ class AgentAPI(Agent):
             ip_bind_port=_config.ip_bind_port(),
             ip_listen_address=_config.ip_listen_address())
 
-        # Add email address to Agent subclass
-        econfig = Config()
-        email_addr = econfig.api_email_address()
-        self.set_email(email_addr)
-        # Email address must be same in the created Pgpier
-        # object for the API as the one in the yaml file
-        # or else an error might be encounter. To use a
-        # different email address, delete the contents of the
-        # key folder
-
     def query(self):
         """Query all remote targets for data.
 
@@ -402,6 +388,30 @@ fix.'''.format(self.pidfile_parent))
 
         # Run
         _StandaloneApplication(self._app, self.parent, options=options).run()
+
+
+class EncryptedAgentAPI(AgentAPI):
+    """Agent class for daemons."""
+
+    def __init__(self, parent, child, app, config=None, directory=None):
+        """Initialize the class.
+
+        Args:
+            parent: Name of parent daemon
+            email: Email address used for encryption
+            child: Name of child daemon
+            config: Config object
+            directory: Override the directory for KeyRing storage if provided.
+
+        Returns:
+            None
+
+        """
+        # Instantiate daemon superclass
+        AgentAPI.__init__(self, parent, child, app, config=config)
+
+        # Create encryption object
+        self.encryption = encrypt.Encryption(parent, directory=directory)
 
 
 class _StandaloneApplication(BaseApplication):

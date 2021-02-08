@@ -3,13 +3,14 @@
 
 # Standard imports
 import os
+import stat
 
 # Import project libraries
 from pattoo_shared import files
 from pattoo_shared import log
 from pattoo_shared import url
 from pattoo_shared.constants import (
-    PATTOO_API_AGENT_PREFIX, PATTOO_API_WEB_PREFIX)
+    PATTOO_API_AGENT_PREFIX)
 from pattoo_shared.variables import PollingPoint
 
 
@@ -233,6 +234,52 @@ class BaseConfig():
         # Return
         return value
 
+    def keyring_directory(self, agent_name):
+        """Get keyring_directory.
+
+        Args:
+            agent_name: Name of agent
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        result = '{0}{1}.keyring'.format(
+            self.keys_directory(agent_name), os.sep)
+
+        # Create directory if it doesn't exist
+        files.mkdir(result)
+
+        # Make only accessible to the user
+        os.chmod(result, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Return
+        return result
+
+    def keys_directory(self, agent_name):
+        """Get keys_directory.
+
+        Args:
+            agent_name: Name of agent
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        result = '{0}{1}keys{1}{2}'.format(
+            self.daemon_directory(), os.sep, agent_name)
+
+        # Create directory if it doesn't exist
+        files.mkdir(result)
+
+        # Make only accessible to the user
+        os.chmod(result, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Return
+        return result
+
     def system_daemon_directory(self):
         """Determine the system_daemon_directory.
 
@@ -318,6 +365,8 @@ class Config(BaseConfig):
         # Get the configuration
         BaseConfig.__init__(self)
 
+        self._agent_yaml_configuration = _config_reader('pattoo_agent.yaml')
+
     def agent_api_ip_address(self):
         """Get api_ip_address.
 
@@ -334,7 +383,7 @@ class Config(BaseConfig):
 
         # Get result
         result = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
+            key, sub_key, self._agent_yaml_configuration, die=False)
         if result is None:
             result = 'localhost'
         return result
@@ -355,53 +404,11 @@ class Config(BaseConfig):
 
         # Get result
         intermediate = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
+            key, sub_key, self._agent_yaml_configuration, die=False)
         if intermediate is None:
             result = 20201
         else:
             result = int(intermediate)
-        return result
-
-    def api_email_address(self):
-        """GET API email address from yaml file.
-
-        Args:
-            None
-
-        Returns:
-            email (str): Email address of API
-        """
-
-        # Initialize key variables
-        key = 'encryption'
-        sub_key = 'api_email'
-
-        # Get result
-        result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
-        if result is None:
-            result = 'pattoo_api@example.org'
-        return result
-
-    def agent_email_address(self):
-        """GET agent email address from yaml file.
-
-        Args:
-            None
-
-        Returns:
-            email (str): Email address of agent
-        """
-
-        # Initialize key variables
-        key = 'encryption'
-        sub_key = 'agent_email'
-
-        # Get result
-        result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
-        if result is None:
-            result = 'pattoo_agent@example.org'
         return result
 
     def agent_api_uri(self):
@@ -427,8 +434,8 @@ class Config(BaseConfig):
         Returns:
             url (str): URL of the key exchange point
         """
-        url = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
-        return url
+        url_ = '{}/key'.format(PATTOO_API_AGENT_PREFIX)
+        return url_
 
     def agent_api_validation(self):
         """Get URL to validate encryption status.
@@ -439,8 +446,8 @@ class Config(BaseConfig):
         Returns:
             url (str): URL of the validation point
         """
-        url = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
-        return url
+        url_ = '{}/validation'.format(PATTOO_API_AGENT_PREFIX)
+        return url_
 
     def agent_api_encrypted(self):
         """Get URL to receive encrypted data.
@@ -483,8 +490,9 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of the key exchange point
-        """
 
+        """
+        # Initialize key variables
         _ip = url.url_ip_address(self.agent_api_ip_address())
         link = (
             'http://{}:{}{}'.format(
@@ -504,6 +512,7 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of the validation point
+
         """
 
         _ip = url.url_ip_address(self.agent_api_ip_address())
@@ -525,6 +534,7 @@ class Config(BaseConfig):
 
         Returns:
             link (str): Link of encrypted data receive point
+
         """
 
         _ip = url.url_ip_address(self.agent_api_ip_address())
@@ -537,73 +547,6 @@ class Config(BaseConfig):
             )
 
         return link
-
-    def web_api_ip_address(self):
-        """Get web_api_ip_address.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Initialize key variables
-        key = 'pattoo_web_api'
-        sub_key = 'ip_address'
-
-        # Get result
-        result = search(
-            key, sub_key, self._base_yaml_configuration, die=True)
-        return result
-
-    def web_api_ip_bind_port(self):
-        """Get web_api_ip_bind_port.
-
-        Args:
-            None
-
-        Returns:
-            result: result
-
-        """
-        # Initialize key variables
-        key = 'pattoo_web_api'
-        sub_key = 'ip_bind_port'
-
-        # Get result
-        intermediate = search(
-            key, sub_key, self._base_yaml_configuration, die=False)
-        if intermediate is None:
-            result = 20202
-        else:
-            result = int(intermediate)
-        return result
-
-    def web_api_server_url(self, graphql=True):
-        """Get pattoo server's remote URL.
-
-        Args:
-            agent_id: Agent ID
-
-        Returns:
-            result: URL.
-
-        """
-        # Create the suffix
-        if bool(graphql) is True:
-            suffix = '/graphql'
-        else:
-            suffix = '/rest/data'
-
-        # Return
-        _ip = url.url_ip_address(self.web_api_ip_address())
-        result = (
-            'http://{}:{}{}{}'.format(
-                _ip,
-                self.web_api_ip_bind_port(),
-                PATTOO_API_WEB_PREFIX, suffix))
-        return result
 
 
 def agent_config_filename(agent_program):
@@ -696,7 +639,8 @@ def search(key, sub_key, config_dict, die=True):
     # Error if not configured
     if result is None and die is True:
         log_message = (
-            '{}:{} not defined in configuration'.format(key, sub_key))
+            '{}:{} not defined in configuration dict {}'.format(
+                                                    key, sub_key, config_dict))
         log.log2die_safe(1016, log_message)
 
     # Return

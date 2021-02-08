@@ -19,7 +19,7 @@ import yaml
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+_EXPECTED = '{0}pattoo-shared{0}tests{0}pattoo_shared_'.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
@@ -305,16 +305,6 @@ class TestBasicFunctions(unittest.TestCase):
         """Testing method or function named _generate_agent_id."""
         pass
 
-    def test_get_session_cache_dir(self):
-        """Test get_session_cache_dir function"""
-        # Test
-
-        dir_name = 'session_cache'
-        expected = '{}/{}'.format(
-            self.config.cache_directory(), dir_name)
-        result = files.get_session_cache_dir(self.config)
-        self.assertEqual(result, expected)
-
 
 class Test_Directory(unittest.TestCase):
     """Checks all functions and methods."""
@@ -358,29 +348,6 @@ class Test_Directory(unittest.TestCase):
         result = directory.agent_id()
         self.assertEqual(result, expected)
 
-    def test_keyring(self):
-        """Test function keyring."""
-        # Test
-        directory = files._Directory(self.config)
-        expected = '{}{}keys{}{}'\
-                   .format(
-                       self.config.daemon_directory(),
-                       os.sep, os.sep, '.gnupg'
-                       )
-        result = directory.keyring()
-        self.assertEqual(result, expected)
-
-    def test_session_cache_directory(self):
-        """Test function session_cache_directory"""
-        # Test
-        directory = files._Directory(self.config)
-
-        dir_name = 'session_cache'
-        expected = '{}/{}'.format(
-            self.config.cache_directory(), dir_name)
-        result = directory.session_cache_directory()
-        self.assertEqual(result, expected)
-
 
 class Test_File(unittest.TestCase):
     """Checks all functions and methods."""
@@ -416,48 +383,6 @@ class Test_File(unittest.TestCase):
         filename = files._File(self.config)
         result = filename.agent_id(self.prefix)
         self.assertTrue(os.path.isdir(os.path.dirname(result)))
-
-
-class Test_GnuPG(unittest.TestCase):
-    """Test Pgpier integration."""
-    # Initialize config object
-    config = Config()
-
-    def test_set_gnupg(self):
-        """Set Pgpier object test for agent."""
-
-        # Agent details
-        agent_name = 'test_agent1'
-        agent_email = 'test_agent1@example.org'
-
-        # Result
-        result = files.set_gnupg(
-                    agent_name, self.config, agent_email
-                                )
-
-        # If a Pgpier object was created, a key ID would
-        # be set of type str
-        self.assertIsNotNone(result.keyid)
-        self.assertIsInstance(result.keyid, str)
-
-    def test_get_gnupg(self):
-        """Test retrieval of Pgpier object."""
-
-        # Create Pgpier object
-        # Agent details
-        agent_name = 'test_agent2'
-        agent_email = 'test_agent2@example.org'
-
-        # Result
-        files.set_gnupg(
-                    agent_name, self.config, agent_email
-                        )
-
-        # Retrieve Pgpier object
-        result = files.get_gnupg(agent_name, self.config)
-
-        # Test if the Pgpier object was retrieved
-        self.assertIsNotNone(result)
 
 
 if __name__ == '__main__':

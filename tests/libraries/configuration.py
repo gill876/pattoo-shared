@@ -14,8 +14,97 @@ import tempfile
 import os
 import yaml
 
+PATTOO_API_AGENT_NAME = 'pattoo_api_agentd'
+
 # Pattoo imports
 from pattoo_shared import log
+from pattoo_shared import configuration
+
+
+class TestConfigAgentAPId(configuration.ServerConfig):
+    """Class gathers all configuration information.
+
+    Only processes the following YAML keys in the configuration file:
+
+        The value of the PATTOO_API_WEB_NAME constant
+
+    """
+
+    def __init__(self):
+        """Initialize the class.
+
+        Args:
+            None
+
+        Returns:
+            None
+
+        """
+        # Instantiate the Config parent
+        configuration.ServerConfig.__init__(self)
+
+    def ip_listen_address(self):
+        """Get ip_listen_address.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Get result
+        key = PATTOO_API_AGENT_NAME
+        sub_key = 'ip_listen_address'
+        result = configuration.search(
+            key, sub_key, self._server_yaml_configuration, die=False)
+
+        # Default to 0.0.0.0
+        if result is None:
+            result = '0.0.0.0'
+        return result
+
+    def ip_bind_port(self):
+        """Get ip_bind_port.
+
+        Args:
+            None
+
+        Returns:
+            result: result
+
+        """
+        # Initialize key variables
+        key = PATTOO_API_AGENT_NAME
+        sub_key = 'ip_bind_port'
+
+        # Get result
+        intermediate = configuration.search(
+            key, sub_key, self._server_yaml_configuration, die=False)
+        if intermediate is None:
+            result = 20202
+        else:
+            result = int(intermediate)
+        return result
+
+    def api_email_address(self):
+        """GET API email address from yaml file.
+
+        Args:
+            None
+
+        Returns:
+            email (str): Email address of API
+        """
+        # Initialize key variables
+        key = PATTOO_API_AGENT_NAME
+        sub_key = 'api_encryption_email'
+
+        result = configuration.search(
+            key, sub_key, self._server_yaml_configuration, die=False)
+        if result is None:
+            result = 'pattoo_api@example.org'
+        return result
 
 
 class UnittestConfig():
@@ -50,18 +139,26 @@ class UnittestConfig():
                 'daemon_directory': self._daemon_directory,
                 'system_daemon_directory': self._system_daemon_directory,
             },
+            'encryption': {
+                'api_email': 'test_api@example.org',
+            }
+        }
+        self._agent_config = {
             'pattoo_agent_api': {
                 'ip_address': '127.0.0.6',
                 'ip_bind_port': 50505,
             },
-            'pattoo_web_api': {
-                'ip_address': '127.0.0.3',
-                'ip_bind_port': 30303,
-            },
+
             'encryption': {
-                'api_email': 'test_api@example.org',
                 'agent_email': 'test_agent@example.org'
             }
+        }
+        self._server_config = {
+            'pattoo_api_agentd': {
+                'ip_listen_address': '0.0.0.0',
+                'ip_bind_port': 60606,
+                'api_encryption_email': 'test_api@example.org'
+            },
         }
 
     def create(self):
@@ -75,11 +172,25 @@ class UnittestConfig():
 
         """
         # Initialize key variables
-        config_file = '{}{}pattoo.yaml'.format(self._config_directory, os.sep)
+        filenames = {
+            '{}{}pattoo.yaml'.format(
+                self._config_directory, os.sep): self._config,
+            '{}{}pattoo_agent.yaml'.format(
+                self._config_directory, os.sep): self._agent_config,
+            '{}{}pattoo_server.yaml'.format(
+                self._config_directory, os.sep): self._server_config
+        }
 
-        # Write good_config to file
-        with open(config_file, 'w') as f_handle:
-            yaml.dump(self._config, f_handle, default_flow_style=False)
+        for filename, content in filenames.items():
+            # Write to pattoo.yaml
+            try:
+                f_handle = open(filename, 'w')
+            except PermissionError:
+                log.log2die(1019, '''\
+    Insufficient permissions for creating the file: {}'''.format(filename))
+            else:
+                with f_handle:
+                    yaml.dump(content, f_handle, default_flow_style=False)
 
         # Return
         return self._config_directory

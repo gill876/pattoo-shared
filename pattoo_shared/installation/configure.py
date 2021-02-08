@@ -73,9 +73,26 @@ def read_config(filepath, default_config):
     """
     # Read config
     if os.path.isfile(filepath) is True:
-        with open(filepath, 'r') as f_handle:
-            yaml_string = f_handle.read()
-            config = yaml.safe_load(yaml_string)
+        try:
+            f_handle = open(filepath, 'r')
+        except PermissionError:
+            log.log2die_safe(1078, '''\
+Insufficient permissions for reading the file:{}'''.format(filepath))
+        else:
+            with f_handle:
+                yaml_string = f_handle.read()
+                config = yaml.safe_load(yaml_string)
+
+        # Find and replace dictionary values
+        # for default_key, default_value in default_config.items():
+        #     if isinstance(default_value, dict)
+        #     for key in config:
+        #         if key == default_key:
+        #             config[key] = default_config.get(default_key)
+        #     # Add new entries to config dict if they aren't in the file
+        #     if default_key not in config:
+        #         config[default_key] = default_config.get(default_key)
+
     else:
         config = default_config
 
@@ -104,7 +121,7 @@ def check_config(config_file, config_dict):
     config = files.read_yaml_file(config_file)
 
     # Check main keys
-    for primary in config_dict:
+    for primary in config_dict.keys():
         if primary not in config:
             log_message = ('''\
 Section "{}" not found in configuration file {} in directory {}. Please fix.\
@@ -155,24 +172,39 @@ def pattoo_config(file_name, config_directory, config_dict):
     config = read_config(config_file, config_dict)
 
     # Check validity of directories, if any
-    for key, value in sorted(config.items()):
-        if 'directory' in key:
-            if os.sep not in value:
-                log.log2die_safe(
-                    1019, '{} is an invalid directory'.format(value))
+    if bool(config) is False:
+        # Set default
+        config = config_dict
 
-            # Attempt to create directory
-            full_directory = os.path.expanduser(value)
-            if os.path.isdir(full_directory) is False:
-                files.mkdir(full_directory)
+    # Iterate over config dict
+    for _, value in sorted(config.items()):
+        if isinstance(value, dict) is True:
+            for secondary_key in value.keys():
+                if 'directory' in secondary_key:
+                    if os.sep not in value.get(secondary_key):
+                        log.log2die_safe(
+                            1019, '{} is an invalid directory'.format(value))
 
-            # Recursively set file ownership to pattoo user and group
-            if getpass.getuser == 'root':
-                shared.chown(full_directory)
+                    # Attempt to create directory
+                    full_directory = os.path.expanduser(
+                        value.get(secondary_key))
+                    if os.path.isdir(full_directory) is False:
+                        print('Creating: {}'.format(full_directory))
+                        files.mkdir(full_directory)
 
-    # Write file
-    with open(config_file, 'w') as f_handle:
-        yaml.dump(config, f_handle, default_flow_style=False)
+                    # Recursively set file ownership to pattoo user and group
+                    if getpass.getuser() == 'root':
+                        shared.chown(full_directory)
+
+        # Write file
+        try:
+            f_handle = open(config_file, 'w')
+        except PermissionError:
+            log.log2die(1076, '''\
+Insufficient permissions for creating the file:{}'''.format(config_file))
+        else:
+            with f_handle:
+                yaml.dump(config, f_handle, default_flow_style=False)
 
     return config_file
 
@@ -189,10 +221,7 @@ def configure_component(component_name, config_dir, config_dict):
         None
     """
     # Create configuration
-    config_file = pattoo_config(
-                                component_name,
-                                config_dir,
-                                config_dict)
+    config_file = pattoo_config(component_name, config_dir, config_dict)
 
     # Check if configuration is valid
     check_config(config_file, config_dict)

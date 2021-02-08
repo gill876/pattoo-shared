@@ -1,9 +1,28 @@
-#!/usr/bin/env python3
+"""Module of general functions."""
+
+# Standard imports
+import random
+import hashlib
 
 # Import from the PattooShared library
 from pattoo_shared.constants import DATA_FLOAT
 from pattoo_shared.variables import (
     DataPoint, DataPointMetadata, TargetDataPoints, AgentPolledData)
+
+
+def random_agent_name():
+    """Creates random agent name.
+
+    Args:
+        None
+
+    Return:
+        result: Agent name
+
+    """
+    salt = str(random.getrandbits(128))
+    result = hashlib.sha224(salt.encode()).hexdigest()
+    return result
 
 
 def test_agent():

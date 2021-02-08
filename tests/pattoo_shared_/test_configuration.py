@@ -11,7 +11,7 @@ import sys
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(
     os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir))
-_EXPECTED = '{0}pattoo-shared{0}tests{0}test_pattoo_shared'.format(os.sep)
+_EXPECTED = '{0}pattoo-shared{0}tests{0}pattoo_shared_'.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
     # We need to prepend the path in case PattooShared has been installed
     # elsewhere on the system using PIP. This could corrupt expected results
@@ -138,41 +138,6 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
-    def test_web_api_ip_address(self):
-        """Testing method or function named web_api_ip_address."""
-        # Test
-        result = self.config.web_api_ip_address()
-        self.assertEqual(result, '127.0.0.3')
-
-    def test_web_api_ip_bind_port(self):
-        """Testing method or function named web_api_ip_bind_port."""
-        # Test
-        result = self.config.web_api_ip_bind_port()
-        self.assertEqual(result, 30303)
-
-    def test_api_email_address(self):
-        """Test api email address retrieval"""
-        # Test from yaml file
-        result = self.config.api_email_address()
-        expected = 'test_api@example.org'
-
-        self.assertEqual(result, expected)
-
-    def test_agent_email_address(self):
-        """Test agent email address retrieval"""
-        # Test from yaml file
-        result = self.config.agent_email_address()
-        expected = 'test_agent@example.org'
-
-        self.assertEqual(result, expected)
-
-    def test_web_api_server_url(self):
-        """Testing method or function named web_api_server_url."""
-        # Test
-        result = self.config.web_api_server_url()
-        self.assertEqual(
-            result, 'http://127.0.0.3:30303/pattoo/api/v1/web/graphql')
-
     def test_daemon_directory(self):
         """Testing function daemon_directory."""
         # Nothing should happen. Directory exists in testing.
@@ -241,6 +206,28 @@ class TestConfig(unittest.TestCase):
 
         # Test
         result = self.config.agent_cache_directory(agent_id)
+        self.assertEqual(result, expected)
+
+    def test_keyring_directory(self):
+        """Testing function keyring_directory."""
+        # Initialize key values
+        agent_name = 'b00'
+        expected = '{1}{0}.keyring'.format(
+            os.sep, self.config.keys_directory(agent_name))
+
+        # Test
+        result = self.config.keyring_directory(agent_name)
+        self.assertEqual(result, expected)
+
+    def test_keys_directory(self):
+        """Testing function keys_directory."""
+        # Initialize key values
+        agent_name = 'b00'
+        expected = (
+            '{1}{0}keys{0}b00'.format(os.sep, self.config.daemon_directory()))
+
+        # Test
+        result = self.config.keys_directory(agent_name)
         self.assertEqual(result, expected)
 
 
