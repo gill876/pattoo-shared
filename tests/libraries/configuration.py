@@ -184,13 +184,16 @@ class UnittestConfig():
         for filename, content in filenames.items():
             # Write to pattoo.yaml
             try:
-                f_handle = open(filename, 'w')
+                fh_ = open(filename, 'w')
             except PermissionError:
                 log.log2die(1019, '''\
     Insufficient permissions for creating the file: {}'''.format(filename))
             else:
-                with f_handle:
-                    yaml.dump(content, f_handle, default_flow_style=False)
+                with fh_:
+                    # Convert to dict, just in case as defaultdict
+                    # isn't supported by yaml.safe_dump
+                    yaml.safe_dump(
+                        dict(content), stream=fh_, default_flow_style=False)
 
         # Return
         return self._config_directory

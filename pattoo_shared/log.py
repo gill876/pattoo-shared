@@ -144,6 +144,26 @@ def log2console(code, message):
     print(output)
 
 
+def log2die_safe_exception(code, sys_exc_info, message):
+    """Log trace message to file and STDOUT, but don't die.
+
+    Args:
+        code: Message code
+        sys_exc_info: Tuple from exception from sys.exc_info
+        message: Message text
+
+    Returns:
+        None
+
+    """
+    # Initialize key variables
+    (exc_type, exc_value, exc_traceback) = sys_exc_info
+    log_message = ('''\
+[Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}] {}\
+'''.format(exc_type, exc_value, exc_traceback, message))
+    log2die_safe(code, log_message)
+
+
 def log2die_safe(code, message):
     """Log message to STDOUT only and die.
 
@@ -266,7 +286,7 @@ def log2exception(code, sys_exc_info, message=None, die=False):
     # Initialize key variables
     (exc_type, exc_value, exc_traceback) = sys_exc_info
     log_message = ('''\
-Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
+[Bug: Exception Type:{}, Exception Instance: {}, Stack Trace Object: {}]\
 '''.format(exc_type, exc_value, exc_traceback))
     log2warning(code, log_message)
     if bool(message) is True:

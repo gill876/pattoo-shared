@@ -5,14 +5,17 @@ import os
 import unittest
 import sys
 import tempfile
+from random import random
+
 import yaml
 import distro
-from random import random
 
 # Try to create a working PYTHONPATH
 EXEC_DIR = os.path.dirname(os.path.realpath(__file__))
-ROOT_DIR = os.path.abspath(os.path.join(os.path.abspath(os.path.join(
-    os.path.abspath(os.path.join(EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
+ROOT_DIR = os.path.abspath(os.path.join(
+    os.path.abspath(os.path.join(
+        os.path.abspath(os.path.join(
+            EXEC_DIR, os.pardir)), os.pardir)), os.pardir))
 _EXPECTED = '''\
 {0}pattoo-shared{0}tests{0}pattoo_shared_{0}installation'''.format(os.sep)
 if EXEC_DIR.endswith(_EXPECTED) is True:
@@ -55,7 +58,7 @@ class Test_Systemd(unittest.TestCase):
         linux_distro = distro.linux_distribution()[0].lower()
         etc_dir = '/etc/systemd/system/multi-user.target.wants'
 
-        if linux_distro == 'ubuntu':
+        if linux_distro in ['ubuntu']:
             expected = '/lib/systemd/system'
         else:
             # Expected directory for CentOS
@@ -74,16 +77,13 @@ class Test_Systemd(unittest.TestCase):
     def test__get_runtime_directory_default(self):
         """Testing method or function named "_get_runtime_directory"."""
         # Initialize key variables
-        default_config = {
+        default = {
             'pattoo': {
                 'language': 'en',
-                'log_directory': (
-                    '/var/log/pattoo'),
+                'log_directory': '/var/log/pattoo',
                 'log_level': 'debug',
-                'cache_directory': (
-                    '/opt/pattoo-cache'),
-                'daemon_directory': (
-                    '/opt/pattoo-daemon'),
+                'cache_directory': '/opt/pattoo-cache',
+                'daemon_directory': '/opt/pattoo-daemon',
                 'system_daemon_directory': '/var/run/pattoo'
             },
             'pattoo_agent_api': {
@@ -102,8 +102,8 @@ class Test_Systemd(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
 
             # Test with default system daemon directory
-            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as config:
-                yaml.dump(default_config, config, default_flow_style=False)
+            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as fh_:
+                yaml.safe_dump(default, stream=fh_, default_flow_style=False)
                 result = _get_runtime_directory(temp_dir)
             self.assertEqual(expected, result)
 
@@ -117,23 +117,20 @@ class Test_Systemd(unittest.TestCase):
     def test__get_runtime_directory_no_systemd(self):
         """Testing method or function named "_get_runtime_directory"."""
         # Initialize key variables
-        fake_config = {
+        fake = {
             'pattoo': {
-                    'language': 'en',
-                    'log_directory': (
-                        '/var/log/pattoo'),
-                    'log_level': 'debug',
-                    'cache_directory': (
-                        '/opt/pattoo-cache'),
-                    'daemon_directory': (
-                        '/opt/pattoo-daemon')
-                }
+                'language': 'en',
+                'log_directory': '/var/log/pattoo',
+                'log_level': 'debug',
+                'cache_directory': '/opt/pattoo-cache',
+                'daemon_directory': '/opt/pattoo-daemon'
             }
+        }
 
         # Retrieve runtime directory from temp directory
         with tempfile.TemporaryDirectory() as temp_dir:
-            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as config:
-                yaml.dump(fake_config, config, default_flow_style=False)
+            with open(os.path.join(temp_dir, 'pattoo.yaml'), 'w+') as fh_:
+                yaml.safe_dump(fake, stream=fh_, default_flow_style=False)
 
             # Test without system daemon directory
             with self.assertRaises(SystemExit) as cm_:
@@ -156,7 +153,7 @@ class Test_Systemd(unittest.TestCase):
             # Create service files
             for daemon in daemons:
                 daemon_path = os.path.join(
-                                target_dir, '{}.service'.format(daemon))
+                    target_dir, '{}.service'.format(daemon))
                 with open(daemon_path, 'w'):
                     pass
 
