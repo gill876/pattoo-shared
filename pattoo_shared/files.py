@@ -77,6 +77,30 @@ class _Directory():
         value = '{}{}agent_id'.format(self._root, os.sep)
         return value
 
+    def session_cache_directory(self):
+        """Get Flask-Session cache directory.
+
+        Args:
+            None
+
+        Returns:
+            result (str): Path to Flask-Session cache directory
+
+        """
+        dir_name = 'session_cache'
+        # Get result
+        result = '{}/{}'.format(self._cache, dir_name)
+
+        # Create directory if it doesn't exist
+        mkdir(result)
+
+        # Change filemode to 700
+        # Only allow the user to access the flash session folder
+        os.chmod(result, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+
+        # Return
+        return result
+
 
 class _File():
     """A class for creating the names of hidden files."""
@@ -560,3 +584,22 @@ def _generate_agent_id():
 
     # Return
     return agent_id
+
+
+def get_session_cache_dir(config):
+    """Get Flask-Session cache directory.
+
+    Args:
+        config (obj): Config object
+
+    Returns:
+        cache_dir (str): Path to Flask-Session cache directory
+
+    """
+
+    # Get directory
+    directory = _Directory(config)
+    cache_dir = directory.session_cache_directory()
+
+    # Return directory
+    return cache_dir
